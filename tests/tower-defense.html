@@ -51,27 +51,47 @@
         }
         
         #towerSelect h3 {
-            margin-bottom: 10px;
+            margin-bottom: 15px;
             color: #ff0;
+            text-align: center;
+            font-size: 16px;
+            border-bottom: 2px solid #444;
+            padding-bottom: 10px;
         }
         
         .tower-btn {
             width: 100%;
-            padding: 12px;
-            margin: 8px 0;
+            padding: 15px 10px;
+            margin: 10px 0;
             border: none;
-            border-radius: 5px;
+            border-radius: 8px;
             cursor: pointer;
             font-size: 14px;
-            font-weight: bold;
-            transition: transform 0.2s;
+            transition: all 0.2s;
+            text-align: center;
         }
         .tower-btn:hover { transform: scale(1.05); }
         .tower-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
         
-        .arrow-tower { background: #4a4; color: #fff; }
-        .cannon-tower { background: #a44; color: #fff; }
-        .ice-tower { background: #44a; color: #fff; }
+        .arrow-tower { 
+            background: linear-gradient(135deg, #2d5a2d, #4a8);
+            color: #fff;
+            border-left: 4px solid #0f0;
+        }
+        .cannon-tower { 
+            background: linear-gradient(135deg, #5a2d2d, #a44);
+            color: #fff;
+            border-left: 4px solid #f00;
+        }
+        .ice-tower { 
+            background: linear-gradient(135deg, #2d2d5a, #44a);
+            color: #fff;
+            border-left: 4px solid #0af;
+        }
+        .tower-btn.selected {
+            box-shadow: 0 0 20px currentColor;
+            transform: scale(1.05);
+        }
         
         #waveBtn {
             width: 100%;
@@ -89,12 +109,16 @@
         
         #instructions {
             margin-top: 15px;
-            padding: 10px;
-            background: rgba(255,255,255,0.05);
-            border-radius: 5px;
+            padding: 15px;
+            background: rgba(0,255,255,0.05);
+            border: 1px solid #0ff;
+            border-radius: 8px;
             font-size: 12px;
-            line-height: 1.6;
-            color: #aaa;
+            line-height: 1.8;
+            color: #aff;
+        }
+        #instructions strong {
+            color: #fff;
         }
         
         #gameOver {
@@ -131,24 +155,35 @@
             <div class="stat">👹 敌人: <span id="enemies">0</span></div>
             
             <div id="towerSelect">
-                <h3>选择防御塔</h3>
+                <h3>🛡️ 选择防御塔</h3>
                 <button class="tower-btn arrow-tower" onclick="selectTower('arrow')">
-                    🏹 箭塔 ($50)
+                    <div style="font-size: 20px; margin-bottom: 4px;">🔺</div>
+                    <div style="font-weight: bold;">箭塔</div>
+                    <div style="font-size: 11px; opacity: 0.9;">攻速快 | 伤害15 | $50</div>
                 </button>
                 <button class="tower-btn cannon-tower" onclick="selectTower('cannon')">
-                    💣 炮塔 ($100)
+                    <div style="font-size: 20px; margin-bottom: 4px;">💥</div>
+                    <div style="font-weight: bold;">炮塔</div>
+                    <div style="font-size: 11px; opacity: 0.9;">溅射伤害 | 伤害40 | $100</div>
                 </button>
                 <button class="tower-btn ice-tower" onclick="selectTower('ice')">
-                    ❄️ 冰塔 ($80)
+                    <div style="font-size: 20px; margin-bottom: 4px;">❄️</div>
+                    <div style="font-weight: bold;">冰塔</div>
+                    <div style="font-size: 11px; opacity: 0.9;">减速50% | 伤害8 | $80</div>
                 </button>
             </div>
             
             <button id="waveBtn" onclick="startWave()">⚔️ 开始下一波</button>
             
             <div id="instructions">
-                🖱️ 点击空地建造<br>
-                🖱️ 点击塔升级/出售<br>
-                ⚔️ 阻止敌人到达终点
+                <strong>🎮 游戏说明:</strong><br>
+                1️⃣ 点击下方选择防御塔类型<br>
+                2️⃣ 在地图绿色区域点击建造<br>
+                3️⃣ 点击已建塔可升级/出售<br>
+                4️⃣ 点击「开始下一波」出兵<br><br>
+                <strong>🔺 箭塔:</strong> 攻速快，单体伤害<br>
+                <strong>💥 炮塔:</strong> 范围溅射伤害<br>
+                <strong>❄️ 冰塔:</strong> 减速敌人
             </div>
         </div>
     </div>
@@ -335,21 +370,148 @@ class Tower {
             ctx.stroke();
         }
         
-        // 塔基座
-        ctx.fillStyle = '#333';
-        ctx.fillRect(this.x - 20, this.y - 20, 40, 40);
+        // 塔基座 - 所有塔共用
+        ctx.fillStyle = '#2a2a3a';
+        ctx.fillRect(this.x - 22, this.y - 22, 44, 44);
+        ctx.strokeStyle = '#444';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(this.x - 22, this.y - 22, 44, 44);
         
-        // 塔身
-        ctx.fillStyle = this.color;
+        // 根据塔类型绘制不同形状
+        switch(this.type) {
+            case 'arrow':
+                this.drawArrowTower();
+                break;
+            case 'cannon':
+                this.drawCannonTower();
+                break;
+            case 'ice':
+                this.drawIceTower();
+                break;
+        }
+        
+        // 等级标记 - 在右上角
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 11px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('Lv' + this.level, this.x + 14, this.y - 12);
+    }
+    
+    drawArrowTower() {
+        // 箭塔 - 三角形箭头形状
+        ctx.save();
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = '#0f0';
+        
+        // 主体 - 绿色三角形
+        ctx.fillStyle = '#4a4';
         ctx.beginPath();
-        ctx.arc(this.x, this.y, 15, 0, Math.PI * 2);
+        ctx.moveTo(this.x, this.y - 18);
+        ctx.lineTo(this.x + 15, this.y + 12);
+        ctx.lineTo(this.x - 15, this.y + 12);
+        ctx.closePath();
         ctx.fill();
         
-        // 等级标记
-        ctx.fillStyle = '#fff';
-        ctx.font = '12px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText('Lv.' + this.level, this.x, this.y + 4);
+        // 内部装饰 - 小三角形
+        ctx.fillStyle = '#0f0';
+        ctx.beginPath();
+        ctx.moveTo(this.x, this.y - 8);
+        ctx.lineTo(this.x + 6, this.y + 6);
+        ctx.lineTo(this.x - 6, this.y + 6);
+        ctx.closePath();
+        ctx.fill();
+        
+        // 发射口
+        ctx.fillStyle = '#2f2';
+        ctx.beginPath();
+        ctx.arc(this.x, this.y - 5, 4, 0, Math.PI * 2);
+        ctx.fill();
+        
+        ctx.restore();
+    }
+    
+    drawCannonTower() {
+        // 炮塔 - 圆形炮台形状
+        ctx.save();
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = '#f00';
+        
+        // 主体 - 红色圆形
+        ctx.fillStyle = '#a44';
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, 16, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // 外圈
+        ctx.strokeStyle = '#f00';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, 16, 0, Math.PI * 2);
+        ctx.stroke();
+        
+        // 内部十字
+        ctx.strokeStyle = '#f44';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(this.x - 8, this.y);
+        ctx.lineTo(this.x + 8, this.y);
+        ctx.moveTo(this.x, this.y - 8);
+        ctx.lineTo(this.x, this.y + 8);
+        ctx.stroke();
+        
+        // 中心点
+        ctx.fillStyle = '#f88';
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, 5, 0, Math.PI * 2);
+        ctx.fill();
+        
+        ctx.restore();
+    }
+    
+    drawIceTower() {
+        // 冰塔 - 菱形水晶形状
+        ctx.save();
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = '#0af';
+        
+        // 主体 - 蓝色菱形
+        ctx.fillStyle = '#44a';
+        ctx.beginPath();
+        ctx.moveTo(this.x, this.y - 18);
+        ctx.lineTo(this.x + 12, this.y);
+        ctx.lineTo(this.x, this.y + 18);
+        ctx.lineTo(this.x - 12, this.y);
+        ctx.closePath();
+        ctx.fill();
+        
+        // 内部菱形
+        ctx.fillStyle = '#66c';
+        ctx.beginPath();
+        ctx.moveTo(this.x, this.y - 10);
+        ctx.lineTo(this.x + 7, this.y);
+        ctx.lineTo(this.x, this.y + 10);
+        ctx.lineTo(this.x - 7, this.y);
+        ctx.closePath();
+        ctx.fill();
+        
+        // 中心核心
+        ctx.fillStyle = '#0af';
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, 4, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // 冰晶装饰
+        ctx.strokeStyle = '#8af';
+        ctx.lineWidth = 2;
+        for (let i = 0; i < 4; i++) {
+            const angle = (i * Math.PI / 2) + Math.PI / 4;
+            ctx.beginPath();
+            ctx.moveTo(this.x + Math.cos(angle) * 10, this.y + Math.sin(angle) * 10);
+            ctx.lineTo(this.x + Math.cos(angle) * 16, this.y + Math.sin(angle) * 16);
+            ctx.stroke();
+        }
+        
+        ctx.restore();
     }
     
     upgrade() {
@@ -724,6 +886,12 @@ function updateUI() {
     document.querySelectorAll('.tower-btn').forEach(btn => {
         const type = btn.onclick.toString().match(/'(\w+)'/)[1];
         btn.disabled = gold < TOWER_TYPES[type].cost;
+        // 添加选中状态
+        if (selectedTower === type) {
+            btn.classList.add('selected');
+        } else {
+            btn.classList.remove('selected');
+        }
     });
     
     // 升级/出售菜单
