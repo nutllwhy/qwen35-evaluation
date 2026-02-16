@@ -116,23 +116,23 @@ function playHitSound() {
     } catch(e) { console.log('Sound error:', e); }
 }
 
-// 创建短血条
+// 创建更短的血条
 function createHealthBar(maxHp, color) {
     const canvas = document.createElement('canvas');
-    canvas.width = 40;
-    canvas.height = 6;
+    canvas.width = 32; // 更短
+    canvas.height = 4; // 更矮
     const ctx = canvas.getContext('2d');
     
     function draw(hpPercent) {
         ctx.fillStyle = '#222';
-        ctx.fillRect(0, 0, 40, 6);
+        ctx.fillRect(0, 0, 32, 4);
         ctx.strokeStyle = '#fff';
         ctx.lineWidth = 1;
-        ctx.strokeRect(0, 0, 40, 6);
+        ctx.strokeRect(0, 0, 32, 4);
         
         const percent = Math.max(0, Math.min(1, hpPercent));
         ctx.fillStyle = percent > 0.5 ? color : percent > 0.25 ? '#ff0' : '#f00';
-        ctx.fillRect(1, 1, 38 * percent, 4);
+        ctx.fillRect(1, 1, 30 * percent, 2);
     }
     
     draw(1);
@@ -140,8 +140,8 @@ function createHealthBar(maxHp, color) {
     const texture = new THREE.CanvasTexture(canvas);
     const material = new THREE.SpriteMaterial({ map: texture });
     const sprite = new THREE.Sprite(material);
-    sprite.scale.set(1.2, 0.18, 1);
-    sprite.position.y = 1.2;
+    sprite.scale.set(0.8, 0.1, 1); // 缩小显示
+    sprite.position.y = 1.0; // 降低位置
     
     return { sprite, canvas, ctx, draw };
 }
@@ -210,7 +210,7 @@ function createEnemyShip(type) {
         tailR.position.set(0.4, 0.3, 0.8);
         tailR.rotation.z = 0.2;
         group.add(tailR);
-        return { group, hp: 4, maxHp: 4, speed: 0.18, color: '#0f0' };
+        return { group, hp: 2, maxHp: 2, speed: 0.18, color: '#0f0' };
     } else if (type === 'heavy') {
         const bodyGeo = new THREE.CylinderGeometry(0.5, 0.6, 2, 8);
         bodyGeo.rotateX(Math.PI / 2);
@@ -220,7 +220,7 @@ function createEnemyShip(type) {
         const wing = new THREE.Mesh(wingGeo, bodyMat);
         wing.position.set(0, -0.1, 0.2);
         group.add(wing);
-        return { group, hp: 10, maxHp: 10, speed: 0.08, color: '#0f0' };
+        return { group, hp: 5, maxHp: 5, speed: 0.08, color: '#0f0' };
     } else {
         const bodyGeo = new THREE.CylinderGeometry(0.35, 0.45, 2, 8);
         bodyGeo.rotateX(Math.PI / 2);
@@ -239,7 +239,7 @@ function createEnemyShip(type) {
         const vTail = new THREE.Mesh(vTailGeo, bodyMat);
         vTail.position.set(0, 0.4, 0.9);
         group.add(vTail);
-        return { group, hp: 6, maxHp: 6, speed: 0.12, color: '#0f0' };
+        return { group, hp: 3, maxHp: 3, speed: 0.12, color: '#0f0' };
     }
 }
 
@@ -449,12 +449,12 @@ function update() {
             continue;
         }
         
-        // 子弹击中检测
+        // 子弹击中检测 - 增加伤害（2点）
         let hit = false;
         for (let j = bullets.length - 1; j >= 0; j--) {
             const bulletBox = new THREE.Box3().setFromObject(bullets[j]);
             if (bulletBox.intersectsBox(enemyBox)) {
-                e.hp--;
+                e.hp -= 2; // 一发子弹造成2点伤害
                 scene.remove(bullets[j]);
                 bullets.splice(j, 1);
                 hit = true;
