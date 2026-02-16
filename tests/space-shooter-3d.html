@@ -243,6 +243,83 @@ function createEnemyShip(type) {
     }
 }
 
+// 创建BOSS
+function createBoss() {
+    const group = new THREE.Group();
+    
+    // BOSS机身 - 更大更复杂
+    const bodyGeo = new THREE.CylinderGeometry(1.2, 1.5, 5, 8);
+    bodyGeo.rotateX(Math.PI / 2);
+    const bodyMat = new THREE.MeshStandardMaterial({ 
+        color: 0xff0044, 
+        metalness: 0.9, 
+        roughness: 0.1,
+        emissive: 0x330011
+    });
+    const body = new THREE.Mesh(bodyGeo, bodyMat);
+    group.add(body);
+    
+    // BOSS主翼 - 超大
+    const mainWingGeo = new THREE.BoxGeometry(8, 0.2, 2.5);
+    const wingMat = new THREE.MeshStandardMaterial({ 
+        color: 0xcc0033, 
+        metalness: 0.8, 
+        roughness: 0.2 
+    });
+    const mainWing = new THREE.Mesh(mainWingGeo, wingMat);
+    mainWing.position.set(0, 0, 0.5);
+    group.add(mainWing);
+    
+    // BOSS副翼
+    const subWingGeo = new THREE.BoxGeometry(4, 0.15, 1.5);
+    const subWingL = new THREE.Mesh(subWingGeo, wingMat);
+    subWingL.position.set(-2.5, 0.3, -0.5);
+    subWingL.rotation.z = 0.3;
+    group.add(subWingL);
+    const subWingR = new THREE.Mesh(subWingGeo, wingMat);
+    subWingR.position.set(2.5, 0.3, -0.5);
+    subWingR.rotation.z = -0.3;
+    group.add(subWingR);
+    
+    // BOSS尾翼
+    const tailGeo = new THREE.BoxGeometry(0.3, 1.5, 1);
+    const tailL = new THREE.Mesh(tailGeo, wingMat);
+    tailL.position.set(-1.5, 0.8, 2);
+    tailL.rotation.z = -0.3;
+    group.add(tailL);
+    const tailR = new THREE.Mesh(tailGeo, wingMat);
+    tailR.position.set(1.5, 0.8, 2);
+    tailR.rotation.z = 0.3;
+    group.add(tailR);
+    
+    // BOSS核心 - 发光球体
+    const coreGeo = new THREE.SphereGeometry(0.8, 16, 16);
+    const coreMat = new THREE.MeshBasicMaterial({ 
+        color: 0xff0000,
+        emissive: 0xff0000,
+        emissiveIntensity: 2
+    });
+    const core = new THREE.Mesh(coreGeo, coreMat);
+    core.position.set(0, 0.5, 0);
+    group.add(core);
+    
+    // BOSS引擎 - 多个
+    const engineGeo = new THREE.CylinderGeometry(0.4, 0.6, 1.2, 8);
+    engineGeo.rotateX(Math.PI / 2);
+    const engineMat = new THREE.MeshBasicMaterial({ 
+        color: 0xff4400, 
+        emissive: 0xff2200 
+    });
+    const positions = [[-2, -0.3, 2.5], [2, -0.3, 2.5], [-1, -0.3, 3], [1, -0.3, 3]];
+    positions.forEach(pos => {
+        const engine = new THREE.Mesh(engineGeo, engineMat);
+        engine.position.set(...pos);
+        group.add(engine);
+    });
+    
+    return { group, hp: 50, maxHp: 50, speed: 0.04, color: '#f00', isBoss: true };
+}
+
 // 初始化
 function init() {
     scene = new THREE.Scene();
@@ -305,8 +382,65 @@ function shoot() {
     bullets.push(bullet);
 }
 
-// 生成敌机
+// BOSS发射弹幕
+function bossShoot(boss) {
+    // BOSS发射3发扇形子弹
+    const angles = [-0.3, 0, 0.3]; // 左中右三个方向
+    angles.forEach(angle => {
+        const geometry = new THREE.SphereGeometry(0.25, 8, 8);
+        const material = new THREE.MeshBasicMaterial({ color: 0xff0044, emissive: 0xff0022 });
+        const bullet = new THREE.Mesh(geometry, material);
+        bullet.position.copy(boss.mesh.position);
+        bullet.position.y = 0;
+        bullet.position.z += 2;
+        
+        // 计算子弹速度方向
+        bullet.userData.velocity = new THREE.Vector3(
+            Math.sin(angle) * 0.3,
+            0,
+            0.6 + Math.cos(angle) * 0.2
+        );
+        
+        scene.add(bullet);
+        enemyBullets.push(bullet);
+    });
+}
+
+// 生成敌机或BOSS
 function spawnEnemy() {
+    // 每5波生成一个BOSS
+    const isBossWave = wave % 5 === 0;
+    const existingBoss = enemies.some(e => e.isBoss);
+    
+    if (isBossWave && !existingBoss) {
+        // 生成BOSS
+        const bossData = createBoss();
+        const boss = bossData.group;
+        boss.position.set(0, 0, -40); // BOSS从中间出现
+        scene.add(boss);
+        
+        // BOSS使用更长的血条
+        const healthBar = createBossHealthBar(bossData.maxHp);
+        boss.add(healthBar.sprite);
+        
+        enemies.push({ 
+            mesh: boss, 
+            type: 'boss', 
+            speed: bossData.speed, 
+            hp: bossData.hp, 
+            maxHp: bossData.maxHp,
+            healthBar: healthBar,
+            isBoss: true,
+            lastShot: Date.now(),
+            shootInterval: 1500
+        });
+        
+        // 显示BOSS警告
+        showBossWarning();
+        return;
+    }
+    
+    // 普通敌机
     const types = ['normal', 'fast', 'heavy'];
     const type = types[Math.floor(Math.random() * types.length)];
     const enemyData = createEnemyShip(type);
@@ -330,6 +464,68 @@ function spawnEnemy() {
         lastShot: Date.now(),
         shootInterval: shootInterval
     });
+}
+
+// 创建BOSS血条 - 更长更显眼
+function createBossHealthBar(maxHp) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 80; // BOSS血条更长
+    canvas.height = 8; // 更粗
+    const ctx = canvas.getContext('2d');
+    
+    function draw(hpPercent) {
+        // 背景
+        ctx.fillStyle = '#111';
+        ctx.fillRect(0, 0, 80, 8);
+        
+        // 边框 - 金色
+        ctx.strokeStyle = '#ffd700';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(0, 0, 80, 8);
+        
+        // 血量 - 紫色到红色渐变
+        const percent = Math.max(0, Math.min(1, hpPercent));
+        const gradient = ctx.createLinearGradient(0, 0, 78, 0);
+        if (percent > 0.5) {
+            gradient.addColorStop(0, '#ff0066');
+            gradient.addColorStop(1, '#ff4400');
+        } else if (percent > 0.25) {
+            gradient.addColorStop(0, '#ff4400');
+            gradient.addColorStop(1, '#ff8800');
+        } else {
+            gradient.addColorStop(0, '#ff0000');
+            gradient.addColorStop(1, '#ff0044');
+        }
+        ctx.fillStyle = gradient;
+        ctx.fillRect(2, 2, 76 * percent, 4);
+    }
+    
+    draw(1);
+    
+    const texture = new THREE.CanvasTexture(canvas);
+    const material = new THREE.SpriteMaterial({ map: texture });
+    const sprite = new THREE.Sprite(material);
+    sprite.scale.set(3, 0.3, 1); // BOSS血条更大
+    sprite.position.y = 2.5; // 更高位置
+    
+    return { sprite, canvas, ctx, draw };
+}
+
+// 显示BOSS警告
+function showBossWarning() {
+    const warning = document.createElement('div');
+    warning.style.cssText = `
+        position: absolute; top: 30%; left: 50%; transform: translate(-50%, -50%);
+        color: #ff0044; font-size: 48px; font-weight: bold;
+        text-shadow: 0 0 20px #ff0044, 0 0 40px #ff0000;
+        animation: blink 0.5s infinite; pointer-events: none; z-index: 100;
+    `;
+    warning.textContent = '⚠️ WARNING: BOSS APPROACHING ⚠️';
+    document.body.appendChild(warning);
+    
+    setTimeout(() => {
+        warning.remove();
+    }, 3000);
 }
 
 // 创建爆炸
@@ -417,9 +613,22 @@ function update() {
             continue;
         }
         
-        // 移动和旋转
-        e.mesh.position.z += e.speed;
-        e.mesh.rotation.set(0, Math.PI, 0);
+        // BOSS特殊行为
+        if (e.isBoss) {
+            // BOSS左右移动
+            e.mesh.position.x = Math.sin(now * 0.001) * 3;
+            // BOSS缓慢旋转展示
+            e.mesh.rotation.y = Math.PI + Math.sin(now * 0.0005) * 0.2;
+            // BOSS发射弹幕
+            if (now - e.lastShot > e.shootInterval) {
+                bossShoot(e);
+                e.lastShot = now;
+            }
+        } else {
+            // 普通敌机行为
+            e.mesh.position.z += e.speed;
+            e.mesh.rotation.set(0, Math.PI, 0);
+        }
         
         // 更新血条
         if (e.healthBar && e.healthBar.draw) {
@@ -481,6 +690,31 @@ function update() {
         if (hit) continue;
     }
     
+    // 更新敌机子弹（包括BOSS弹幕）
+    for (let i = enemyBullets.length - 1; i >= 0; i--) {
+        const b = enemyBullets[i];
+        if (b.userData.velocity) {
+            b.position.add(b.userData.velocity);
+        } else {
+            b.position.z += 0.5;
+        }
+        
+        // 检测击中玩家
+        const bulletBox = new THREE.Box3().setFromObject(b);
+        if (bulletBox.intersectsBox(playerBox)) {
+            takeDamage(15);
+            scene.remove(b);
+            enemyBullets.splice(i, 1);
+            continue;
+        }
+        
+        // 飞出屏幕
+        if (b.position.z > 15) {
+            scene.remove(b);
+            enemyBullets.splice(i, 1);
+        }
+    }
+    
     // 更新粒子
     for (let i = particles.length - 1; i >= 0; i--) {
         const p = particles[i];
@@ -520,6 +754,8 @@ function startGame() {
     enemies = [];
     bullets.forEach(b => scene.remove(b));
     bullets = [];
+    enemyBullets.forEach(b => scene.remove(b));
+    enemyBullets = [];
     particles.forEach(p => scene.remove(p));
     particles = [];
     
