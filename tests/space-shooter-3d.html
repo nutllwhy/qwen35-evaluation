@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D 太空射击 - 稳定修复版</title>
+    <title>3D 太空射击 - 血条版</title>
     <style>
         body { margin: 0; overflow: hidden; background: #000; font-family: Arial, sans-serif; }
         #game-container { width: 100vw; height: 100vh; }
@@ -36,19 +36,17 @@
     </div>
     <div id="menu">
         <h1>STAR FIGHTER</h1>
-        <p>WASD 移动 | 空格 射击<br>敌机撞击会扣血！</p>
+        <p>WASD 移动 | 空格 射击<br>大型目标更易击中！每个目标有血条</p>
         <button onclick="startGame()">开始游戏</button>
     </div>
 
 <script>
-// 游戏变量
 let scene, camera, renderer, player;
-let bullets = [], enemies = [], particles = [];
+let bullets = [], enemies = [], particles = [], healthBars = [];
 let score = 0, wave = 1, health = 100;
 let isPlaying = false, keys = {}, lastShot = 0;
 let audioCtx;
 
-// 音效
 function initAudio() { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
 function playShootSound() {
     if (!audioCtx) return;
@@ -98,6 +96,49 @@ function playHitSound() {
     osc.stop(audioCtx.currentTime + 0.3);
 }
 
+// 创建血条
+function createHealthBar(maxHp) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 64;
+    canvas.height = 8;
+    const ctx = canvas.getContext('2d');
+    
+    // 绘制血条背景
+    ctx.fillStyle = '#333';
+    ctx.fillRect(0, 0, 64, 8);
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(0, 0, 64, 8);
+    
+    // 绘制血量
+    ctx.fillStyle = '#0f0';
+    ctx.fillRect(2, 2, 60, 4);
+    
+    const texture = new THREE.CanvasTexture(canvas);
+    const material = new THREE.SpriteMaterial({ map: texture });
+    const sprite = new THREE.Sprite(material);
+    sprite.scale.set(2, 0.25, 1);
+    sprite.position.y = 1.5;
+    return { sprite, canvas, ctx, maxHp };
+}
+
+// 更新血条
+function updateHealthBar(healthBar, currentHp, maxHp) {
+    const ctx = healthBar.ctx;
+    const canvas = healthBar.canvas;
+    
+    ctx.fillStyle = '#333';
+    ctx.fillRect(0, 0, 64, 8);
+    ctx.strokeStyle = '#fff';
+    ctx.strokeRect(0, 0, 64, 8);
+    
+    const percent = currentHp / maxHp;
+    ctx.fillStyle = percent > 0.5 ? '#0f0' : percent > 0.25 ? '#ff0' : '#f00';
+    ctx.fillRect(2, 2, 60 * percent, 4);
+    
+    healthBar.sprite.material.map.needsUpdate = true;
+}
+
 // 创建玩家飞船
 function createPlayerShip() {
     const group = new THREE.Group();
@@ -134,31 +175,39 @@ function createPlayerShip() {
     return group;
 }
 
-// 创建敌机
+// 创建敌机 - 增大尺寸！
 function createEnemyShip(type) {
     const group = new THREE.Group();
+    
     if (type === 'fast') {
-        const bodyGeo = new THREE.ConeGeometry(0.4, 1.5, 3);
+        // 快速型 - 增大50%
+        const bodyGeo = new THREE.ConeGeometry(0.6, 2.2, 3); // 原来0.4,1.5
         bodyGeo.rotateX(-Math.PI / 2);
         const bodyMat = new THREE.MeshStandardMaterial({ color: 0xff6600, metalness: 0.7, roughness: 0.3 });
         const body = new THREE.Mesh(bodyGeo, bodyMat);
         group.add(body);
+        return { group, hp: 5, maxHp: 5, speed: 0.22 }; // 需要5发子弹
+        
     } else if (type === 'heavy') {
-        const bodyGeo = new THREE.BoxGeometry(1.2, 0.6, 1.5);
+        // 重型 - 增大50%
+        const bodyGeo = new THREE.BoxGeometry(1.8, 0.9, 2.2); // 原来1.2,0.6,1.5
         const bodyMat = new THREE.MeshStandardMaterial({ color: 0x6622aa, metalness: 0.8, roughness: 0.4 });
         const body = new THREE.Mesh(bodyGeo, bodyMat);
         group.add(body);
+        return { group, hp: 15, maxHp: 15, speed: 0.08 }; // 需要15发子弹
+        
     } else {
-        const bodyGeo = new THREE.CylinderGeometry(0.3, 0.3, 1.2, 6);
+        // 标准型 - 增大50%
+        const bodyGeo = new THREE.CylinderGeometry(0.45, 0.45, 1.8, 6); // 原来0.3,1.2
         bodyGeo.rotateX(Math.PI / 2);
         const bodyMat = new THREE.MeshStandardMaterial({ color: 0xff3333, metalness: 0.7, roughness: 0.3 });
         const body = new THREE.Mesh(bodyGeo, bodyMat);
         group.add(body);
-        const wingGeo = new THREE.BoxGeometry(1.5, 0.1, 0.5);
+        const wingGeo = new THREE.BoxGeometry(2.2, 0.15, 0.75); // 原来1.5,0.1,0.5
         const wing = new THREE.Mesh(wingGeo, bodyMat);
         group.add(wing);
+        return { group, hp: 8, maxHp: 8, speed: 0.12 }; // 需要8发子弹
     }
-    return group;
 }
 
 // 初始化
@@ -205,10 +254,10 @@ function init() {
 // 发射子弹
 function shoot() {
     const now = Date.now();
-    if (now - lastShot < 200) return;
+    if (now - lastShot < 150) return; // 更快的射击速度
     lastShot = now;
     playShootSound();
-    const geometry = new THREE.CylinderGeometry(0.05, 0.05, 1.5, 6);
+    const geometry = new THREE.CylinderGeometry(0.08, 0.08, 1.5, 6); // 稍大的子弹
     geometry.rotateX(Math.PI / 2);
     const material = new THREE.MeshBasicMaterial({ color: 0x00ffff, emissive: 0x00ffff });
     const bullet = new THREE.Mesh(geometry, material);
@@ -224,28 +273,39 @@ let enemySpawnTimer = 0;
 function spawnEnemy() {
     const types = ['normal', 'fast', 'heavy'];
     const type = types[Math.floor(Math.random() * types.length)];
-    const enemy = createEnemyShip(type);
-    enemy.position.set((Math.random() - 0.5) * 16, 0, -40 - Math.random() * 10);
-    let speed, hp;
-    if (type === 'fast') { speed = 0.28; hp = 1; }
-    else if (type === 'heavy') { speed = 0.12; hp = 4; }
-    else { speed = 0.18; hp = 2; }
-    speed *= (1 + wave * 0.08);
+    const enemyData = createEnemyShip(type);
+    const enemy = enemyData.group;
+    enemy.position.set((Math.random() - 0.5) * 14, 0, -35 - Math.random() * 10);
+    
+    let speed = enemyData.speed * (1 + wave * 0.05);
+    
     scene.add(enemy);
-    enemies.push({ mesh: enemy, type, speed, hp, maxHp: hp });
+    
+    // 创建血条
+    const healthBar = createHealthBar(enemyData.maxHp);
+    enemy.add(healthBar.sprite);
+    
+    enemies.push({ 
+        mesh: enemy, 
+        type, 
+        speed, 
+        hp: enemyData.hp, 
+        maxHp: enemyData.maxHp,
+        healthBar: healthBar
+    });
 }
 
-// 创建爆炸 - 简化版
+// 创建爆炸
 function createExplosion(position, color) {
-    for (let i = 0; i < 6; i++) {
-        const geo = new THREE.SphereGeometry(0.15, 6, 6);
+    for (let i = 0; i < 8; i++) {
+        const geo = new THREE.SphereGeometry(0.2, 6, 6);
         const mat = new THREE.MeshBasicMaterial({ color: color });
         const p = new THREE.Mesh(geo, mat);
         p.position.copy(position);
         p.userData.velocity = new THREE.Vector3(
-            (Math.random() - 0.5) * 0.4,
-            (Math.random() - 0.5) * 0.4,
-            (Math.random() - 0.5) * 0.4
+            (Math.random() - 0.5) * 0.5,
+            (Math.random() - 0.5) * 0.5,
+            (Math.random() - 0.5) * 0.5
         );
         scene.add(p);
         particles.push(p);
@@ -272,7 +332,7 @@ function gameOver() {
     document.querySelector('#menu button').textContent = '重新开始';
 }
 
-// 游戏主循环 - 修复版
+// 游戏主循环
 function update() {
     if (!isPlaying) return;
     
@@ -299,13 +359,13 @@ function update() {
     
     // 生成敌机
     enemySpawnTimer++;
-    const spawnRate = Math.max(30, 100 - wave * 8);
+    const spawnRate = Math.max(40, 120 - wave * 5); // 稍慢的生成速度
     if (enemySpawnTimer > spawnRate) {
         spawnEnemy();
         enemySpawnTimer = 0;
     }
     
-    // 碰撞检测 - 关键修复：使用标记数组
+    // 碰撞检测
     const playerBox = new THREE.Box3().setFromObject(player);
     const enemiesToRemove = [];
     const bulletsToRemove = [];
@@ -313,7 +373,13 @@ function update() {
     for (let i = 0; i < enemies.length; i++) {
         const e = enemies[i];
         e.mesh.position.z += e.speed;
-        e.mesh.rotation.y += 0.03;
+        e.mesh.rotation.y += 0.02;
+        
+        // 更新血条位置
+        if (e.healthBar) {
+            updateHealthBar(e.healthBar, e.hp, e.maxHp);
+        }
+        
         const enemyBox = new THREE.Box3().setFromObject(e.mesh);
         
         // 撞击玩家
@@ -337,15 +403,28 @@ function update() {
             if (bulletBox.intersectsBox(enemyBox)) {
                 e.hp--;
                 bulletsToRemove.push(j);
+                
+                // 命中反馈 - 闪烁
+                e.mesh.children.forEach(child => {
+                    if (child.material) child.material.emissive = new THREE.Color(0xffffff);
+                });
+                setTimeout(() => {
+                    e.mesh.children.forEach(child => {
+                        if (child.material) child.material.emissive = new THREE.Color(0x000000);
+                    });
+                }, 50);
+                
                 if (e.hp <= 0) {
                     const color = e.type === 'fast' ? 0xff6600 : e.type === 'heavy' ? 0xff00ff : 0xff0000;
                     createExplosion(e.mesh.position, color);
                     playExplosionSound();
                     enemiesToRemove.push(i);
-                    const points = e.type === 'fast' ? 250 : e.type === 'heavy' ? 400 : 150;
+                    
+                    const points = e.type === 'fast' ? 100 : e.type === 'heavy' ? 300 : 200;
                     score += points;
                     document.getElementById('score').textContent = 'SCORE: ' + score;
-                    if (score > wave * 600) {
+                    
+                    if (score > wave * 800) {
                         wave++;
                         document.getElementById('wave').textContent = 'WAVE: ' + wave;
                     }
@@ -355,7 +434,7 @@ function update() {
         }
     }
     
-    // 安全删除（从后往前）
+    // 安全删除
     enemiesToRemove.sort((a, b) => b - a);
     for (const idx of enemiesToRemove) {
         if (enemies[idx]) {
