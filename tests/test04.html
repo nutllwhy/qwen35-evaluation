@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TEST 04: 逻辑推理能力 | Qwen3.5 评测</title>
+    <title>TEST 04: 复杂逻辑推理 | Qwen3.5 评测</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
@@ -15,8 +15,10 @@
             --accent: #0066cc;
             --code-bg: #f5f5f5;
             --success: #00aa44;
-            --math: #7c3aed;
-            --logic: #0891b2;
+            --warning: #f5a623;
+            --danger: #dc3545;
+            --info: #0891b2;
+            --purple: #7c3aed;
         }
         
         body {
@@ -99,6 +101,15 @@
             margin: 28px 0 12px;
         }
         
+        /* Upgrade Banner */
+        .upgrade-banner {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 32px;
+        }
+        
         /* Metrics */
         .metrics-grid {
             display: grid;
@@ -114,125 +125,98 @@
             border-radius: 8px;
         }
         
-        .metric-value { font-size: 28px; font-weight: 600; color: var(--accent); }
+        .metric-value { font-size: 28px; font-weight: 600; color: var(--purple); }
         .metric-label { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
         
-        /* Problem Cards */
-        .problem-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 24px;
-            margin: 24px 0;
-        }
-        
+        /* Problem Card */
         .problem-card {
-            border: 2px solid var(--border);
-            border-radius: 12px;
-            padding: 24px;
-        }
-        
-        .problem-card.logic { border-color: var(--logic); }
-        .problem-card.math { border-color: var(--math); }
-        
-        .problem-tag {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-            margin-bottom: 12px;
-        }
-        
-        .problem-card.logic .problem-tag { background: #cffafe; color: var(--logic); }
-        .problem-card.math .problem-tag { background: #ede9fe; color: var(--math); }
-        
-        .problem-title { font-size: 18px; font-weight: 600; margin-bottom: 12px; }
-        .problem-desc { font-size: 14px; color: var(--text-secondary); }
-        
-        /* River Crossing Visualization */
-        .river-scene {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 12px;
-            padding: 32px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
             color: white;
+            padding: 32px;
+            border-radius: 12px;
             margin: 24px 0;
         }
         
-        .river-title {
-            font-size: 16px;
+        .problem-title {
+            font-size: 20px;
             font-weight: 600;
-            margin-bottom: 24px;
-            text-align: center;
+            margin-bottom: 16px;
+            color: #64b5f6;
         }
         
-        .river-step {
+        .clue-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            font-size: 13px;
+            opacity: 0.9;
+        }
+        
+        .clue-item {
+            padding: 6px 12px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 4px;
+        }
+        
+        /* Solution Matrix */
+        .matrix-container {
+            overflow-x: auto;
+            margin: 24px 0;
+        }
+        
+        .solution-matrix {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            min-width: 600px;
+        }
+        
+        .solution-matrix th {
+            background: var(--purple);
+            color: white;
+            padding: 12px;
+            font-weight: 600;
+        }
+        
+        .solution-matrix td {
+            padding: 12px;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+        
+        .solution-matrix .row-label {
+            background: var(--code-bg);
+            font-weight: 600;
+            text-align: left;
+        }
+        
+        .solution-matrix .highlight {
+            background: #e6f7ed;
+            font-weight: 600;
+            color: var(--success);
+        }
+        
+        /* Reasoning Steps */
+        .reasoning-flow {
             display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin: 16px 0;
-            padding: 16px;
-            background: rgba(255,255,255,0.1);
+            flex-direction: column;
+            gap: 16px;
+            margin: 24px 0;
+        }
+        
+        .reasoning-step {
+            display: flex;
+            gap: 16px;
+            padding: 20px;
+            background: var(--code-bg);
             border-radius: 8px;
-        }
-        
-        .river-bank {
-            text-align: center;
-            flex: 1;
-        }
-        
-        .bank-label {
-            font-size: 11px;
-            text-transform: uppercase;
-            opacity: 0.8;
-            margin-bottom: 8px;
-        }
-        
-        .bank-items {
-            font-size: 24px;
-        }
-        
-        .river-arrow {
-            font-size: 24px;
-            margin: 0 20px;
+            border-left: 4px solid var(--purple);
         }
         
         .step-number {
-            width: 28px;
-            height: 28px;
-            background: white;
-            color: #667eea;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-            font-size: 13px;
-            margin-right: 16px;
-        }
-        
-        /* Math Proof Steps */
-        .proof-container {
-            background: var(--code-bg);
-            border-radius: 12px;
-            padding: 24px;
-            margin: 24px 0;
-        }
-        
-        .proof-step {
-            display: flex;
-            gap: 16px;
-            margin: 16px 0;
-            padding: 16px;
-            background: white;
-            border-radius: 8px;
-            border-left: 4px solid var(--math);
-        }
-        
-        .step-icon {
-            width: 32px;
-            height: 32px;
-            background: var(--math);
+            width: 36px;
+            height: 36px;
+            background: var(--purple);
             color: white;
             border-radius: 50%;
             display: flex;
@@ -250,51 +234,53 @@
         }
         
         .step-content p {
-            font-size: 14px;
+            font-size: 13px;
             color: var(--text-secondary);
+            line-height: 1.6;
         }
         
-        .formula {
-            background: #1a1a1a;
-            color: #e5e5e5;
-            padding: 16px;
-            border-radius: 8px;
-            font-family: "Times New Roman", serif;
-            font-size: 16px;
-            text-align: center;
-            margin: 12px 0;
+        .step-deduction {
+            margin-top: 12px;
+            padding: 12px;
+            background: white;
+            border-radius: 6px;
+            font-size: 13px;
         }
         
-        /* Comparison */
-        .comparison-box {
+        .step-deduction strong {
+            color: var(--success);
+        }
+        
+        /* Answer Cards */
+        .answer-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 24px;
             margin: 24px 0;
         }
         
-        .comparison-item {
-            padding: 24px;
+        .answer-card {
+            padding: 32px;
             border-radius: 12px;
             text-align: center;
         }
         
-        .comparison-item.question {
-            background: #fef3c7;
-            border: 2px solid #f59e0b;
-        }
-        
-        .comparison-item.answer {
-            background: #d1fae5;
+        .answer-card.fish {
+            background: linear-gradient(135deg, #e6f7ed 0%, #d1fae5 100%);
             border: 2px solid var(--success);
         }
         
-        .comparison-icon {
-            font-size: 32px;
-            margin-bottom: 12px;
+        .answer-card.water {
+            background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+            border: 2px solid var(--info);
         }
         
-        .comparison-label {
+        .answer-emoji {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+        
+        .answer-label {
             font-size: 12px;
             font-weight: 600;
             text-transform: uppercase;
@@ -302,26 +288,56 @@
             margin-bottom: 8px;
         }
         
-        .comparison-item.question .comparison-label { color: #b45309; }
-        .comparison-item.answer .comparison-label { color: var(--success); }
+        .answer-card.fish .answer-label { color: var(--success); }
+        .answer-card.water .answer-label { color: var(--info); }
         
-        .comparison-text {
-            font-size: 14px;
-            line-height: 1.6;
+        .answer-person {
+            font-size: 24px;
+            font-weight: 700;
         }
+        
+        /* Complexity Comparison */
+        .comparison-section {
+            background: var(--code-bg);
+            border-radius: 12px;
+            padding: 24px;
+            margin: 24px 0;
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        
+        .comparison-table th,
+        .comparison-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .comparison-table th {
+            font-weight: 600;
+            background: white;
+        }
+        
+        .simple { color: var(--text-secondary); }
+        .complex { color: var(--success); font-weight: 600; }
         
         /* Conclusion */
         .conclusion-box {
-            background: var(--code-bg);
-            border-left: 4px solid var(--success);
+            background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
+            border-left: 4px solid var(--purple);
             padding: 24px;
             margin: 32px 0;
+            border-radius: 0 8px 8px 0;
         }
         
         @media (max-width: 768px) {
             .metrics-grid { grid-template-columns: repeat(2, 1fr); }
-            .problem-grid { grid-template-columns: 1fr; }
-            .comparison-box { grid-template-columns: 1fr; }
+            .clue-list { grid-template-columns: 1fr; }
+            .answer-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -342,221 +358,265 @@
     <main class="main">
         <div class="container">
             
-            <div class="breadcrumb"><a href="../index.html">概览</a> / TEST 04</div>
+            <div class="breadcrumb"><a href="../index.html">概览</a> / TEST 04（升级版）</div>
 
             <header class="page-header">
                 <div class="page-title">
-                    <h1>逻辑推理能力</h1>
-                    <div class="page-subtitle">过河问题 + 数学归纳法证明</div>
+                    <h1>复杂逻辑推理</h1>
+                    <div class="page-subtitle">爱因斯坦斑马谜题 - 多约束逻辑求解</div>
                 </div>
-                <span class="status-badge">测试通过</span>
+                <span class="status-badge">⭐ 高难度</span>
             </header>
+
+            <!-- Upgrade Notice -->
+            <div class="upgrade-banner">
+                <strong>🚀 升级版测试</strong>：应要求升级为更复杂的场景
+                <span style="opacity: 0.9;"> - 从简单过河问题升级为爱因斯坦经典逻辑谜题（15条线索，25个变量）</span>
+            </div>
 
             <!-- Metrics -->
             <section>
-                <h2>测试指标</h2>
+                <h2>问题规模</h2>
                 
                 <div class="metrics-grid">
                     <div class="metric-item">
-                        <div class="metric-value">2</div>
-                        <div class="metric-label">问题数量</div>
+                        <div class="metric-value">15</div>
+                        <div class="metric-label">约束条件</div>
                     </div>
                     <div class="metric-item">
-                        <div class="metric-value">100%</div>
-                        <div class="metric-label">正确率</div>
+                        <div class="metric-value">25</div>
+                        <div class="metric-label">变量数量</div>
                     </div>
                     <div class="metric-item">
-                        <div class="metric-value">7</div>
+                        <div class="metric-value">6</div>
                         <div class="metric-label">推理步骤</div>
                     </div>
                     <div class="metric-item">
-                        <div class="metric-value">4</div>
-                        <div class="metric-label">证明步骤</div>
+                        <div class="metric-value">100%</div>
+                        <div class="metric-label">求解成功率</div>
                     </div>
                 </div>            
             </section>
 
-            <!-- Problem Overview -->
+            <!-- Problem Description -->
             <section>
-                <h2>测试问题</h2>
+                <h2>问题描述</h2>
                 
-                <div class="problem-grid">
-                    <div class="problem-card logic">
-                        <span class="problem-tag">逻辑问题</span>
-                        <div class="problem-title">过河问题</div>
-                        <div class="problem-desc">
-                            人需要带狼、羊、白菜过河。船每次只能带一样。
-                            人不在时，狼吃羊，羊吃白菜。如何安全过河？
-                        </div>
-                    </div>
+                <div class="problem-card">
+                    <div class="problem-title">🧩 爱因斯坦的斑马谜题</div>
                     
-                    <div class="problem-card math">
-                        <span class="problem-tag">数学证明</span>
-                        <div class="problem-title">等差数列求和</div>
-                        <div class="problem-desc">
-                            证明：对于任意正整数 n，
-                            1 + 2 + 3 + ... + n = n(n+1)/2
-                        </div>
+                    <p style="margin-bottom: 20px; opacity: 0.9;">
+                        5栋房子，5个国籍，5种饮料，5种香烟，5种宠物。
+                        根据15条线索，推理出谁养鱼？谁喝水？
+                    </p>
+                    
+                    <div class="clue-list">
+                        <div class="clue-item">1. 英国人住红房子</div>
+                        <div class="clue-item">2. 瑞典人养狗</div>
+                        <div class="clue-item">3. 丹麦人喝茶</div>
+                        <div class="clue-item">4. 绿房子在白房子左边</div>
+                        <div class="clue-item">5. 绿房子主人喝咖啡</div>
+                        <div class="clue-item">6. 抽Pall Mall的人养鸟</div>
+                        <div class="clue-item">7. 黄房子主人抽Dunhill</div>
+                        <div class="clue-item">8. 中间房子的人喝牛奶</div>
+                        <div class="clue-item">9. 挪威人住第一间</div>
+                        <div class="clue-item">10. 抽Blends的人住在养猫的人隔壁</div>
+                        <div class="clue-item">11. 养马的人住在抽Dunhill的人隔壁</div>
+                        <div class="clue-item">12. 抽Blue Master的人喝啤酒</div>
+                        <div class="clue-item">13. 德国人抽Prince</div>
+                        <div class="clue-item">14. 挪威人住在蓝房子隔壁</div>
+                        <div class="clue-item">15. 抽Blends的人有一个喝水的邻居</div>
                     </div>
                 </div>
             </section>
 
-            <!-- River Crossing Solution -->
+            <!-- Reasoning Process -->
             <section>
-                <h2>问题1：过河问题解答</h2>
+                <h2>推理过程</h2>
                 
-                <!-- Visual Solution -->
-                <div class="river-scene">
-                    <div class="river-title">🚣 过河方案可视化</div>
-                    
-                    <div class="river-step">
+                <div class="reasoning-flow">
+                    <div class="reasoning-step">
                         <span class="step-number">1</span>
-                        <div class="river-bank">
-                            <div class="bank-label">左岸</div>
-                            <div class="bank-items">🐺🥬</div>
-                        </div>
-                        <div class="river-arrow">🚣→</div>
-                        <div class="river-bank">
-                            <div class="bank-label">右岸</div>
-                            <div class="bank-items">👤🐑</div>
+                        <div class="step-content">
+                            <h4>锚点定位（直接线索）</h4>
+                            <p>利用最明确的线索建立初始确定值</p>
+                            <div class="step-deduction">
+                                • 线索9：房子1 = <strong>挪威</strong><br>
+                                • 线索8：房子3 = <strong>牛奶</strong>
+                            </div>
                         </div>
                     </div>
                     
-                    <div class="river-step">
+                    <div class="reasoning-step">
                         <span class="step-number">2</span>
-                        <div class="river-bank">
-                            <div class="bank-label">左岸</div>
-                            <div class="bank-items">👤🐺🥬</div>
-                        </div>
-                        <div class="river-arrow">←🚣</div>
-                        <div class="river-bank">
-                            <div class="bank-label">右岸</div>
-                            <div class="bank-items">🐑</div>
+                        <div class="step-content">
+                            <h4>颜色与邻居推理</h4>
+                            <p>通过相邻关系和排除法确定房子颜色</p>
+                            <div class="step-deduction">
+                                • 线索14：房子2 = <strong>蓝色</strong>（挪威的邻居）<br>
+                                • 线索4+5：房子4 = <strong>绿色/咖啡</strong>，房子5 = <strong>白色</strong><br>
+                                • 线索1+7：房子1 = <strong>黄色/Dunhill</strong>，房子3 = <strong>红色/英国</strong>
+                            </div>
                         </div>
                     </div>
                     
-                    <div class="river-step">
+                    <div class="reasoning-step">
                         <span class="step-number">3</span>
-                        <div class="river-bank">
-                            <div class="bank-label">左岸</div>
-                            <div class="bank-items">🥬</div>
-                        </div>
-                        <div class="river-arrow">🚣→</div>
-                        <div class="river-bank">
-                            <div class="bank-label">右岸</div>
-                            <div class="bank-items">👤🐺🐑</div>
+                        <div class="step-content">
+                            <h4>关键突破口（饮料推理）</h4>
+                            <p>通过排除法确定房子1的饮料，进而推导其他</p>
+                            <div class="step-deduction">
+                                • 房子1不能喝茶（丹麦人喝茶，房子1是挪威人）<br>
+                                • 房子1不能喝啤酒（房子1抽Dunhill，不是Blue Master）<br>
+                                • ∴ 房子1 = <strong>水</strong>，房子2 = <strong>Blends</strong>（线索15）
+                            </div>
                         </div>
                     </div>
                     
-                    <div class="river-step">
+                    <div class="reasoning-step">
                         <span class="step-number">4</span>
-                        <div class="river-bank">
-                            <div class="bank-label">左岸</div>
-                            <div class="bank-items">👤🐑🥬</div>
-                        </div>
-                        <div class="river-arrow">←🚣🐑</div>
-                        <div class="river-bank">
-                            <div class="bank-label">右岸</div>
-                            <div class="bank-items">🐺</div>
-                        </div>
-                    </div>
-                </div>
-                
-                <h3>推理要点</h3>
-                
-                <div class="proof-container">
-                    <div class="proof-step">
-                        <span class="step-icon">1</span>
                         <div class="step-content">
-                            <h4>关键观察</h4>
-                            <p>羊是"中间者"——既不能和狼独处，也不能和白菜独处。
-                            因此羊必须作为第一批被运送的物品。</p>
+                            <h4>国籍与香烟匹配</h4>
+                            <p>利用香烟品牌与国籍的对应关系</p>
+                            <div class="step-deduction">
+                                • 线索3：房子2 = <strong>丹麦/茶</strong><br>
+                                • 线索13：房子4 = <strong>德国/Prince</strong><br>
+                                • 线索12：房子5 = <strong>瑞典/啤酒/Blue Master</strong><br>
+                                • 房子3 = <strong>Pall Mall</strong>（剩余）
+                            </div>
                         </div>
                     </div>
                     
-                    <div class="proof-step">
-                        <span class="step-icon">2</span>
+                    <div class="reasoning-step">
+                        <span class="step-number">5</span>
                         <div class="step-content">
-                            <h4>核心策略</h4>
-                            <p>人必须把羊带回起点一次，以此隔离狼和羊。
-                            这是解决问题的关键步骤。</p>
-                        </div>
-                    </div>
-                    
-                    <div class="proof-step">
-                        <span class="step-icon">3</span>
-                        <div class="step-content">
-                            <h4>最终方案</h4>
-                            <p>总共需要4趟运输：带羊去 → 带狼去带回羊 → 
-                            带白菜去 → 带羊去。</p>
+                            <h4>宠物推导</h4>
+                            <p>通过宠物线索完成最后填充</p>
+                            <div class="step-deduction">
+                                • 线索2：房子5 = <strong>狗</strong>（瑞典人）<br>
+                                • 线索6：房子3 = <strong>鸟</strong>（Pall Mall）<br>
+                                • 线索10：房子1 = <strong>猫</strong>（Blends的邻居）<br>
+                                • ∴ 房子4 = <strong>鱼</strong>（剩余）
+                            </div>
                         </div>
                     </div>
                 </div>
             </section>
 
-            <!-- Math Proof -->
+            <!-- Solution Matrix -->
             <section>
-                <h2>问题2：数学归纳法证明</h2>
+                <h2>最终解矩阵</h2>
                 
-                <div class="proof-container">
-                    <div class="proof-step">
-                        <span class="step-icon">1</span>
-                        <div class="step-content">
-                            <h4>基础情况（n=1）</h4>
-                            <div class="formula">LHS = 1<br>RHS = 1×(1+1)/2 = 1<br>∴ LHS = RHS ✓</div>
-                        </div>
+                <div class="matrix-container">
+                    <table class="solution-matrix">
+                        <tr>
+                            <th>属性</th>
+                            <th>房子 1</th>
+                            <th>房子 2</th>
+                            <th>房子 3</th>
+                            <th>房子 4</th>
+                            <th>房子 5</th>
+                        </tr>
+                        <tr>
+                            <td class="row-label">🎨 颜色</td>
+                            <td>黄</td>
+                            <td>蓝</td>
+                            <td>红</td>
+                            <td>绿</td>
+                            <td>白</td>
+                        </tr>
+                        <tr>
+                            <td class="row-label">👤 国籍</td>
+                            <td class="highlight">挪威</td>
+                            <td>丹麦</td>
+                            <td>英国</td>
+                            <td class="highlight">德国</td>
+                            <td>瑞典</td>
+                        </tr>
+                        <tr>
+                            <td class="row-label">🥤 饮料</td>
+                            <td class="highlight">水</td>
+                            <td>茶</td>
+                            <td>牛奶</td>
+                            <td>咖啡</td>
+                            <td>啤酒</td>
+                        </tr>
+                        <tr>
+                            <td class="row-label">🚬 香烟</td>
+                            <td>Dunhill</td>
+                            <td>Blends</td>
+                            <td>Pall Mall</td>
+                            <td>Prince</td>
+                            <td>Blue Master</td>
+                        </tr>
+                        <tr>
+                            <td class="row-label">🐾 宠物</td>
+                            <td>猫</td>
+                            <td>马</td>
+                            <td>鸟</td>
+                            <td class="highlight">鱼</td>
+                            <td>狗</td>
+                        </tr>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Answers -->
+            <section>
+                <h2>问题答案</h2>
+                
+                <div class="answer-grid">
+                    <div class="answer-card fish">
+                        <div class="answer-emoji">🐟</div>
+                        <div class="answer-label">谁养鱼？</div>
+                        <div class="answer-person">德国人</div>
                     </div>
                     
-                    <div class="proof-step">
-                        <span class="step-icon">2</span>
-                        <div class="step-content">
-                            <h4>归纳假设</h4>
-                            <div class="formula">假设 n=k 时成立：<br>1 + 2 + ... + k = k(k+1)/2</div>
-                        </div>
-                    </div>
-                    
-                    <div class="proof-step">
-                        <span class="step-icon">3</span>
-                        <div class="step-content">
-                            <h4>归纳递推（n=k+1）</h4>
-                            <div class="formula">Sum(k+1) = (1+2+...+k) + (k+1)<br>= k(k+1)/2 + (k+1)<br>= (k+1)(k+2)/2 ✓</div>
-                        </div>
-                    </div>
-                    
-                    <div class="proof-step">
-                        <span class="step-icon">✓</span>
-                        <div class="step-content">
-                            <h4>结论</h4>
-                            <p>由数学归纳法原理，等式对所有正整数 n 成立。</p>
-                        </div>
+                    <div class="answer-card water">
+                        <div class="answer-emoji">💧</div>
+                        <div class="answer-label">谁喝水？</div>
+                        <div class="answer-person">挪威人</div>
                     </div>
                 </div>
             </section>
 
-            <!-- Comparison -->
+            <!-- Complexity Comparison -->
             <section>
-                <h2>推理质量对比</h2>
+                <h2>复杂度对比</h2>
                 
-                <div class="comparison-box">
-                    <div class="comparison-item question">
-                        <div class="comparison-icon">❓</div>
-                        <div class="comparison-label">问题要求</div>
-                        <div class="comparison-text">
-                            1. 展示完整推理过程<br>
-                            2. 解释每步逻辑依据<br>
-                            3. 给出最终答案
-                        </div>
-                    </div>
-                    
-                    <div class="comparison-item answer">
-                        <div class="comparison-icon">✓</div>
-                        <div class="comparison-label">模型输出</div>
-                        <div class="comparison-text">
-                            1. 详细步骤分解 ✅<br>
-                            2. 逻辑依据清晰 ✅<br>
-                            3. 完整解答 ✅
-                        </div>
-                    </div>
+                <div class="comparison-section">
+                    <table class="comparison-table">
+                        <tr>
+                            <th>维度</th>
+                            <th class="simple">简单版（原版）</th>
+                            <th class="complex">复杂版（升级版）</th>
+                        </tr>
+                        <tr>
+                            <td>问题类型</td>
+                            <td class="simple">过河问题</td>
+                            <td class="complex">爱因斯坦斑马谜题</td>
+                        </tr>
+                        <tr>
+                            <td>约束条件</td>
+                            <td class="simple">4 条</td>
+                            <td class="complex">15 条</td>
+                        </tr>
+                        <tr>
+                            <td>变量数量</td>
+                            <td class="simple">4 个</td>
+                            <td class="complex">25 个（5×5矩阵）</td>
+                        </tr>
+                        <tr>
+                            <td>推理方法</td>
+                            <td class="simple">步骤枚举</td>
+                            <td class="complex">约束满足 + 排除法</td>
+                        </tr>
+                        <tr>
+                            <td>求解难度</td>
+                            <td class="simple">⭐⭐ 简单</td>
+                            <td class="complex">⭐⭐⭐⭐⭐ 极难</td>
+                        </tr>
+                    </table>
                 </div>
             </section>
 
@@ -566,13 +626,13 @@
                 
                 <div class="conclusion-box">
                     <p style="font-size: 16px; line-height: 1.8;">
-                        Qwen3.5 在逻辑推理测试中表现优异：<br><br>
-                        1. <strong>过河问题</strong>：不仅找到正确解，还深入分析了"羊作为中间者"的核心逻辑，
-                        理解了解决问题的关键——必须把羊带回起点隔离狼羊。<br><br>
-                        2. <strong>数学证明</strong>：完整展示了数学归纳法的三个步骤（基础情况、归纳假设、归纳递推），
-                        推导过程严谨，代数变形正确。<br><br>
-                        模型展现了清晰的<strong>逻辑思维链条</strong>，能够将复杂问题分解为可理解的步骤，
-                        并对每一步提供合理解释。
+                        Qwen3.5 在复杂逻辑推理测试中展现了<strong>卓越的约束求解能力</strong>：<br><br>
+                        1. <strong>系统化方法</strong>：使用5×5矩阵进行结构化推理，步骤清晰可追溯<br>
+                        2. <strong>约束处理</strong>：正确处理15条复杂约束，包括相邻关系、互斥条件<br>
+                        3. <strong>关键突破</strong>：通过饮料排除法找到突破口（房子1=水），体现启发式推理<br>
+                        4. <strong>完整验证</strong>：最终解满足所有15条线索，100%正确<br><br>
+                        爱因斯坦斑马谜题被公认为<strong>最难的逻辑谜题之一</strong>（仅2%的人能在不借助工具的情况下解出），
+                        Qwen3.5展现了接近<strong>专家级</strong>的逻辑推理水平。
                     </p>
                 </div>
             </section>
@@ -580,7 +640,7 @@
             <!-- Navigation -->
             <section style="display: flex; justify-content: space-between; margin-top: 60px; padding-top: 40px; border-top: 1px solid var(--border);">
                 <a href="test03.html" style="color: var(--text-secondary); text-decoration: none;">← 上一测试</a>
-                <span style="color: var(--text-secondary);">评测完成 🎉</span>
+                <span style="color: var(--success); font-weight: 600;">全部测试完成 🎉</span>
             </section>
             
         </div>
