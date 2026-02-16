@@ -307,19 +307,6 @@ function createPlayerShip(level = 1) {
     }
     
     return group;
-    tail.position.set(0, 0.4, 1);
-    tail.rotation.x = 0.3;
-    group.add(tail);
-    const engineGeo = new THREE.CylinderGeometry(0.2, 0.35, 0.8, 8);
-    engineGeo.rotateX(Math.PI / 2);
-    const engineMat = new THREE.MeshBasicMaterial({ color: 0x00aaff, emissive: 0x00ffff });
-    const engineL = new THREE.Mesh(engineGeo, engineMat);
-    engineL.position.set(-0.6, -0.1, 1.2);
-    group.add(engineL);
-    const engineR = new THREE.Mesh(engineGeo, engineMat);
-    engineR.position.set(0.6, -0.1, 1.2);
-    group.add(engineR);
-    return group;
 }
 
 // 创建敌机
