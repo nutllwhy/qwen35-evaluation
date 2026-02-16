@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TEST 01: 代码生成能力 | Qwen3.5 评测</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --bg: #ffffff;
+            --text: #111111;
+            --text-secondary: #666666;
+            --border: #e5e5e5;
+            --accent: #0066cc;
+            --code-bg: #f5f5f5;
+            --success: #00aa44;
+            --warning: #f5a623;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+        
+        /* Navigation */
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            z-index: 100;
+        }
+        
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 60px;
+        }
+        
+        .nav-logo { font-weight: 600; font-size: 18px; }
+        
+        .nav-links {
+            display: flex;
+            gap: 32px;
+            list-style: none;
+        }
+        
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-size: 14px;
+            transition: color 0.2s;
+        }
+        
+        .nav-links a:hover, .nav-links a.active { color: var(--text); }
+        
+        /* Main */
+        .main { margin-top: 60px; }
+        .container { max-width: 1000px; margin: 0 auto; padding: 40px 24px; }
+        
+        /* Breadcrumb */
+        .breadcrumb {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+        }
+        
+        .breadcrumb a { color: var(--accent); text-decoration: none; }
+        
+        /* Header */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+        
+        .page-title h1 {
+            font-size: 32px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .page-subtitle {
+            font-size: 16px;
+            color: var(--text-secondary);
+        }
+        
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: #e6f7ed;
+            color: var(--success);
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        
+        .status-badge::before {
+            content: "✓";
+            width: 18px;
+            height: 18px;
+            background: var(--success);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+        }
+        
+        /* Sections */
+        section {
+            margin: 48px 0;
+        }
+        
+        h2 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--text);
+        }
+        
+        h3 {
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            margin: 28px 0 12px;
+        }
+        
+        /* Visual Box */
+        .visual-box {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 24px;
+            margin: 20px 0;
+        }
+        
+        .visual-label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+        }
+        
+        /* Code Block */
+        .code-block {
+            background: #1a1a1a;
+            color: #e5e5e5;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: "SF Mono", Monaco, monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            overflow-x: auto;
+            white-space: pre;
+        }
+        
+        .code-block .comment { color: #6a9955; }
+        .code-block .keyword { color: #569cd6; }
+        .code-block .string { color: #ce9178; }
+        .code-block .function { color: #dcdcaa; }
+        .code-block .type { color: #4ec9b0; }
+        
+        /* Metrics Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin: 24px 0;
+        }
+        
+        .metric-item {
+            text-align: center;
+            padding: 20px;
+            background: var(--code-bg);
+            border-radius: 8px;
+        }
+        
+        .metric-value {
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--accent);
+        }
+        
+        .metric-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+        
+        /* Checklist */
+        .checklist {
+            list-style: none;
+        }
+        
+        .checklist li {
+            padding: 12px 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .checklist li::before {
+            content: "✓";
+            width: 20px;
+            height: 20px;
+            background: var(--success);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+        
+        /* Two Column */
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+        
+        @media (max-width: 768px) {
+            .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+            .two-col { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav">
+        <div class="nav-container">
+            <div class="nav-logo"><a href="../index.html" style="text-decoration:none;color:inherit;">Qwen3.5 评测</a></div>
+            <ul class="nav-links">
+                <li><a href="../index.html">概览</a></li>
+                <li><a href="test01.html" class="active">代码生成</a></li>
+                <li><a href="test02.html">Bug修复</a></li>
+                <li><a href="test03.html">项目生成</a></li>
+                <li><a href="test04.html">逻辑推理</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="main">
+        <div class="container">
+            
+            <div class="breadcrumb">
+                <a href="../index.html">概览</a> / TEST 01
+            </div>
+
+            <header class="page-header">
+                <div class="page-title">
+                    <h1>代码生成能力</h1>
+                    <div class="page-subtitle">验证基础代码生成、注释质量、类型提示规范</div>
+                </div>
+                <span class="status-badge">测试通过</span>
+            </header>
+
+            <!-- Metrics -->
+            <section>
+                <h2>测试指标</h2>
+                <div class="metrics-grid">
+                    <div class="metric-item">
+                        <div class="metric-value">894</div>
+                        <div class="metric-label">输出Token</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value">3.2s</div>
+                        <div class="metric-label">响应时间</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value">双版本</div>
+                        <div class="metric-label">实现方案</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value">5个</div>
+                        <div class="metric-label">测试用例</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Prompt -->
+            <section>
+                <h2>测试输入</h2>                
+                <div class="visual-box">
+                    <div class="visual-label">Prompt</div>
+                    <div style="font-size: 15px; line-height: 1.8;">
+                        写一个 Python 快速排序算法，要求：
+                        <ol style="margin-left: 20px; margin-top: 12px;">
+                            <li>包含详细注释</li>
+                            <li>添加类型提示</li>
+                            <li>包含测试用例</li>
+                        </ol>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Output Analysis -->
+            <section>
+                <h2>输出分析</h2>
+                
+                <h3>通过项</h3>
+                <ul class="checklist">
+                    <li>提供双版本实现（简洁版 + 原地版）</li>
+                    <li>完整类型提示（List[T], TypeVar）</li>
+                    <li>详细中文注释与复杂度分析</li>
+                    <li>5个测试用例覆盖边界情况</li>
+                    <li>主动提供算法对比和使用建议</li>
+                </ul>
+            </section>
+
+            <!-- Code Output -->
+            <section>
+                <h2>模型输出代码</h2>
+                
+                <div class="code-block"><span class="keyword">from</span> typing <span class="keyword">import</span> List, TypeVar
+
+<span class="type">T</span> = <span class="function">TypeVar</span>(<span class="string">'T'</span>)
+
+<span class="keyword">def</span> <span class="function">quick_sort</span>(arr: List[<span class="type">T</span>]) -&gt; List[<span class="type">T</span>]:
+    <span class="comment">"""快速排序主函数（对外接口）</span>
+<span class="comment">    时间复杂度：平均 O(n log n)，最坏 O(n²)</span>
+<span class="comment">    空间复杂度：O(n) - 创建新列表</span>
+<span class="comment">    """</span>
+    <span class="keyword">if</span> <span class="function">len</span>(arr) &lt;= <span class="type">1</span>:
+        <span class="keyword">return</span> arr
+    
+    arr_copy = arr.<span class="function">copy</span>()
+    <span class="function">quick_sort_recursive</span>(arr_copy, <span class="type">0</span>, <span class="function">len</span>(arr_copy) - <span class="type">1</span>)
+    <span class="keyword">return</span> arr_copy</div>
+            </section>
+
+            <!-- Conclusion -->
+            <section>
+                <h2>评测结论</h2>
+                
+                <div class="visual-box" style="border-left: 4px solid var(--success);">
+                    <p style="font-size: 16px; line-height: 1.8;">
+                        Qwen3.5 在代码生成任务中表现出色，不仅生成了正确的快速排序算法，
+                        还主动提供了<strong>双版本实现</strong>（简洁版适合教学，原地版适合生产），
+                        并包含完整的类型提示、详细注释和复杂度分析。<br><br>
+                        特别值得注意的是，模型主动考虑了<strong>软件工程实践</strong>，
+                        提供了算法对比表和使用建议，体现出对实际开发场景的理解。
+                    </p>
+                </div>
+            </section>
+
+            <!-- Navigation -->
+            <section style="display: flex; justify-content: space-between; margin-top: 60px; padding-top: 40px; border-top: 1px solid var(--border);">
+                <a href="../index.html" style="color: var(--text-secondary); text-decoration: none;">← 返回概览</a>
+                <a href="test02.html" style="color: var(--accent); text-decoration: none; font-weight: 500;">下一测试：Bug修复 →</a>
+            </section>
+            
+        </div>
+    </main>
+</body>
+</html>

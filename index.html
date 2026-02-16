@@ -3,264 +3,312 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Qwen3.5 评测报告</title>
+    <title>Qwen3.5 深度评测</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         
         :root {
             --bg: #ffffff;
             --text: #111111;
             --text-secondary: #666666;
-            --text-tertiary: #999999;
             --border: #e5e5e5;
             --accent: #0066cc;
             --code-bg: #f5f5f5;
             --success: #00aa44;
-            --pending: #999999;
+            --card-bg: #fafafa;
         }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background: var(--bg);
             color: var(--text);
             line-height: 1.6;
-            font-size: 16px;
+        }
+        
+        /* Navigation */
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            z-index: 100;
+        }
+        
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 60px;
+        }
+        
+        .nav-logo {
+            font-weight: 600;
+            font-size: 18px;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 32px;
+            list-style: none;
+        }
+        
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-size: 14px;
+            transition: color 0.2s;
+        }
+        
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: var(--text);
+        }
+        
+        /* Main Content */
+        .main {
+            margin-top: 60px;
         }
         
         .container {
-            max-width: 720px;
+            max-width: 1200px;
             margin: 0 auto;
             padding: 60px 24px;
         }
         
-        /* Header */
-        header {
-            margin-bottom: 60px;
+        /* Hero */
+        .hero {
+            text-align: center;
+            padding: 80px 0;
         }
         
-        .meta {
-            font-size: 13px;
-            color: var(--text-tertiary);
-            margin-bottom: 16px;
-        }
-        
-        h1 {
-            font-size: 32px;
-            font-weight: 600;
-            line-height: 1.3;
-            margin-bottom: 16px;
-            letter-spacing: -0.5px;
-        }
-        
-        .subtitle {
-            font-size: 17px;
-            color: var(--text-secondary);
-            line-height: 1.6;
-        }
-        
-        /* Status Bar */
-        .status-bar {
-            display: flex;
-            gap: 24px;
-            padding: 16px 0;
-            border-top: 1px solid var(--border);
-            border-bottom: 1px solid var(--border);
-            margin: 32px 0;
-            font-size: 14px;
-        }
-        
-        .status-item {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-        
-        .status-label {
-            font-size: 12px;
-            color: var(--text-tertiary);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        .status-value {
-            font-weight: 500;
-        }
-        
-        .status-value.online {
-            color: var(--success);
-        }
-        
-        /* Section */
-        section {
-            margin: 48px 0;
-        }
-        
-        h2 {
-            font-size: 20px;
-            font-weight: 600;
-            margin-bottom: 20px;
-            padding-bottom: 8px;
-            border-bottom: 2px solid var(--text);
+        .hero-badge {
             display: inline-block;
-        }
-        
-        h3 {
-            font-size: 16px;
-            font-weight: 600;
-            margin: 28px 0 12px;
-        }
-        
-        p {
-            margin-bottom: 16px;
-            color: var(--text-secondary);
-        }
-        
-        /* Test Case */
-        .test-case {
-            border: 1px solid var(--border);
-            margin: 24px 0;
-        }
-        
-        .test-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 16px 20px;
-            background: var(--bg);
-            border-bottom: 1px solid var(--border);
-        }
-        
-        .test-id {
+            background: var(--code-bg);
+            padding: 6px 16px;
+            border-radius: 20px;
             font-size: 12px;
-            color: var(--text-tertiary);
-            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 24px;
         }
         
-        .test-title {
-            font-size: 15px;
+        .hero h1 {
+            font-size: 48px;
             font-weight: 600;
+            margin-bottom: 16px;
+            letter-spacing: -1px;
+        }
+        
+        .hero p {
+            font-size: 20px;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto 40px;
+        }
+        
+        .hero-stats {
+            display: flex;
+            justify-content: center;
+            gap: 60px;
+            margin-top: 48px;
+        }
+        
+        .stat {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 36px;
+            font-weight: 600;
+            color: var(--accent);
+        }
+        
+        .stat-label {
+            font-size: 13px;
+            color: var(--text-secondary);
             margin-top: 4px;
         }
         
-        .badge {
-            font-size: 11px;
+        /* Dashboard Grid */
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            margin: 48px 0;
+        }
+        
+        .dash-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            padding: 24px;
+            border-radius: 8px;
+        }
+        
+        .dash-card h3 {
+            font-size: 13px;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            padding: 4px 10px;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
         }
         
-        .badge.pass {
+        .dash-value {
+            font-size: 32px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .dash-value.success { color: var(--success); }
+        .dash-value.primary { color: var(--accent); }
+        
+        .dash-desc {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        
+        /* Progress Bar */
+        .progress-section {
+            margin: 48px 0;
+        }
+        
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .progress-title {
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .progress-value {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background: var(--code-bg);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: var(--accent);
+            border-radius: 4px;
+            transition: width 0.5s;
+        }
+        
+        /* Test Grid */
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+            margin: 48px 0;
+        }
+        
+        .test-card {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .test-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+        }
+        
+        .test-card-header {
+            padding: 20px;
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .test-card-id {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+        }
+        
+        .test-card-status {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            padding: 4px 10px;
+            border-radius: 4px;
+        }
+        
+        .status-done {
             background: #e6f7ed;
             color: var(--success);
         }
         
-        .badge.pending {
-            background: #f5f5f5;
-            color: var(--pending);
+        .status-pending {
+            background: var(--code-bg);
+            color: var(--text-secondary);
         }
         
-        .test-body {
+        .test-card-body {
             padding: 20px;
         }
         
-        .test-section {
-            margin: 16px 0;
-        }
-        
-        .test-section-label {
-            font-size: 11px;
+        .test-card-title {
+            font-size: 18px;
             font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: var(--text-tertiary);
             margin-bottom: 8px;
         }
         
-        /* Code Blocks */
-        .code-block {
+        .test-card-desc {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+        }
+        
+        .test-card-visual {
             background: var(--code-bg);
             padding: 16px;
-            font-family: "SF Mono", Monaco, monospace;
+            border-radius: 4px;
+            font-family: monospace;
             font-size: 13px;
-            line-height: 1.6;
-            overflow-x: auto;
-            white-space: pre-wrap;
-            word-break: break-all;
+            line-height: 1.5;
+            color: var(--text-secondary);
         }
         
-        .code-block.prompt {
-            background: #fff8e6;
-            border-left: 3px solid #f5a623;
-        }
-        
-        /* Summary */
-        .summary {
-            background: var(--code-bg);
-            padding: 20px;
-            margin: 20px 0;
-        }
-        
-        .summary-title {
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: var(--text-tertiary);
-            margin-bottom: 12px;
-        }
-        
-        .summary-list {
-            list-style: none;
-        }
-        
-        .summary-list li {
-            padding: 6px 0;
+        .test-card-link {
+            display: inline-block;
+            margin-top: 16px;
             font-size: 14px;
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 500;
         }
         
-        .summary-list li:before {
-            content: "→";
-            margin-right: 10px;
-            color: var(--success);
-        }
-        
-        /* Table */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
-            font-size: 14px;
-        }
-        
-        th {
-            text-align: left;
-            padding: 12px;
-            border-bottom: 2px solid var(--text);
-            font-weight: 600;
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: var(--text-tertiary);
-        }
-        
-        td {
-            padding: 12px;
-            border-bottom: 1px solid var(--border);
+        .test-card-link:hover {
+            text-decoration: underline;
         }
         
         /* Footer */
         footer {
-            margin-top: 80px;
-            padding-top: 40px;
-            border-top: 1px solid var(--border);
             text-align: center;
+            padding: 40px 24px;
+            border-top: 1px solid var(--border);
             font-size: 13px;
-            color: var(--text-tertiary);
+            color: var(--text-secondary);
         }
         
         footer a {
@@ -268,180 +316,174 @@
             text-decoration: none;
         }
         
-        /* Highlight */
-        .highlight {
-            background: #fff3cd;
-            padding: 2px 4px;
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 32px; }
+            .hero-stats { flex-direction: column; gap: 24px; }
+            .dashboard { grid-template-columns: 1fr; }
+            .test-grid { grid-template-columns: 1fr; }
+            .nav-links { display: none; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        
-        <!-- Header -->
-        <header>
-            <div class="meta">技术评测 · 2026年2月16日</div>
-            <h1>Qwen3.5 深度评测</h1>
-            <p class="subtitle">基于阿里云百炼平台的工程协作能力实测，覆盖代码生成、Bug修复、多文件项目等七大维度</p>
-            
-            <div class="status-bar">
-                <div class="status-item">
-                    <span class="status-label">状态</span>
-                    <span class="status-value online">在线</span>
-                </div>
-                <div class="status-item">
-                    <span class="status-label">模型</span>
-                    <span class="status-value">qwen3.5-plus</span>
-                </div>
-                <div class="status-item">
-                    <span class="status-label">响应时间</span>
-                    <span class="status-value">~3s</span>
-                </div>
-                <div class="status-item">
-                    <span class="status-label">完成度</span>
-                    <span class="status-value">1/7</span>
-                </div>
-            </div>
-        </header>
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="nav-container">
+            <div class="nav-logo">Qwen3.5 评测</div>
+            <ul class="nav-links">
+                <li><a href="index.html" class="active">概览</a></li>
+                <li><a href="tests/test01.html">代码生成</a></li>
+                <li><a href="tests/test02.html">Bug修复</a></li>
+                <li><a href="tests/test03.html">项目生成</a></li>
+                <li><a href="tests/test04.html">逻辑推理</a></li>
+            </ul>
+        </div>
+    </nav>
 
-        <!-- Intro -->
-        <section>
-            <p>
-                <span class="highlight">Qwen3.5</span> 是阿里云通义千问系列最新版本，采用 MoE 架构，
-                原生支持多模态理解。本评测通过 Anthropic API 兼容接口，实测其在真实开发场景中的表现。
-            </p>
-        </section>
+    <!-- Main -->
+    <main class="main">
+        <div class="container">
+            
+            <!-- Hero -->
+            <section class="hero">
+                <div class="hero-badge">技术评测 · 2026年2月16日</div>
+                <h1>Qwen3.5 深度评测</h1>
+                <p>基于阿里云百炼平台的工程协作能力实测，覆盖代码生成、Bug修复、多文件项目等七大维度</p>
+                
+                <div class="hero-stats">
+                    <div class="stat">
+                        <div class="stat-value">1/7</div>
+                        <div class="stat-label">测试完成</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">3s</div>
+                        <div class="stat-label">平均响应</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">900</div>
+                        <div class="stat-label">输出Token</div>
+                    </div>
+                </div>
+            </section>
 
-        <!-- Test Results -->
-        <section>
-            <h2>测试案例</h2>
-            
-            <!-- Test 1 -->
-            <div class="test-case">
-                <div class="test-header">
-                    <div>
-                        <div class="test-id">TEST 01</div>
-                        <div class="test-title">代码生成能力</div>
-                    </div>
-                    <span class="badge pass">通过</span>
+            <!-- Dashboard -->
+            <section class="dashboard">
+                <div class="dash-card">
+                    <h3>连接状态</h3>
+                    <div class="dash-value success">在线</div>
+                    <div class="dash-desc">API 响应正常</div>
                 </div>
-                <div class="test-body">
-                    <div class="test-section">
-                        <div class="test-section-label">目标</div>
-                        <p style="margin: 0;">验证基础代码生成、注释质量、类型提示规范</p>
-                    </div>
-                    
-                    <div class="test-section">
-                        <div class="test-section-label">Prompt</div>
-                        <div class="code-block prompt">写一个 Python 快速排序算法，要求：
-1. 包含详细注释
-2. 添加类型提示  
-3. 包含测试用例</div>
-                    </div>
-                    
-                    <div class="summary">
-                        <div class="summary-title">输出摘要</div>
-                        <ul class="summary-list">
-                            <li>双版本实现（简洁版 + 原地版）</li>
-                            <li>完整类型提示 List[T], TypeVar</li>
-                            <li>详细中文注释与复杂度分析</li>
-                            <li>5个测试用例覆盖边界情况</li>
-                        </ul>
-                    </div>
-                    
-                    <div class="test-section">
-                        <div class="test-section-label">结论</div>
-                        <p style="margin: 0;">代码质量达生产级别，类型提示规范，体现出对软件工程实践的深入理解。</p>
-                    </div>
+                
+                <div class="dash-card">
+                    <h3>模型版本</h3>
+                    <div class="dash-value primary">qwen3.5-plus</div>
+                    <div class="dash-desc">阿里云百炼</div>
                 </div>
-            </div>
-            
-            <!-- Test 2 -->
-            <div class="test-case">
-                <div class="test-header">
-                    <div>
-                        <div class="test-id">TEST 02</div>
-                        <div class="test-title">Bug 修复能力</div>
-                    </div>
-                    <span class="badge pending">待测试</span>
+                
+                <div class="dash-card">
+                    <h3>架构类型</h3>
+                    <div class="dash-value">MoE</div>
+                    <div class="dash-desc">混合专家架构</div>
                 </div>
-                <div class="test-body">
-                    <p style="margin: 0; color: var(--text-tertiary);">给定错误代码片段，验证问题定位与修复方案生成能力</p>
-                </div>
-            </div>
-            
-            <!-- Test 3 -->
-            <div class="test-case">
-                <div class="test-header">
-                    <div>
-                        <div class="test-id">TEST 03</div>
-                        <div class="test-title">多文件项目生成</div>
-                    </div>
-                    <span class="badge pending">待测试</span>
-                </div>
-                <div class="test-body">
-                    <p style="margin: 0; color: var(--text-tertiary);">验证复杂功能的多文件项目结构设计与代码组织能力</p>
-                </div>
-            </div>
-            
-            <!-- Test 4 -->
-            <div class="test-case">
-                <div class="test-header">
-                    <div>
-                        <div class="test-id">TEST 04</div>
-                        <div class="test-title">逻辑推理</div>
-                    </div>
-                    <span class="badge pending">待测试</span>
-                </div>
-                <div class="test-body">
-                    <p style="margin: 0; color: var(--text-tertiary);">数学证明、常识推理、逻辑谜题求解能力</p>
-                </div>
-            </div>
-        </section>
+            </section>
 
-        <!-- Specs -->
-        <section>
-            <h2>技术规格</h2>
-            <table>
-                <tr>
-                    <th>项目</th>
-                    <th>规格</th>
-                </tr>
-                <tr>
-                    <td>模型架构</td>
-                    <td>混合专家（MoE）</td>
-                </tr>
-                <tr>
-                    <td>多模态支持</td>
-                    <td>文本、图像、视频</td>
-                </tr>
-                <tr>
-                    <td>API 兼容</td>
-                    <td>Anthropic API 格式</td>
-                </tr>
-                <tr>
-                    <td>接入平台</td>
-                    <td>阿里云百炼</td>
-                </tr>
-                <tr>
-                    <td>平均响应</td>
-                    <td>约 3 秒</td>
-                </tr>
-                <tr>
-                    <td>输出 Token</td>
-                    <td>约 900</td>
-                </tr>
-            </table>
-        </section>
+            <!-- Progress -->
+            <section class="progress-section">
+                <div class="progress-header">
+                    <span class="progress-title">测试进度</span>
+                    <span class="progress-value">14% (1/7)</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 14%"></div>
+                </div>
+            </section>
 
-        <!-- Footer -->
-        <footer>
-            <p>栗噔噔 AI 实验室 · 数据截至 2026年2月16日</p>
-            <p style="margin-top: 8px;">
-                <a href="https://github.com/nutllwhy/qwen35-evaluation">GitHub 仓库</a>
-            </p>
-        </footer>
-        
-    </div>
+            <!-- Test Cards -->
+            <section>
+                <h2 style="font-size: 24px; margin-bottom: 24px;">测试案例</h2>
+                
+                <div class="test-grid">
+                    <!-- Test 1 -->
+                    <div class="test-card">
+                        <div class="test-card-header">
+                            <span class="test-card-id">TEST 01</span>
+                            <span class="test-card-status status-done">已完成</span>
+                        </div>
+                        <div class="test-card-body">
+                            <div class="test-card-title">代码生成能力</div>
+                            <div class="test-card-desc">验证基础代码生成、注释质量、类型提示规范</div>
+                            <div class="test-card-visual">
+def quick_sort(arr: List[T]) -> List[T]:
+    """快速排序主函数"""
+    ...
+                            </div>
+                            <a href="tests/test01.html" class="test-card-link">查看详情 →</a>
+                        </div>
+                    </div>
+
+                    <!-- Test 2 -->
+                    <div class="test-card">
+                        <div class="test-card-header">
+                            <span class="test-card-id">TEST 02</span>
+                            <span class="test-card-status status-pending">待测试</span>
+                        </div>
+                        <div class="test-card-body">
+                            <div class="test-card-title">Bug 修复能力</div>
+                            <div class="test-card-desc">定位问题并生成修复方案</div>
+                            <div class="test-card-visual">
+def buggy_function(x):
+    # TODO: 修复此函数
+    return x / 0
+                            </div>
+                            <a href="tests/test02.html" class="test-card-link">开始测试 →</a>
+                        </div>
+                    </div>
+
+                    <!-- Test 3 -->
+                    <div class="test-card">
+                        <div class="test-card-header">
+                            <span class="test-card-id">TEST 03</span>
+                            <span class="test-card-status status-pending">待测试</span>
+                        </div>
+                        <div class="test-card-body">
+                            <div class="test-card-title">多文件项目生成</div>
+                            <div class="test-card-desc">复杂功能的多文件结构设计</div>
+                            <div class="test-card-visual">
+project/
+├── main.py
+├── utils.py
+└── tests/
+                            </div>
+                            <a href="tests/test03.html" class="test-card-link">开始测试 →</a>
+                        </div>
+                    </div>
+
+                    <!-- Test 4 -->
+                    <div class="test-card">
+                        <div class="test-card-header">
+                            <span class="test-card-id">TEST 04</span>
+                            <span class="test-card-status status-pending">待测试</span>
+                        </div>
+                        <div class="test-card-body">
+                            <div class="test-card-title">逻辑推理能力</div>
+                            <div class="test-card-desc">数学证明、常识推理</div>
+                            <div class="test-card-visual">
+如果 A > B 且 B > C
+那么 A ? C
+                            </div>
+                            <a href="tests/test04.html" class="test-card-link">开始测试 →</a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Footer -->
+            <footer>
+                <p>栗噔噔 AI 实验室 · 数据截至 2026年2月16日</p>
+                <p style="margin-top: 8px;"><a href="https://github.com/nutllwhy/qwen35-evaluation">GitHub</a></p>
+            </footer>
+            
+        </div>
+    </main>
 </body>
 </html>
