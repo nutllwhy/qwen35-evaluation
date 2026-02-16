@@ -682,9 +682,14 @@ const ctx = canvas.getContext('2d');
 let audioEnabled = true;
 let audioContext = null;
 
+// 初始化音频上下文 - 必须在用户交互后调用
 function initAudio() {
     if (!audioContext) {
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    // 如果音频上下文被暂停，恢复它
+    if (audioContext.state === 'suspended') {
+        audioContext.resume();
     }
 }
 
@@ -693,71 +698,107 @@ function toggleAudio() {
     const btn = document.getElementById('audioToggle');
     btn.textContent = audioEnabled ? '🔊' : '🔇';
     btn.style.opacity = audioEnabled ? '1' : '0.5';
-    if (audioEnabled) initAudio();
+    if (audioEnabled) {
+        initAudio();
+        // 播放测试音
+        playTestSound();
+    }
 }
 
-// 播放落子声 - 使用合成音效模拟棋子敲击声
+// 测试音效
+function playTestSound() {
+    if (!audioEnabled || !audioContext) return;
+    const osc = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+    osc.connect(gain);
+    gain.connect(audioContext.destination);
+    osc.frequency.value = 880;
+    gain.gain.setValueAtTime(0.1, audioContext.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+    osc.start();
+    osc.stop(audioContext.currentTime + 0.1);
+}
+
+// 播放落子声 - 清脆的石子敲击声
 function playPlaceSound(player) {
     if (!audioEnabled || !audioContext) return;
     
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
+    const t = audioContext.currentTime;
     
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
+    // 主音 - 清脆的敲击
+    const osc = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+    osc.connect(gain);
+    gain.connect(audioContext.destination);
     
-    // 黑子：低沉的木头声，白子：清脆的玉石声
-    if (player === 1) {
-        oscillator.frequency.setValueAtTime(180, audioContext.currentTime);
-        oscillator.frequency.exponentialRampToValueAtTime(120, audioContext.currentTime + 0.08);
-    } else {
-        oscillator.frequency.setValueAtTime(350, audioContext.currentTime);
-        oscillator.frequency.exponentialRampToValueAtTime(280, audioContext.currentTime + 0.06);
-    }
+    // 黑子稍低，白子稍高，都很清脆
+    const baseFreq = player === 1 ? 800 : 1200;
+    osc.frequency.setValueAtTime(baseFreq, t);
+    osc.frequency.exponentialRampToValueAtTime(baseFreq * 0.5, t + 0.08);
+    osc.type = 'triangle';
     
-    oscillator.type = 'sine';
-    gainNode.gain.setValueAtTime(0.4, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(0.5, t + 0.005);
+    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.12);
     
-    oscillator.start(audioContext.currentTime);
-    oscillator.stop(audioContext.currentTime + 0.1);
+    osc.start(t);
+    osc.stop(t + 0.15);
     
-    // 添加轻微的噪声模拟敲击感
-    const noiseBuffer = audioContext.createBuffer(1, audioContext.sampleRate * 0.05, audioContext.sampleRate);
-    const output = noiseBuffer.getChannelData(0);
-    for (let i = 0; i < noiseBuffer.length; i++) {
-        output[i] = Math.random() * 2 - 1;
-    }
-    const noise = audioContext.createBufferSource();
-    noise.buffer = noiseBuffer;
-    const noiseGain = audioContext.createGain();
-    noiseGain.gain.setValueAtTime(0.05, audioContext.currentTime);
-    noiseGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.05);
-    noise.connect(noiseGain);
-    noiseGain.connect(audioContext.destination);
-    noise.start();
+    // 泛音 - 增加清脆感
+    const osc2 = audioContext.createOscillator();
+    const gain2 = audioContext.createGain();
+    osc2.connect(gain2);
+    gain2.connect(audioContext.destination);
+    
+    osc2.frequency.setValueAtTime(baseFreq * 2.5, t);
+    osc2.type = 'sine';
+    gain2.gain.setValueAtTime(0, t);
+    gain2.gain.linearRampToValueAtTime(0.2, t + 0.003);
+    gain2.gain.exponentialRampToValueAtTime(0.01, t + 0.08);
+    
+    osc2.start(t);
+    osc2.stop(t + 0.1);
 }
 
-// 播放胜利音效
+// 播放胜利音效 - 欢快的和弦
 function playWinSound() {
     if (!audioEnabled || !audioContext) return;
     
-    const notes = [523.25, 659.25, 783.99, 1046.50]; // C大调和弦
+    const t = audioContext.currentTime;
+    const notes = [523.25, 659.25, 783.99, 1046.50]; // C-E-G-C
+    
     notes.forEach((freq, i) => {
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
+        // 主音
+        const osc = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+        osc.connect(gain);
+        gain.connect(audioContext.destination);
         
-        oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
+        osc.frequency.value = freq;
+        osc.type = 'sine';
         
-        oscillator.frequency.setValueAtTime(freq, audioContext.currentTime + i * 0.1);
-        oscillator.type = 'sine';
-        gainNode.gain.setValueAtTime(0, audioContext.currentTime + i * 0.1);
-        gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + i * 0.1 + 0.05);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + i * 0.1 + 0.5);
+        const startTime = t + i * 0.12;
+        gain.gain.setValueAtTime(0, startTime);
+        gain.gain.linearRampToValueAtTime(0.4, startTime + 0.03);
+        gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.8);
         
-        oscillator.start(audioContext.currentTime + i * 0.1);
-        oscillator.stop(audioContext.currentTime + i * 0.1 + 0.6);
+        osc.start(startTime);
+        osc.stop(startTime + 1);
+        
+        // 八度音增加丰满度
+        const osc2 = audioContext.createOscillator();
+        const gain2 = audioContext.createGain();
+        osc2.connect(gain2);
+        gain2.connect(audioContext.destination);
+        
+        osc2.frequency.value = freq * 2;
+        osc2.type = 'sine';
+        gain2.gain.setValueAtTime(0, startTime);
+        gain2.gain.linearRampToValueAtTime(0.15, startTime + 0.03);
+        gain2.gain.exponentialRampToValueAtTime(0.01, startTime + 0.6);
+        
+        osc2.start(startTime);
+        osc2.stop(startTime + 0.8);
     });
 }
 
@@ -765,21 +806,24 @@ function playWinSound() {
 function playLoseSound() {
     if (!audioEnabled || !audioContext) return;
     
-    const notes = [392.00, 349.23, 293.66, 261.63]; // 下行音阶
+    const t = audioContext.currentTime;
+    const notes = [349.23, 293.66, 261.63]; // F-D-C
+    
     notes.forEach((freq, i) => {
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
+        const osc = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+        osc.connect(gain);
+        gain.connect(audioContext.destination);
         
-        oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
+        osc.frequency.value = freq;
+        osc.type = 'triangle';
         
-        oscillator.frequency.setValueAtTime(freq, audioContext.currentTime + i * 0.15);
-        oscillator.type = 'triangle';
-        gainNode.gain.setValueAtTime(0.2, audioContext.currentTime + i * 0.15);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + i * 0.15 + 0.4);
+        const startTime = t + i * 0.2;
+        gain.gain.setValueAtTime(0.3, startTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.5);
         
-        oscillator.start(audioContext.currentTime + i * 0.15);
-        oscillator.stop(audioContext.currentTime + i * 0.15 + 0.5);
+        osc.start(startTime);
+        osc.stop(startTime + 0.6);
     });
 }
 
@@ -787,20 +831,20 @@ function playLoseSound() {
 function playSkillSound() {
     if (!audioEnabled || !audioContext) return;
     
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
+    const t = audioContext.currentTime;
+    const osc = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+    osc.connect(gain);
+    gain.connect(audioContext.destination);
     
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
+    osc.frequency.setValueAtTime(600, t);
+    osc.frequency.linearRampToValueAtTime(1200, t + 0.15);
+    osc.type = 'sine';
+    gain.gain.setValueAtTime(0.3, t);
+    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.4);
     
-    oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
-    oscillator.frequency.exponentialRampToValueAtTime(880, audioContext.currentTime + 0.1);
-    oscillator.type = 'sine';
-    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
-    
-    oscillator.start();
-    oscillator.stop(audioContext.currentTime + 0.3);
+    osc.start(t);
+    osc.stop(t + 0.5);
 }
 
 const BOARD_SIZE = 15;
@@ -947,11 +991,14 @@ function drawPiece(r, c, player) {
 }
 
 // 点击下棋
-canvas.addEventListener('click', (e) => {
+canvas.addEventListener('click', async (e) => {
     if (gameOver) return;
     
-    // 首次交互初始化音频
+    // 首次交互初始化音频并恢复上下文
     initAudio();
+    if (audioContext && audioContext.state === 'suspended') {
+        await audioContext.resume();
+    }
     
     const rect = canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
@@ -1161,10 +1208,13 @@ function getCandidateMoves() {
 }
 
 // 技能
-function useSkill(id) {
+async function useSkill(id) {
     if (gameOver || currentPlayer !== 1 || skillsUsed[id]) return;
     
     initAudio();
+    if (audioContext && audioContext.state === 'suspended') {
+        await audioContext.resume();
+    }
     playSkillSound();
     
     switch(id) {
@@ -1305,9 +1355,12 @@ function createPetals() {
     }
 }
 
-function showModal(type, message) {
-    // 确保音频已初始化
+async function showModal(type, message) {
+    // 确保音频已初始化并恢复
     initAudio();
+    if (audioContext && audioContext.state === 'suspended') {
+        await audioContext.resume();
+    }
     
     const modal = document.getElementById('modal');
     const title = document.getElementById('modalTitle');
@@ -1322,7 +1375,7 @@ function showModal(type, message) {
         desc.innerHTML = '🎊 五子连珠，妙手天成！🎊';
         blessing.textContent = blessings[Math.floor(Math.random() * blessings.length)];
         // 播放胜利音效
-        setTimeout(() => playWinSound(), 100);
+        playWinSound();
         // 放烟花
         createFireworks();
         // 持续放烟花
@@ -1331,7 +1384,7 @@ function showModal(type, message) {
     } else if (type === 'lose') {
         desc.textContent = '棋差一着，再接再厉！';
         blessing.textContent = '胜败乃兵家常事，重整旗鼓再出发！';
-        setTimeout(() => playLoseSound(), 100);
+        playLoseSound();
     } else {
         desc.textContent = '平分秋色，不分伯仲！';
         blessing.textContent = '和为贵，棋逢对手亦是乐事！';
