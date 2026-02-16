@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TEST 07: 塔防游戏 | Qwen3.5 评测</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --bg: #ffffff;
+            --text: #111111;
+            --text-secondary: #666666;
+            --border: #e5e5e5;
+            --accent: #0066cc;
+            --code-bg: #f5f5f5;
+            --success: #00aa44;
+            --warning: #f5a623;
+            --danger: #dc3545;
+            --purple: #7c3aed;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+        
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            z-index: 100;
+        }
+        
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 60px;
+        }
+        
+        .nav-logo { font-weight: 600; font-size: 18px; }
+        .nav-links { display: flex; gap: 32px; list-style: none; }
+        .nav-links a { text-decoration: none; color: var(--text-secondary); font-size: 14px; }
+        .nav-links a:hover, .nav-links a.active { color: var(--text); }
+        
+        .main { margin-top: 60px; }
+        .container { max-width: 1000px; margin: 0 auto; padding: 40px 24px; }
+        
+        .breadcrumb { font-size: 13px; color: var(--text-secondary); margin-bottom: 24px; }
+        .breadcrumb a { color: var(--accent); text-decoration: none; }
+        
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+        
+        .page-title h1 { font-size: 32px; font-weight: 600; margin-bottom: 8px; }
+        .page-subtitle { font-size: 16px; color: var(--text-secondary); }
+        
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: linear-gradient(135deg, #00aa44 0%, #00cc66 100%);
+            color: white;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        
+        section { margin: 48px 0; }
+        
+        h2 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--text);
+        }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin: 24px 0;
+        }
+        
+        .metric-item {
+            text-align: center;
+            padding: 20px;
+            background: var(--code-bg);
+            border-radius: 8px;
+        }
+        
+        .metric-value { font-size: 28px; font-weight: 600; color: var(--purple); }
+        .metric-label { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+        
+        .game-preview {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 12px;
+            padding: 32px;
+            text-align: center;
+            margin: 24px 0;
+        }
+        
+        .game-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #0ff;
+            margin-bottom: 16px;
+            text-shadow: 0 0 20px #0ff;
+        }
+        
+        .game-desc {
+            color: #aaa;
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+        
+        .play-button {
+            display: inline-block;
+            padding: 16px 48px;
+            background: linear-gradient(135deg, #0f0 0%, #0c0 100%);
+            color: #000;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .play-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 255, 0, 0.4);
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin: 24px 0;
+        }
+        
+        .feature-card {
+            padding: 20px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            border-left: 4px solid var(--purple);
+        }
+        
+        .feature-title {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .feature-desc {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        
+        .tech-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin: 24px 0;
+        }
+        
+        .tech-tag {
+            padding: 8px 16px;
+            background: var(--code-bg);
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        
+        .conclusion-box {
+            background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
+            border-left: 4px solid var(--purple);
+            padding: 24px;
+            margin: 32px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        @media (max-width: 768px) {
+            .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+            .feature-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav">
+        <div class="nav-container">
+            <div class="nav-logo"><a href="../index.html" style="text-decoration:none;color:inherit;">Qwen3.5 评测</a></div>
+            <ul class="nav-links">
+                <li><a href="../index.html">概览</a></li>
+                <li><a href="test01.html">美学基准</a></li>
+                <li><a href="test02.html">Bug修复</a></li>
+                <li><a href="test03.html">项目生成</a></li>
+                <li><a href="test04.html">逻辑推理</a></li>
+                <li><a href="test05.html">3D游戏</a></li>
+                <li><a href="test06.html">2D弹幕</a></li>
+                <li><a href="test07.html" class="active">塔防</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="main">
+        <div class="container">
+            
+            <div class="breadcrumb"><a href="../index.html">概览</a> / TEST 07</div>
+
+            <header class="page-header">
+                <div class="page-title">
+                    <h1>塔防游戏</h1>
+                    <div class="page-subtitle">Tower Defense 策略游戏测试</div>
+                </div>
+                <span class="status-badge">🎮 可运行</span>
+            </header>
+
+            <section>
+                <h2>测试指标</h2>
+                
+                <div class="metrics-grid">
+                    <div class="metric-item">
+                        <div class="metric-value">3</div>
+                        <div class="metric-label">防御塔类型</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value">4</div>
+                        <div class="metric-label">敌人类型</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value">10</div>
+                        <div class="metric-label">波次设计</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value">22KB</div>
+                        <div class="metric-label">代码大小</div>
+                    </div>
+                </div>            
+            </section>
+
+            <section>
+                <h2>游戏演示</h2>
+                
+                <div class="game-preview">
+                    <div class="game-title">🏰 TOWER DEFENSE 🏰</div>
+                    <div class="game-desc">
+                        完整塔防策略游戏 - 建造防御塔，阻止敌人到达终点！<br>
+                        包含3种防御塔、4种敌人、10波挑战
+                    </div>
+                    
+                    <a href="tower-defense.html" class="play-button" target="_blank">
+                        ▶ 开始游戏
+                    </a>
+                </div>
+            </section>
+
+            <section>
+                <h2>游戏特性</h2>
+                
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <div class="feature-title">🏹 箭塔</div>
+                        <div class="feature-desc">
+                            攻速快，伤害15，范围120，价格$50
+                        </div>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-title">💣 炮塔</div>
+                        <div class="feature-desc">
+                            攻速慢，伤害40，范围150，带溅射，价格$100
+                        </div>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-title">❄️ 冰塔</div>
+                        <div class="feature-desc">
+                            减速50%，伤害8，范围100，价格$80
+                        </div>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-title">👹 BOSS战</div>
+                        <div class="feature-desc">
+                            第5波和第10波出现BOSS，血量极高
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section>
+                <h2>技术栈</h2>
+                
+                <div class="tech-list">
+                    <span class="tech-tag">🎨 HTML5 Canvas</span>
+                    <span class="tech-tag">🎯 路径寻路</span>
+                    <span class="tech-tag">🔍 自动索敌</span>
+                    <span class="tech-tag">💥 溅射伤害</span>
+                    <span class="tech-tag">❄️ 减速效果</span>
+                    <span class="tech-tag">⬆️ 升级系统</span>
+                </div>
+            </section>
+
+            <section>
+                <h2>评测结论</h2>
+                
+                <div class="conclusion-box">
+                    <p style="font-size: 16px; line-height: 1.8;">
+                        Qwen3.5 在塔防游戏中展现了<strong>优秀的架构设计能力</strong>：<br><br>
+                        1. <strong>游戏架构</strong>：清晰的实体类设计（Tower/Enemy/Projectile）<br>
+                        2. <strong>路径系统</strong>：点序列路径，敌人自动沿路径移动<br>
+                        3. <strong>策略系统</strong>：3种塔各有特色，升级/出售经济系统<br>
+                        4. <strong>波次平衡</strong>：10波渐进难度，BOSS战设计<br><br>
+                        生成的游戏<strong>可玩性高</strong>，策略深度适中，
+                        展现了模型在游戏AI和<strong>策略系统设计</strong>方面的实力。
+                    </p>
+                </div>
+            </section>
+
+            <section style="display: flex; justify-content: space-between; margin-top: 60px; padding-top: 40px; border-top: 1px solid var(--border);">
+                <a href="test06.html" style="color: var(--text-secondary); text-decoration: none;">← 上一测试</a>
+                <span style="color: var(--success); font-weight: 600;">全部7项测试完成 🎉</span>
+            </section>
+            
+        </div>
+    </main>
+</body>
+</html>
