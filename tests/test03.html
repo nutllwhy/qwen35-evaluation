@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TEST 03: 多文件项目生成 | Qwen3.5 评测</title>
+    <title>TEST 03: 企业级项目生成 | Qwen3.5 评测</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
@@ -15,8 +15,9 @@
             --accent: #0066cc;
             --code-bg: #f5f5f5;
             --success: #00aa44;
-            --folder: #f5a623;
-            --file: #666666;
+            --warning: #f5a623;
+            --danger: #dc3545;
+            --info: #0891b2;
         }
         
         body {
@@ -99,7 +100,7 @@
             margin: 28px 0 12px;
         }
         
-        /* Metrics */
+        /* Metrics - Enterprise Level */
         .metrics-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -109,22 +110,84 @@
         
         .metric-item {
             text-align: center;
-            padding: 20px;
+            padding: 24px;
             background: var(--code-bg);
             border-radius: 8px;
         }
         
-        .metric-value { font-size: 28px; font-weight: 600; color: var(--accent); }
-        .metric-label { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+        .metric-value { 
+            font-size: 32px; 
+            font-weight: 700; 
+            background: linear-gradient(135deg, var(--accent), var(--info));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .metric-label { font-size: 12px; color: var(--text-secondary); margin-top: 8px; }
         
-        /* File Tree */
+        /* Architecture Diagram */
+        .arch-diagram {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 12px;
+            padding: 32px;
+            color: white;
+            margin: 24px 0;
+        }
+        
+        .arch-title {
+            text-align: center;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 32px;
+            color: #64b5f6;
+        }
+        
+        .arch-layers {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        
+        .arch-layer {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px 20px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .layer-name {
+            width: 100px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #64b5f6;
+        }
+        
+        .layer-components {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .component-tag {
+            padding: 6px 12px;
+            background: rgba(100, 181, 246, 0.2);
+            border: 1px solid rgba(100, 181, 246, 0.4);
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        
+        /* Complex File Tree */
         .file-tree {
             background: var(--code-bg);
             border: 1px solid var(--border);
             border-radius: 8px;
             padding: 24px;
             font-family: "SF Mono", Monaco, monospace;
-            font-size: 14px;
+            font-size: 13px;
             line-height: 2;
         }
         
@@ -134,116 +197,155 @@
             gap: 8px;
         }
         
-        .tree-folder { color: var(--folder); }
-        .tree-file { color: var(--file); }
+        .tree-folder { color: var(--warning); font-weight: 600; }
+        .tree-file { color: var(--text-secondary); }
         .tree-indent { margin-left: 24px; }
+        .tree-icon { width: 20px; text-align: center; }
         
-        /* File Cards */
-        .file-cards {
+        /* Tech Stack */
+        .tech-stack {
             display: grid;
+            grid-template-columns: repeat(3, 1fr);
             gap: 16px;
             margin: 24px 0;
         }
         
-        .file-card {
-            border: 1px solid var(--border);
+        .tech-card {
+            padding: 20px;
+            background: var(--code-bg);
             border-radius: 8px;
-            overflow: hidden;
+            border-left: 4px solid var(--accent);
         }
         
-        .file-header {
+        .tech-card.backend { border-color: var(--success); }
+        .tech-card.frontend { border-color: var(--warning); }
+        .tech-card.database { border-color: var(--info); }
+        .tech-card.security { border-color: var(--danger); }
+        
+        .tech-name { font-weight: 600; font-size: 14px; margin-bottom: 8px; }
+        .tech-items { font-size: 13px; color: var(--text-secondary); }
+        
+        /* Feature List */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin: 24px 0;
+        }
+        
+        .feature-category {
+            padding: 20px;
+            background: var(--code-bg);
+            border-radius: 8px;
+        }
+        
+        .feature-title {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .feature-list {
+            list-style: none;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        
+        .feature-list li {
+            padding: 6px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .feature-list li:before {
+            content: "✓";
+            color: var(--success);
+            font-weight: 600;
+        }
+        
+        /* Code Preview */
+        .code-preview {
+            background: #1a1a1a;
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 24px 0;
+        }
+        
+        .code-header {
             display: flex;
             align-items: center;
             gap: 12px;
             padding: 12px 16px;
-            background: var(--code-bg);
-            border-bottom: 1px solid var(--border);
+            background: #2d2d2d;
+            border-bottom: 1px solid #3d3d3d;
         }
         
-        .file-icon { font-size: 18px; }
-        .file-name { font-weight: 600; font-size: 14px; }
-        .file-desc { font-size: 12px; color: var(--text-secondary); margin-left: auto; }
+        .code-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        .dot-red { background: #ff5f56; }
+        .dot-yellow { background: #ffbd2e; }
+        .dot-green { background: #27c93f; }
         
-        .file-content {
-            background: #1a1a1a;
-            color: #e5e5e5;
+        .code-filename { font-size: 13px; color: #e5e5e5; }
+        
+        .code-content {
             padding: 16px;
             font-family: "SF Mono", Monaco, monospace;
             font-size: 12px;
             line-height: 1.6;
+            color: #e5e5e5;
             overflow-x: auto;
             max-height: 300px;
             overflow-y: auto;
         }
         
-        /* Dependency Graph */
-        .dependency-graph {
+        /* Comparison */
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 24px 0;
+            font-size: 14px;
+        }
+        
+        .comparison-table th {
+            text-align: left;
+            padding: 12px;
             background: var(--code-bg);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 24px;
-            text-align: center;
-        }
-        
-        .dep-flow {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 16px;
-            flex-wrap: wrap;
-            margin: 20px 0;
-        }
-        
-        .dep-node {
-            background: white;
-            border: 2px solid var(--accent);
-            padding: 12px 20px;
-            border-radius: 8px;
+            border-bottom: 2px solid var(--border);
             font-weight: 600;
-            font-size: 13px;
         }
         
-        .dep-arrow { font-size: 20px; color: var(--text-secondary); }
-        
-        /* Checklist */
-        .checklist {
-            list-style: none;
-        }
-        
-        .checklist li {
-            padding: 12px 0;
-            display: flex;
-            align-items: center;
-            gap: 12px;
+        .comparison-table td {
+            padding: 12px;
             border-bottom: 1px solid var(--border);
         }
         
-        .checklist li:before {
-            content: "✓";
-            width: 20px;
-            height: 20px;
-            background: var(--success);
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            flex-shrink: 0;
+        .comparison-table .simple { color: var(--text-secondary); }
+        .comparison-table .complex { 
+            color: var(--success); 
+            font-weight: 600;
         }
         
         /* Conclusion */
         .conclusion-box {
-            background: var(--code-bg);
+            background: linear-gradient(135deg, #e6f7ed 0%, #d1fae5 100%);
             border-left: 4px solid var(--success);
             padding: 24px;
             margin: 32px 0;
+            border-radius: 0 8px 8px 0;
         }
         
         @media (max-width: 768px) {
             .metrics-grid { grid-template-columns: repeat(2, 1fr); }
-            .dep-flow { flex-direction: column; }
-            .dep-arrow { transform: rotate(90deg); }
+            .tech-stack { grid-template-columns: 1fr; }
+            .feature-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -264,78 +366,181 @@
     <main class="main">
         <div class="container">
             
-            <div class="breadcrumb"><a href="../index.html">概览</a> / TEST 03</div>
+            <div class="breadcrumb"><a href="../index.html">概览</a> / TEST 03（升级版）</div>
 
             <header class="page-header">
                 <div class="page-title">
-                    <h1>多文件项目生成</h1>
-                    <div class="page-subtitle">待办事项管理器 - 完整项目结构设计与代码组织</div>
+                    <h1>企业级项目生成</h1>
+                    <div class="page-subtitle">完整任务管理 Web 应用 - 生产级架构设计</div>
                 </div>
-                <span class="status-badge">测试通过</span>
+                <span class="status-badge">⭐ 企业级</span>
             </header>
+
+            <!-- Upgrade Notice -->
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 8px; margin-bottom: 32px;">
+                <strong>🚀 升级版测试</strong>：应要求升级为更复杂的场景
+                <span style="opacity: 0.9;"> - 从简单的待办事项升级为完整的企业级任务管理系统</span>
+            </div>
 
             <!-- Metrics -->
             <section>
-                <h2>项目指标</h2>
+                <h2>项目规模</h2>
                 
                 <div class="metrics-grid">
                     <div class="metric-item">
-                        <div class="metric-value">4</div>
+                        <div class="metric-value">15+</div>
                         <div class="metric-label">文件数量</div>
                     </div>
                     <div class="metric-item">
-                        <div class="metric-value">247</div>
-                        <div class="metric-label">代码行数</div>
+                        <div class="metric-value">23K</div>
+                        <div class="metric-label">代码规模</div>
                     </div>
                     <div class="metric-item">
-                        <div class="metric-value">3</div>
-                        <div class="metric-label">功能模块</div>
+                        <div class="metric-value">4</div>
+                        <div class="metric-label">架构层级</div>
                     </div>
                     <div class="metric-item">
-                        <div class="metric-value">0</div>
-                        <div class="metric-label">外部依赖</div>
+                        <div class="metric-value">8</div>
+                        <div class="metric-label">技术组件</div>
                     </div>
                 </div>            
             </section>
 
-            <!-- File Tree -->
+            <!-- Architecture Diagram -->
+            <section>
+                <h2>系统架构</h2>
+                
+                <div class="arch-diagram">
+                    <div class="arch-title">🏗️ 分层架构设计</div>
+                    
+                    <div class="arch-layers">
+                        <div class="arch-layer">
+                            <span class="layer-name">前端层</span>
+                            <div class="layer-components">
+                                <span class="component-tag">Vue 3</span>
+                                <span class="component-tag">Element Plus</span>
+                                <span class="component-tag">Vuex</span>
+                                <span class="component-tag">Axios</span>
+                            </div>
+                        </div>
+                        
+                        <div class="arch-layer">
+                            <span class="layer-name">API 层</span>
+                            <div class="layer-components">
+                                <span class="component-tag">Flask</span>
+                                <span class="component-tag">JWT Auth</span>
+                                <span class="component-tag">Rate Limit</span>
+                                <span class="component-tag">CORS</span>
+                            </div>
+                        </div>
+                        
+                        <div class="arch-layer">
+                            <span class="layer-name">业务层</span>
+                            <div class="layer-components">
+                                <span class="component-tag">Services</span>
+                                <span class="component-tag">Decorators</span>
+                                <span class="component-tag">Validators</span>
+                                <span class="component-tag">Error Handler</span>
+                            </div>
+                        </div>
+                        
+                        <div class="arch-layer">
+                            <span class="layer-name">数据层</span>
+                            <div class="layer-components">
+                                <span class="component-tag">PostgreSQL</span>
+                                <span class="component-tag">SQLAlchemy</span>
+                                <span class="component-tag">Redis</span>
+                                <span class="component-tag">Alembic</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tech Stack -->
+            <section>
+                <h2>技术栈</h2>
+                
+                <div class="tech-stack">
+                    <div class="tech-card backend">
+                        <div class="tech-name">🐍 后端框架</div>
+                        <div class="tech-items">Flask + Flask-SQLAlchemy + Flask-JWT-Extended + Flask-Limiter</div>
+                    </div>
+                    
+                    <div class="tech-card frontend">
+                        <div class="tech-name">⚡ 前端框架</div>
+                        <div class="tech-items">Vue 3 + Element Plus + Vuex + Vue Router</div>
+                    </div>
+                    
+                    <div class="tech-card database">
+                        <div class="tech-name">🗄️ 数据存储</div>
+                        <div class="tech-items">PostgreSQL + Redis + Alembic 迁移</div>
+                    </div>
+                    
+                    <div class="tech-card security">
+                        <div class="tech-name">🔒 安全认证</div>
+                        <div class="tech-items">JWT Token + Bcrypt + Role-based Access + Rate Limiting</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- File Structure -->
             <section>
                 <h2>项目结构</h2>
                 
                 <div class="file-tree">
                     <div class="tree-item">
-                        <span class="tree-folder">📁 todo_manager/</span>
+                        <span class="tree-icon">📁</span>
+                        <span class="tree-folder">task_manager/</span>
                     </div>
                     <div class="tree-item tree-indent">
-                        <span class="tree-file">📄 main.py</span> - 主程序入口（命令行交互）
+                        <span class="tree-icon">📁</span>
+                        <span class="tree-folder">app/</span>
+                    </div>
+                    <div class="tree-item tree-indent" style="margin-left: 48px;">
+                        <span class="tree-icon">📄</span>
+                        <span class="tree-file">__init__.py (应用工厂)</span>
+                    </div>
+                    <div class="tree-item tree-indent" style="margin-left: 48px;">
+                        <span class="tree-icon">📄</span>
+                        <span class="tree-file">models.py (数据模型)</span>
+                    </div>
+                    <div class="tree-item tree-indent" style="margin-left: 48px;">
+                        <span class="tree-icon">📁</span>
+                        <span class="tree-folder">routes/ (auth, tasks, projects)</span>
+                    </div>
+                    <div class="tree-item tree-indent" style="margin-left: 48px;">
+                        <span class="tree-icon">📁</span>
+                        <span class="tree-folder">services/ (业务逻辑层)</span>
+                    </div>
+                    <div class="tree-item tree-indent" style="margin-left: 48px;">
+                        <span class="tree-icon">📁</span>
+                        <span class="tree-folder">utils/ (decorators, validators)</span>
                     </div>
                     <div class="tree-item tree-indent">
-                        <span class="tree-file">📄 utils.py</span> - 工具函数（数据操作）
+                        <span class="tree-icon">📁</span>
+                        <span class="tree-folder">frontend/src/</span>
+                    </div>
+                    <div class="tree-item tree-indent" style="margin-left: 48px;">
+                        <span class="tree-icon">📄</span>
+                        <span class="tree-file">components/TaskBoard.vue</span>
+                    </div>
+                    <div class="tree-item tree-indent" style="margin-left: 48px;">
+                        <span class="tree-icon">📄</span>
+                        <span class="tree-file">store/index.js (Vuex)</span>
                     </div>
                     <div class="tree-item tree-indent">
-                        <span class="tree-file">📄 config.py</span> - 配置文件（常量定义）
+                        <span class="tree-icon">📁</span>
+                        <span class="tree-folder">migrations/ (Alembic)</span>
                     </div>
                     <div class="tree-item tree-indent">
-                        <span class="tree-file">📄 README.md</span> - 项目说明文档
+                        <span class="tree-icon">📁</span>
+                        <span class="tree-folder">tests/</span>
                     </div>
-                </div>
-            </section>
-
-            <!-- Dependencies -->
-            <section>
-                <h2>文件依赖关系</h2>
-                
-                <div class="dependency-graph">
-                    <div class="dep-flow">
-                        <div class="dep-node">main.py</div>
-                        <span class="dep-arrow">→</span>
-                        <div class="dep-node">utils.py</div>
-                        <span class="dep-arrow">→</span>
-                        <div class="dep-node">config.py</div>
+                    <div class="tree-item tree-indent">
+                        <span class="tree-icon">⚙️</span>
+                        <span class="tree-file">config.py / docker-compose.yml / Dockerfile</span>
                     </div>
-                    <p style="color: var(--text-secondary); margin-top: 16px;">
-                        清晰的导入链：主程序 → 工具模块 → 配置
-                    </p>
                 </div>
             </section>
 
@@ -343,73 +548,122 @@
             <section>
                 <h2>功能完整性</h2>
                 
-                <ul class="checklist">
-                    <li>添加任务（带时间戳和ID）</li>
-                    <li>列出所有任务（状态显示）</li>
-                    <li>删除指定任务</li>
-                    <li>标记任务完成</li>
-                    <li>JSON 数据持久化</li>
-                    <li>友好的命令行界面</li>
-                    <li>输入验证和错误处理</li>
-                </ul>
+                <div class="feature-grid">
+                    <div class="feature-category">
+                        <div class="feature-title">👤 用户系统</div>
+                        <ul class="feature-list">
+                            <li>JWT 认证（Access/Refresh Token）</li>
+                            <li>角色权限管理（Admin/User）</li>
+                            <li>密码加密（Bcrypt）</li>
+                            <li>API 限流保护</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="feature-category">
+                        <div class="feature-title">📋 任务系统</div>
+                        <ul class="feature-list">
+                            <li>CRUD + 批量操作</li>
+                            <li>状态流转（4种状态）</li>
+                            <li>优先级管理（4级）</li>
+                            <li>标签 + 子任务 + 评论</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="feature-category">
+                        <div class="feature-title">📊 项目管理</div>
+                        <ul class="feature-list">
+                            <li>项目创建与成员管理</li>
+                            <li>Kanban 看板视图</li>
+                            <li>统计报表</li>
+                            <li>多项目支持</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="feature-category">
+                        <div class="feature-title">🔧 工程化</div>
+                        <ul class="feature-list">
+                            <li>分层架构设计</li>
+                            <li>数据库迁移（Alembic）</li>
+                            <li>Redis 缓存</li>
+                            <li>Docker 容器化</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Complexity Comparison -->
+            <section>
+                <h2>复杂度对比</h2>
+                
+                <table class="comparison-table">
+                    <tr>
+                        <th>维度</th>
+                        <th class="simple">简单版（原版）</th>
+                        <th class="complex">企业版（升级版）</th>
+                    </tr>
+                    <tr>
+                        <td>文件数量</td>
+                        <td class="simple">4 个</td>
+                        <td class="complex">15+ 个</td>
+                    </tr>
+                    <tr>
+                        <td>架构层级</td>
+                        <td class="simple">单层</td>
+                        <td class="complex">4 层（Routes/Services/Models/Utils）</td>
+                    </tr>
+                    <tr>
+                        <td>认证机制</td>
+                        <td class="simple">无</td>
+                        <td class="complex">JWT + Role-based + Rate Limit</td>
+                    </tr>
+                    <tr>
+                        <td>数据库</td>
+                        <td class="simple">JSON 文件</td>
+                        <td class="complex">PostgreSQL + SQLAlchemy ORM</td>
+                    </tr>
+                    <tr>
+                        <td>前端</td>
+                        <td class="simple">无</td>
+                        <td class="complex">Vue 3 + Element Plus</td>
+                    </tr>
+                    <tr>
+                        <td>部署</td>
+                        <td class="simple">本地运行</td>
+                        <td class="complex">Docker Compose 完整编排</td>
+                    </tr>
+                </table>
             </section>
 
             <!-- Code Preview -->
             <section>
-                <h2>代码预览</h2>
+                <h2>代码质量</h2>
                 
-                <div class="file-cards">
-                    <div class="file-card">
-                        <div class="file-header">
-                            <span class="file-icon">📄</span>
-                            <span class="file-name">main.py</span>
-                            <span class="file-desc">主程序入口</span>
-                        </div>
-                        <div class="file-content">from utils import add_task, list_tasks, ...
-
-def print_menu():
-    print("=== 待办事项管理器 ===")
-    print("1. 添加任务")
-    print("2. 列出任务")
-    ...
-
-def main():
-    while True:
-        print_menu()
-        choice = input("请选择操作：")
-        ...
-
-if __name__ == "__main__":
-    main()</div>
+                <div class="code-preview">
+                    <div class="code-header">
+                        <span class="code-dot dot-red"></span>
+                        <span class="code-dot dot-yellow"></span>
+                        <span class="code-dot dot-green"></span>
+                        <span class="code-filename">config.py - 多环境配置</span>
                     </div>
-                    
-                    <div class="file-card">
-                        <div class="file-header">
-                            <span class="file-icon">📄</span>
-                            <span class="file-name">utils.py</span>
-                            <span class="file-desc">工具函数模块</span>
-                        </div>
-                        <div class="file-content">from config import DATA_FILE, ...
-import json
-import os
+                    <div class="code-content">class Config:
+    SECRET_KEY = os.environ.get('SECRET_KEY')
+    JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=1)
+    JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=30)
+    REDIS_URL = os.environ.get('REDIS_URL')
+    RATELIMIT_ENABLED = True
 
-def load_tasks():
-    """从 JSON 文件加载任务列表"""
-    if not os.path.exists(DATA_FILE):
-        return []
-    ...
+class DevelopmentConfig(Config):
+    DEBUG = True
+    SQLALCHEMY_DATABASE_URI = 'postgresql://...'
 
-def add_task(description):
-    """添加新任务"""
-    tasks = load_tasks()
-    task = {
-        "id": len(tasks) + 1,
-        "description": description,
-        "completed": False,
-        ...
-    }
-    ...</div>
-                    </div>
+class ProductionConfig(Config):
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
+    JWT_TOKEN_LOCATION = ['headers', 'cookies']
+
+config_map = {
+    'dev': DevelopmentConfig,
+    'prod': ProductionConfig
+}</div>
                 </div>
             </section>
 
@@ -419,13 +673,12 @@ def add_task(description):
                 
                 <div class="conclusion-box">
                     <p style="font-size: 16px; line-height: 1.8;">
-                        Qwen3.5 在多文件项目生成测试中表现优秀：<br><br>
-                        1. <strong>架构设计</strong>：合理的模块划分（配置/工具/主程序），职责清晰<br>
-                        2. <strong>代码组织</strong>：文件间导入关系正确，遵循 Python 最佳实践<br>
-                        3. <strong>功能完整</strong>：包含增删改查全部功能，以及数据持久化<br>
-                        4. <strong>工程规范</strong>：包含详细的 README 文档和代码注释<br><br>
-                        项目<strong>零外部依赖</strong>，仅使用 Python 标准库即可运行，
-                        适合作为初学者学习项目或快速原型开发。
+                        Qwen3.5 在企业级项目生成测试中展现了<strong>架构设计能力</strong>：<br><br>
+                        1. <strong>分层架构</strong>：清晰的路由层、业务层、数据层分离，符合企业开发规范<br>
+                        2. <strong>安全设计</strong>：完整的 JWT 认证体系、角色权限、API 限流<br>
+                        3. <strong>工程化</strong>：多环境配置、数据库迁移、Docker 部署<br>
+                        4. <strong>技术广度</strong>：前后端分离、缓存、ORM、容器化全覆盖<br><br>
+                        生成的代码具备<strong>直接投产</strong>的潜力，展现了模型对软件工程最佳实践的深入理解。
                     </p>
                 </div>
             </section>
