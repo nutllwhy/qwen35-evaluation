@@ -1114,97 +1114,205 @@ function getGreedyMove() {
     return best;
 }
 
+// 增强版评估函数 - 考虑更多棋型和位置价值
 function evaluate(r, c, player) {
     let score = 0;
     const dirs = [[0,1], [1,0], [1,1], [1,-1]];
+    
     for (let [dr, dc] of dirs) {
-        let count = 1, blocked = 0;
+        // 获取该方向的棋子分布
+        let line = [];
+        for (let i = -4; i <= 4; i++) {
+            const nr = r + dr * i, nc = c + dc * i;
+            if (nr >= 0 && nr < BOARD_SIZE && nc >= 0 && nc < BOARD_SIZE) {
+                line.push(board[nr][nc]);
+            } else {
+                line.push(-1); // 边界
+            }
+        }
+        
+        // 中心位置是4，检查以中心的各种模式
+        const patterns = [
+            { pattern: [0, player, player, player, player, 0], score: 10000 }, // 活四
+            { pattern: [0, player, player, player, 0], score: 1000 }, // 活三
+            { pattern: [0, player, player, 0, player, 0], score: 800 }, // 跳活三
+            { pattern: [0, player, player, 0], score: 100 }, // 活二
+            { pattern: [0, player, 0, player, 0], score: 50 }, // 跳活二
+            { pattern: [player, player, player, player, player], score: 100000 }, // 五连
+            { pattern: [-1, player, player, player, player, 0], score: 5000 }, // 冲四
+            { pattern: [0, player, player, player, player, -1], score: 5000 }, // 冲四
+        ];
+        
+        for (let { pattern, score: s } of patterns) {
+            for (let offset = 0; offset <= line.length - pattern.length; offset++) {
+                let match = true;
+                for (let i = 0; i < pattern.length; i++) {
+                    if (line[offset + i] !== pattern[i]) {
+                        match = false;
+                        break;
+                    }
+                }
+                if (match) score += s;
+            }
+        }
+        
+        // 连子数评估
+        let count = 1, blocked = 0, space = 0;
         for (let i = 1; i < 5; i++) {
             const nr = r + dr * i, nc = c + dc * i;
             if (nr >= 0 && nr < BOARD_SIZE && nc >= 0 && nc < BOARD_SIZE) {
                 if (board[nr][nc] === player) count++;
-                else if (board[nr][nc] !== 0) { blocked++; break; }
-                else break;
+                else if (board[nr][nc] === 0) { space++; break; }
+                else { blocked++; break; }
             } else { blocked++; break; }
         }
         for (let i = 1; i < 5; i++) {
             const nr = r - dr * i, nc = c - dc * i;
             if (nr >= 0 && nr < BOARD_SIZE && nc >= 0 && nc < BOARD_SIZE) {
                 if (board[nr][nc] === player) count++;
-                else if (board[nr][nc] !== 0) { blocked++; break; }
-                else break;
+                else if (board[nr][nc] === 0) { space++; break; }
+                else { blocked++; break; }
             } else { blocked++; break; }
         }
+        
+        // 根据连子数和封堵情况评分
         if (count >= 5) score += 100000;
-        else if (count === 4 && blocked === 0) score += 10000;
-        else if (count === 4 && blocked === 1) score += 1000;
-        else if (count === 3 && blocked === 0) score += 1000;
-        else if (count === 3 && blocked === 1) score += 100;
-        else if (count === 2 && blocked === 0) score += 100;
-        else score += count * 10;
+        else if (count === 4 && blocked === 0) score += 10000; // 活四
+        else if (count === 4 && blocked === 1) score += 5000;  // 冲四
+        else if (count === 3 && blocked === 0) score += 1000;  // 活三
+        else if (count === 3 && blocked === 1) score += 100;   // 眠三
+        else if (count === 2 && blocked === 0) score += 50;    // 活二
     }
+    
+    // 位置价值 - 中心位置更有价值
+    const centerDist = Math.abs(r - 7) + Math.abs(c - 7);
+    score += (14 - centerDist) * 5;
+    
     return score;
 }
 
+// 增强版Minimax - 使用评估函数作为叶子节点值
 function getMinimaxMove(depth) {
     let best = null, bestScore = -Infinity;
-    const moves = getCandidateMoves();
-    for (let move of moves) {
+    const moves = getSortedCandidateMoves();
+    
+    // 限制搜索范围以提高性能
+    const topMoves = moves.slice(0, 12);
+    
+    for (let move of topMoves) {
         board[move.r][move.c] = 2;
-        const score = minimax(depth - 1, false, -Infinity, Infinity);
+        // 检查是否直接获胜
+        if (checkWin(move.r, move.c, 2)) {
+            board[move.r][move.c] = 0;
+            return move;
+        }
+        const score = minimax(depth - 1, false, -Infinity, Infinity, move.r, move.c);
         board[move.r][move.c] = 0;
         if (score > bestScore) { bestScore = score; best = move; }
     }
     return best || getGreedyMove();
 }
 
-function minimax(depth, isMax, alpha, beta) {
-    if (depth === 0) return 0;
-    const moves = getCandidateMoves();
+// 增强版Minimax - 带有深度限制和评估函数
+function minimax(depth, isMax, alpha, beta, lastR, lastC) {
+    // 到达叶子节点，评估当前局面
+    if (depth === 0) {
+        return evaluateBoard();
+    }
+    
+    const moves = getSortedCandidateMoves();
     if (moves.length === 0) return 0;
+    
+    // 限制分支因子
+    const limitedMoves = moves.slice(0, 8);
     
     if (isMax) {
         let maxScore = -Infinity;
-        for (let move of moves) {
+        for (let move of limitedMoves) {
             board[move.r][move.c] = 2;
-            if (checkWin(move.r, move.c, 2)) { board[move.r][move.c] = 0; return 1000000; }
-            const score = minimax(depth - 1, false, alpha, beta);
+            // 检查获胜
+            if (checkWin(move.r, move.c, 2)) {
+                board[move.r][move.c] = 0;
+                return 10000000; // AI获胜，极高分数
+            }
+            const score = minimax(depth - 1, false, alpha, beta, move.r, move.c);
             board[move.r][move.c] = 0;
             maxScore = Math.max(maxScore, score);
             alpha = Math.max(alpha, score);
-            if (beta <= alpha) break;
+            if (beta <= alpha) break; // Alpha-Beta剪枝
         }
         return maxScore;
     } else {
         let minScore = Infinity;
-        for (let move of moves) {
+        for (let move of limitedMoves) {
             board[move.r][move.c] = 1;
-            if (checkWin(move.r, move.c, 1)) { board[move.r][move.c] = 0; return -1000000; }
-            const score = minimax(depth - 1, true, alpha, beta);
+            // 检查玩家获胜（需要阻止）
+            if (checkWin(move.r, move.c, 1)) {
+                board[move.r][move.c] = 0;
+                return -10000000; // 玩家获胜，极低分数
+            }
+            const score = minimax(depth - 1, true, alpha, beta, move.r, move.c);
             board[move.r][move.c] = 0;
             minScore = Math.min(minScore, score);
             beta = Math.min(beta, score);
-            if (beta <= alpha) break;
+            if (beta <= alpha) break; // Alpha-Beta剪枝
         }
         return minScore;
     }
 }
 
-function getCandidateMoves() {
-    const moves = [];
-    for (let r = 0; r < BOARD_SIZE; r++)
-        for (let c = 0; c < BOARD_SIZE; c++)
+// 评估整个棋盘状态
+function evaluateBoard() {
+    let aiScore = 0, playerScore = 0;
+    
+    // 评估所有空位
+    for (let r = 0; r < BOARD_SIZE; r++) {
+        for (let c = 0; c < BOARD_SIZE; c++) {
             if (board[r][c] === 0) {
-                for (let dr = -2; dr <= 2; dr++)
+                aiScore += evaluate(r, c, 2) * 0.8;
+                playerScore += evaluate(r, c, 1);
+            }
+        }
+    }
+    
+    return aiScore - playerScore;
+}
+
+// 排序的候选移动 - 优先评估更有价值的位置
+function getSortedCandidateMoves() {
+    const moves = [];
+    for (let r = 0; r < BOARD_SIZE; r++) {
+        for (let c = 0; c < BOARD_SIZE; c++) {
+            if (board[r][c] === 0) {
+                // 检查周围是否有棋子
+                let hasNeighbor = false;
+                for (let dr = -2; dr <= 2; dr++) {
                     for (let dc = -2; dc <= 2; dc++) {
                         const nr = r + dr, nc = c + dc;
                         if (nr >= 0 && nr < BOARD_SIZE && nc >= 0 && nc < BOARD_SIZE && board[nr][nc] !== 0) {
-                            moves.push({ r, c });
+                            hasNeighbor = true;
                             break;
                         }
                     }
+                    if (hasNeighbor) break;
+                }
+                if (hasNeighbor) {
+                    // 评估这个位置的分数
+                    const score = evaluate(r, c, 2) + evaluate(r, c, 1) * 0.9;
+                    moves.push({ r, c, score });
+                }
             }
-    return moves.length > 0 ? moves : [{ r: 7, c: 7 }];
+        }
+    }
+    
+    // 按分数排序
+    moves.sort((a, b) => b.score - a.score);
+    
+    if (moves.length === 0) {
+        return [{ r: 7, c: 7, score: 0 }];
+    }
+    
+    return moves.map(m => ({ r: m.r, c: m.c }));
 }
 
 // 技能
