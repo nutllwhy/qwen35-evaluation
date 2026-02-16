@@ -42,7 +42,7 @@
                 <div class="health-fill" id="health-fill"></div>
             </div>
         </div>
-        <div id="version">v1.5.0 - BOSS Update</div>
+        <div id="version">v1.6.0 - Super BOSS</div>
     </div>
     <div id="menu">
         <h1>STAR FIGHTER</h1>
@@ -253,24 +253,24 @@ function createEnemyShip(type) {
     }
 }
 
-// 创建BOSS
+// 创建BOSS - 超级加强版
 function createBoss() {
     const group = new THREE.Group();
     
-    // BOSS机身 - 更大更复杂
-    const bodyGeo = new THREE.CylinderGeometry(1.2, 1.5, 5, 8);
+    // BOSS机身 - 增大50%
+    const bodyGeo = new THREE.CylinderGeometry(1.8, 2.2, 7, 8);
     bodyGeo.rotateX(Math.PI / 2);
     const bodyMat = new THREE.MeshStandardMaterial({ 
         color: 0xff0044, 
         metalness: 0.9, 
         roughness: 0.1,
-        emissive: 0x330011
+        emissive: 0x440022
     });
     const body = new THREE.Mesh(bodyGeo, bodyMat);
     group.add(body);
     
-    // BOSS主翼 - 超大
-    const mainWingGeo = new THREE.BoxGeometry(8, 0.2, 2.5);
+    // BOSS主翼 - 超超大
+    const mainWingGeo = new THREE.BoxGeometry(12, 0.3, 3.5);
     const wingMat = new THREE.MeshStandardMaterial({ 
         color: 0xcc0033, 
         metalness: 0.8, 
@@ -281,53 +281,71 @@ function createBoss() {
     group.add(mainWing);
     
     // BOSS副翼
-    const subWingGeo = new THREE.BoxGeometry(4, 0.15, 1.5);
+    const subWingGeo = new THREE.BoxGeometry(6, 0.2, 2);
     const subWingL = new THREE.Mesh(subWingGeo, wingMat);
-    subWingL.position.set(-2.5, 0.3, -0.5);
+    subWingL.position.set(-3.5, 0.4, -0.5);
     subWingL.rotation.z = 0.3;
     group.add(subWingL);
     const subWingR = new THREE.Mesh(subWingGeo, wingMat);
-    subWingR.position.set(2.5, 0.3, -0.5);
+    subWingR.position.set(3.5, 0.4, -0.5);
     subWingR.rotation.z = -0.3;
     group.add(subWingR);
     
     // BOSS尾翼
-    const tailGeo = new THREE.BoxGeometry(0.3, 1.5, 1);
+    const tailGeo = new THREE.BoxGeometry(0.4, 2, 1.5);
     const tailL = new THREE.Mesh(tailGeo, wingMat);
-    tailL.position.set(-1.5, 0.8, 2);
+    tailL.position.set(-2, 1.2, 3);
     tailL.rotation.z = -0.3;
     group.add(tailL);
     const tailR = new THREE.Mesh(tailGeo, wingMat);
-    tailR.position.set(1.5, 0.8, 2);
+    tailR.position.set(2, 1.2, 3);
     tailR.rotation.z = 0.3;
     group.add(tailR);
     
-    // BOSS核心 - 发光球体
-    const coreGeo = new THREE.SphereGeometry(0.8, 16, 16);
+    // BOSS核心 - 更大的发光球体
+    const coreGeo = new THREE.SphereGeometry(1.2, 16, 16);
     const coreMat = new THREE.MeshBasicMaterial({ 
         color: 0xff0000,
         emissive: 0xff0000,
-        emissiveIntensity: 2
+        emissiveIntensity: 3
     });
     const core = new THREE.Mesh(coreGeo, coreMat);
-    core.position.set(0, 0.5, 0);
+    core.position.set(0, 0.8, 0);
     group.add(core);
     
-    // BOSS引擎 - 多个
-    const engineGeo = new THREE.CylinderGeometry(0.4, 0.6, 1.2, 8);
+    // BOSS引擎 - 更多更大
+    const engineGeo = new THREE.CylinderGeometry(0.6, 0.8, 1.5, 8);
     engineGeo.rotateX(Math.PI / 2);
     const engineMat = new THREE.MeshBasicMaterial({ 
         color: 0xff4400, 
         emissive: 0xff2200 
     });
-    const positions = [[-2, -0.3, 2.5], [2, -0.3, 2.5], [-1, -0.3, 3], [1, -0.3, 3]];
+    const positions = [[-3, -0.5, 3.5], [3, -0.5, 3.5], [-1.5, -0.5, 4], [1.5, -0.5, 4], [-0.5, -0.5, 4.5], [0.5, -0.5, 4.5]];
     positions.forEach(pos => {
         const engine = new THREE.Mesh(engineGeo, engineMat);
         engine.position.set(...pos);
         group.add(engine);
     });
     
-    return { group, hp: 50, maxHp: 50, speed: 0.04, color: '#f00', isBoss: true };
+    // BOSS护甲装饰
+    const armorGeo = new THREE.BoxGeometry(2, 0.5, 2);
+    const armorMat = new THREE.MeshStandardMaterial({ 
+        color: 0x880022, 
+        metalness: 1, 
+        roughness: 0.1 
+    });
+    for (let i = 0; i < 4; i++) {
+        const armor = new THREE.Mesh(armorGeo, armorMat);
+        armor.position.set(
+            (i % 2 === 0 ? -1 : 1) * 2.5,
+            0.5,
+            -1 + Math.floor(i / 2) * 2
+        );
+        group.add(armor);
+    }
+    
+    // 返回：HP从50增加到120，速度更慢（0.015）
+    return { group, hp: 120, maxHp: 120, speed: 0.015, color: '#f00', isBoss: true };
 }
 
 // 初始化
@@ -392,23 +410,23 @@ function shoot() {
     bullets.push(bullet);
 }
 
-// BOSS发射弹幕
+// BOSS发射弹幕 - 加强版
 function bossShoot(boss) {
-    // BOSS发射3发扇形子弹
-    const angles = [-0.3, 0, 0.3]; // 左中右三个方向
+    // BOSS发射5发扇形子弹（更密集的弹幕）
+    const angles = [-0.5, -0.25, 0, 0.25, 0.5]; // 5个方向
     angles.forEach(angle => {
-        const geometry = new THREE.SphereGeometry(0.25, 8, 8);
+        const geometry = new THREE.SphereGeometry(0.3, 8, 8); // 更大的子弹
         const material = new THREE.MeshBasicMaterial({ color: 0xff0044, emissive: 0xff0022 });
         const bullet = new THREE.Mesh(geometry, material);
         bullet.position.copy(boss.mesh.position);
         bullet.position.y = 0;
-        bullet.position.z += 2;
+        bullet.position.z += 3;
         
-        // 计算子弹速度方向
+        // 更快的子弹速度
         bullet.userData.velocity = new THREE.Vector3(
-            Math.sin(angle) * 0.3,
+            Math.sin(angle) * 0.4,
             0,
-            0.6 + Math.cos(angle) * 0.2
+            0.8 + Math.cos(angle) * 0.3
         );
         
         scene.add(bullet);
@@ -442,7 +460,7 @@ function spawnEnemy() {
             healthBar: healthBar,
             isBoss: true,
             lastShot: Date.now(),
-            shootInterval: 1500
+            shootInterval: 1000 // 更频繁的攻击（1秒一次）
         });
         
         // 显示BOSS警告
@@ -709,10 +727,12 @@ function update() {
             b.position.z += 0.5;
         }
         
-        // 检测击中玩家
+        // 检测击中玩家（BOSS子弹伤害更高）
         const bulletBox = new THREE.Box3().setFromObject(b);
         if (bulletBox.intersectsBox(playerBox)) {
-            takeDamage(15);
+            // 根据子弹大小判断是否为BOSS子弹
+            const isBossBullet = b.geometry.parameters.radius > 0.25;
+            takeDamage(isBossBullet ? 20 : 15);
             scene.remove(b);
             enemyBullets.splice(i, 1);
             continue;
