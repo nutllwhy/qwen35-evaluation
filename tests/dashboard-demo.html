@@ -190,6 +190,8 @@
         Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto';
         Chart.defaults.color = '#7f8c8d';
 
+        // 等待 DOM 和样式完全加载后再初始化图表
+        function initCharts() {
         // 1. 柱状图配置
         const ctxBar = document.getElementById('barChart').getContext('2d');
         new Chart(ctxBar, {
@@ -333,6 +335,19 @@
                     intersect: false
                 }
             }
+        });
+        }
+
+        // 等待 DOM 完全加载后再初始化
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initCharts);
+        } else {
+            initCharts();
+        }
+        
+        // 额外延迟确保 iframe 尺寸计算正确
+        window.addEventListener('load', function() {
+            setTimeout(initCharts, 100);
         });
     </script>
 </body>
