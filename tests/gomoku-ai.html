@@ -453,6 +453,7 @@
     <div class="header">
         <h1>弈 棋</h1>
         <div class="subtitle">五子连珠 · 智夺天元</div>
+        <button id="audioToggle" onclick="toggleAudio()" style="position: absolute; top: 15px; right: 15px; background: rgba(255,255,255,0.2); border: none; border-radius: 50%; width: 36px; height: 36px; cursor: pointer; font-size: 18px;">🔊</button>
     </div>
     
     <div class="main-container">
@@ -538,7 +539,8 @@
                 <div class="rules-content">
                     <strong>五子连珠：</strong>横、竖、斜先成五子者胜。<br>
                     <strong>黑先白后：</strong>黑方先行，轮流落子。<br>
-                    <strong>秘技：</strong>每局各限用一次。
+                    <strong>秘技：</strong>每局各限用一次。<br>
+                    <strong>🔊 音效：</strong>点击右上角按钮开关音效。
                 </div>
             </div>
         </div>
@@ -555,6 +557,131 @@
 <script>
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
+
+// ==================== 音频系统 ====================
+let audioEnabled = true;
+let audioContext = null;
+
+function initAudio() {
+    if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+}
+
+function toggleAudio() {
+    audioEnabled = !audioEnabled;
+    const btn = document.getElementById('audioToggle');
+    btn.textContent = audioEnabled ? '🔊' : '🔇';
+    btn.style.opacity = audioEnabled ? '1' : '0.5';
+    if (audioEnabled) initAudio();
+}
+
+// 播放落子声 - 使用合成音效模拟棋子敲击声
+function playPlaceSound(player) {
+    if (!audioEnabled || !audioContext) return;
+    
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    // 黑子：低沉的木头声，白子：清脆的玉石声
+    if (player === 1) {
+        oscillator.frequency.setValueAtTime(180, audioContext.currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(120, audioContext.currentTime + 0.08);
+    } else {
+        oscillator.frequency.setValueAtTime(350, audioContext.currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(280, audioContext.currentTime + 0.06);
+    }
+    
+    oscillator.type = 'sine';
+    gainNode.gain.setValueAtTime(0.4, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+    
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + 0.1);
+    
+    // 添加轻微的噪声模拟敲击感
+    const noiseBuffer = audioContext.createBuffer(1, audioContext.sampleRate * 0.05, audioContext.sampleRate);
+    const output = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < noiseBuffer.length; i++) {
+        output[i] = Math.random() * 2 - 1;
+    }
+    const noise = audioContext.createBufferSource();
+    noise.buffer = noiseBuffer;
+    const noiseGain = audioContext.createGain();
+    noiseGain.gain.setValueAtTime(0.05, audioContext.currentTime);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.05);
+    noise.connect(noiseGain);
+    noiseGain.connect(audioContext.destination);
+    noise.start();
+}
+
+// 播放胜利音效
+function playWinSound() {
+    if (!audioEnabled || !audioContext) return;
+    
+    const notes = [523.25, 659.25, 783.99, 1046.50]; // C大调和弦
+    notes.forEach((freq, i) => {
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.frequency.setValueAtTime(freq, audioContext.currentTime + i * 0.1);
+        oscillator.type = 'sine';
+        gainNode.gain.setValueAtTime(0, audioContext.currentTime + i * 0.1);
+        gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + i * 0.1 + 0.05);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + i * 0.1 + 0.5);
+        
+        oscillator.start(audioContext.currentTime + i * 0.1);
+        oscillator.stop(audioContext.currentTime + i * 0.1 + 0.6);
+    });
+}
+
+// 播放失败音效
+function playLoseSound() {
+    if (!audioEnabled || !audioContext) return;
+    
+    const notes = [392.00, 349.23, 293.66, 261.63]; // 下行音阶
+    notes.forEach((freq, i) => {
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.frequency.setValueAtTime(freq, audioContext.currentTime + i * 0.15);
+        oscillator.type = 'triangle';
+        gainNode.gain.setValueAtTime(0.2, audioContext.currentTime + i * 0.15);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + i * 0.15 + 0.4);
+        
+        oscillator.start(audioContext.currentTime + i * 0.15);
+        oscillator.stop(audioContext.currentTime + i * 0.15 + 0.5);
+    });
+}
+
+// 播放技能音效
+function playSkillSound() {
+    if (!audioEnabled || !audioContext) return;
+    
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
+    oscillator.frequency.exponentialRampToValueAtTime(880, audioContext.currentTime + 0.1);
+    oscillator.type = 'sine';
+    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+    
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + 0.3);
+}
 
 const BOARD_SIZE = 15;
 const CELL_SIZE = 44;
@@ -699,6 +826,9 @@ function drawPiece(r, c, player) {
 canvas.addEventListener('click', (e) => {
     if (gameOver) return;
     
+    // 首次交互初始化音频
+    initAudio();
+    
     const rect = canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
@@ -723,13 +853,19 @@ canvas.addEventListener('click', (e) => {
 function makeMove(r, c, player) {
     board[r][c] = player;
     moveHistory.push({ r, c, player });
+    playPlaceSound(player);
     drawBoard();
     
     if (checkWin(r, c, player)) {
         gameOver = true;
         const isWin = player === 1;
-        if (isWin) blackScore++;
-        else whiteScore++;
+        if (isWin) {
+            blackScore++;
+            playWinSound();
+        } else {
+            whiteScore++;
+            playLoseSound();
+        }
         updateScore();
         showModal(isWin ? 'win' : 'lose', isWin ? '黑方胜！' : '白方胜！');
         return;
@@ -909,6 +1045,9 @@ function getCandidateMoves() {
 function useSkill(id) {
     if (gameOver || currentPlayer !== 1 || skillsUsed[id]) return;
     
+    initAudio();
+    playSkillSound();
+    
     switch(id) {
         case 1:
             extraMove = true;
@@ -1021,6 +1160,7 @@ function closeModal() {
 }
 
 initBoard();
+initAudio();
 </script>
 </body>
 </html>
