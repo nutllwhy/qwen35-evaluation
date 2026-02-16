@@ -112,7 +112,12 @@
             align-items: center;
             justify-content: center;
             color: var(--accent-color);
-            font-size: 1.2rem;
+        }
+        
+        .card-icon svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
         }
 
         /* 图表容器 */
@@ -152,7 +157,7 @@
         <div class="card large">
             <div class="card-header">
                 <div class="card-title">月度营收趋势</div>
-                <div class="card-icon">📊</div>
+                <div class="card-icon"><svg viewBox="0 0 24 24"><rect x="3" y="10" width="4" height="11" rx="1"/><rect x="10" y="6" width="4" height="15" rx="1"/><rect x="17" y="3" width="4" height="18" rx="1"/></svg></div>
             </div>
             <div class="chart-container">
                 <canvas id="barChart"></canvas>
@@ -163,7 +168,7 @@
         <div class="card">
             <div class="card-header">
                 <div class="card-title">用户来源分布</div>
-                <div class="card-icon">🍩</div>
+                <div class="card-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 3v9l6 6"/></svg></div>
             </div>
             <div class="chart-container">
                 <canvas id="pieChart"></canvas>
@@ -174,7 +179,7 @@
         <div class="card large">
             <div class="card-header">
                 <div class="card-title">网站流量分析</div>
-                <div class="card-icon">📈</div>
+                <div class="card-icon"><svg viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 7h7v7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
             </div>
             <div class="chart-container">
                 <canvas id="lineChart"></canvas>
