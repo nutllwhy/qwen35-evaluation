@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TEST 04: 复杂逻辑推理 | Qwen3.5 评测</title>
+    <title>TEST 06: 2D弹幕射击 | Qwen3.5 评测</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
@@ -17,7 +17,6 @@
             --success: #00aa44;
             --warning: #f5a623;
             --danger: #dc3545;
-            --info: #0891b2;
             --purple: #7c3aed;
         }
         
@@ -75,8 +74,8 @@
             align-items: center;
             gap: 8px;
             padding: 8px 16px;
-            background: #e6f7ed;
-            color: var(--success);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
             border-radius: 20px;
             font-size: 13px;
             font-weight: 600;
@@ -101,15 +100,6 @@
             margin: 28px 0 12px;
         }
         
-        /* Upgrade Banner */
-        .upgrade-banner {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 32px;
-        }
-        
         /* Metrics */
         .metrics-grid {
             display: grid;
@@ -128,185 +118,115 @@
         .metric-value { font-size: 28px; font-weight: 600; color: var(--purple); }
         .metric-label { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
         
-        /* Problem Card */
-        .problem-card {
+        /* Game Preview */
+        .game-preview {
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            color: white;
-            padding: 32px;
             border-radius: 12px;
+            padding: 32px;
+            text-align: center;
             margin: 24px 0;
         }
         
-        .problem-title {
-            font-size: 20px;
+        .game-title {
+            font-size: 24px;
             font-weight: 600;
+            color: #ff6b6b;
             margin-bottom: 16px;
-            color: #64b5f6;
+            text-shadow: 0 0 20px #ff6b6b;
         }
         
-        .clue-list {
+        .game-desc {
+            color: #aaa;
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+        
+        .play-button {
+            display: inline-block;
+            padding: 16px 48px;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .play-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(238, 90, 36, 0.4);
+        }
+        
+        /* Feature Cards */
+        .feature-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 8px;
-            font-size: 13px;
-            opacity: 0.9;
-        }
-        
-        .clue-item {
-            padding: 6px 12px;
-            background: rgba(255,255,255,0.05);
-            border-radius: 4px;
-        }
-        
-        /* Solution Matrix */
-        .matrix-container {
-            overflow-x: auto;
-            margin: 24px 0;
-        }
-        
-        .solution-matrix {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 13px;
-            min-width: 600px;
-        }
-        
-        .solution-matrix th {
-            background: var(--purple);
-            color: white;
-            padding: 12px;
-            font-weight: 600;
-        }
-        
-        .solution-matrix td {
-            padding: 12px;
-            text-align: center;
-            border: 1px solid var(--border);
-        }
-        
-        .solution-matrix .row-label {
-            background: var(--code-bg);
-            font-weight: 600;
-            text-align: left;
-        }
-        
-        .solution-matrix .highlight {
-            background: #e6f7ed;
-            font-weight: 600;
-            color: var(--success);
-        }
-        
-        /* Reasoning Steps */
-        .reasoning-flow {
-            display: flex;
-            flex-direction: column;
             gap: 16px;
             margin: 24px 0;
         }
         
-        .reasoning-step {
-            display: flex;
-            gap: 16px;
+        .feature-card {
             padding: 20px;
             background: var(--code-bg);
             border-radius: 8px;
             border-left: 4px solid var(--purple);
         }
         
-        .step-number {
-            width: 36px;
-            height: 36px;
-            background: var(--purple);
-            color: white;
-            border-radius: 50%;
+        .feature-title {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 8px;
             display: flex;
             align-items: center;
-            justify-content: center;
-            font-weight: 600;
-            font-size: 14px;
-            flex-shrink: 0;
+            gap: 8px;
         }
         
-        .step-content h4 {
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-        
-        .step-content p {
+        .feature-desc {
             font-size: 13px;
             color: var(--text-secondary);
-            line-height: 1.6;
         }
         
-        .step-deduction {
-            margin-top: 12px;
-            padding: 12px;
-            background: white;
-            border-radius: 6px;
-            font-size: 13px;
-        }
-        
-        .step-deduction strong {
-            color: var(--success);
-        }
-        
-        /* Answer Cards */
-        .answer-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 24px;
+        /* Tech Specs */
+        .tech-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
             margin: 24px 0;
         }
         
-        .answer-card {
-            padding: 32px;
-            border-radius: 12px;
+        .tech-tag {
+            padding: 8px 16px;
+            background: var(--code-bg);
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        
+        /* Code Stats */
+        .code-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin: 24px 0;
+        }
+        
+        .stat-card {
+            padding: 20px;
+            background: linear-gradient(135deg, #f5f5f5 0%, #ffffff 100%);
+            border: 1px solid var(--border);
+            border-radius: 8px;
             text-align: center;
         }
         
-        .answer-card.fish {
-            background: linear-gradient(135deg, #e6f7ed 0%, #d1fae5 100%);
-            border: 2px solid var(--success);
-        }
+        .stat-value { font-size: 24px; font-weight: 700; color: var(--purple); }
+        .stat-label { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
         
-        .answer-card.water {
-            background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
-            border: 2px solid var(--info);
-        }
-        
-        .answer-emoji {
-            font-size: 48px;
-            margin-bottom: 16px;
-        }
-        
-        .answer-label {
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 8px;
-        }
-        
-        .answer-card.fish .answer-label { color: var(--success); }
-        .answer-card.water .answer-label { color: var(--info); }
-        
-        .answer-person {
-            font-size: 24px;
-            font-weight: 700;
-        }
-        
-        /* Complexity Comparison */
-        .comparison-section {
-            background: var(--code-bg);
-            border-radius: 12px;
-            padding: 24px;
-            margin: 24px 0;
-        }
-        
+        /* Comparison Table */
         .comparison-table {
             width: 100%;
             border-collapse: collapse;
+            margin: 24px 0;
             font-size: 14px;
         }
         
@@ -319,11 +239,8 @@
         
         .comparison-table th {
             font-weight: 600;
-            background: white;
+            background: var(--code-bg);
         }
-        
-        .simple { color: var(--text-secondary); }
-        .complex { color: var(--success); font-weight: 600; }
         
         /* Conclusion */
         .conclusion-box {
@@ -336,8 +253,8 @@
         
         @media (max-width: 768px) {
             .metrics-grid { grid-template-columns: repeat(2, 1fr); }
-            .clue-list { grid-template-columns: 1fr; }
-            .answer-grid { grid-template-columns: 1fr; }
+            .feature-grid { grid-template-columns: 1fr; }
+            .code-stats { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -347,10 +264,12 @@
             <div class="nav-logo"><a href="../index.html" style="text-decoration:none;color:inherit;">Qwen3.5 评测</a></div>
             <ul class="nav-links">
                 <li><a href="../index.html">概览</a></li>
-                <li><a href="test01.html">美学基准</a></li>
-                <li><a href="test02.html">Bug修复</a></li>
-                <li><a href="test03.html">项目生成</a></li>
-                <li><a href="test04.html" class="active">逻辑推理</a></li>
+                <li><a href="test01.html">项目生成</a></li>
+                <li><a href="test02.html">逻辑推理</a></li>
+                <li><a href="test03.html">3D游戏</a></li>
+                <li><a href="test04.html" class="active">2D弹幕</a></li>
+                <li><a href="test05.html">塔防</a></li>
+                <li><a href="test06.html">五子棋</a></li>
             </ul>
         </div>
     </nav>
@@ -358,266 +277,157 @@
     <main class="main">
         <div class="container">
             
-            <div class="breadcrumb"><a href="../index.html">概览</a> / TEST 04（升级版）</div>
+            <div class="breadcrumb"><a href="../index.html">概览</a> / TEST04</div>
 
             <header class="page-header">
                 <div class="page-title">
-                    <h1>复杂逻辑推理</h1>
-                    <div class="page-subtitle">爱因斯坦斑马谜题 - 多约束逻辑求解</div>
+                    <h1>2D 弹幕射击</h1>
+                    <div class="page-subtitle">Canvas 2D Bullet Hell 游戏性能测试</div>
                 </div>
-                <span class="status-badge">⭐ 高难度</span>
+                <span class="status-badge">🎮 可运行</span>
             </header>
-
-            <!-- Upgrade Notice -->
-            <div class="upgrade-banner">
-                <strong>🚀 升级版测试</strong>：应要求升级为更复杂的场景
-                <span style="opacity: 0.9;"> - 从简单过河问题升级为爱因斯坦经典逻辑谜题（15条线索，25个变量）</span>
-            </div>
 
             <!-- Metrics -->
             <section>
-                <h2>问题规模</h2>
+                <h2>测试指标</h2>
                 
                 <div class="metrics-grid">
                     <div class="metric-item">
-                        <div class="metric-value">15</div>
-                        <div class="metric-label">约束条件</div>
+                        <div class="metric-value">2D</div>
+                        <div class="metric-label">游戏维度</div>
                     </div>
                     <div class="metric-item">
-                        <div class="metric-value">25</div>
-                        <div class="metric-label">变量数量</div>
+                        <div class="metric-value">100+</div>
+                        <div class="metric-label">同屏子弹数</div>
                     </div>
                     <div class="metric-item">
-                        <div class="metric-value">6</div>
-                        <div class="metric-label">推理步骤</div>
+                        <div class="metric-value">60</div>
+                        <div class="metric-label">目标FPS</div>
                     </div>
                     <div class="metric-item">
-                        <div class="metric-value">100%</div>
-                        <div class="metric-label">求解成功率</div>
+                        <div class="metric-value">3</div>
+                        <div class="metric-label">弹幕类型</div>
                     </div>
                 </div>            
             </section>
 
-            <!-- Problem Description -->
+            <!-- Game Preview -->
             <section>
-                <h2>问题描述</h2>
+                <h2>游戏演示</h2>
                 
-                <div class="problem-card">
-                    <div class="problem-title">🧩 爱因斯坦的斑马谜题</div>
-                    
-                    <p style="margin-bottom: 20px; opacity: 0.9;">
-                        5栋房子，5个国籍，5种饮料，5种香烟，5种宠物。
-                        根据15条线索，推理出谁养鱼？谁喝水？
-                    </p>
-                    
-                    <div class="clue-list">
-                        <div class="clue-item">1. 英国人住红房子</div>
-                        <div class="clue-item">2. 瑞典人养狗</div>
-                        <div class="clue-item">3. 丹麦人喝茶</div>
-                        <div class="clue-item">4. 绿房子在白房子左边</div>
-                        <div class="clue-item">5. 绿房子主人喝咖啡</div>
-                        <div class="clue-item">6. 抽Pall Mall的人养鸟</div>
-                        <div class="clue-item">7. 黄房子主人抽Dunhill</div>
-                        <div class="clue-item">8. 中间房子的人喝牛奶</div>
-                        <div class="clue-item">9. 挪威人住第一间</div>
-                        <div class="clue-item">10. 抽Blends的人住在养猫的人隔壁</div>
-                        <div class="clue-item">11. 养马的人住在抽Dunhill的人隔壁</div>
-                        <div class="clue-item">12. 抽Blue Master的人喝啤酒</div>
-                        <div class="clue-item">13. 德国人抽Prince</div>
-                        <div class="clue-item">14. 挪威人住在蓝房子隔壁</div>
-                        <div class="clue-item">15. 抽Blends的人有一个喝水的邻居</div>
+                <div class="game-preview">
+                    <div class="game-title">🔴 BULLET HELL 🔴</div>
+                    <div class="game-desc">
+                        2D弹幕射击游戏 - 躲避密集的弹幕，消灭敌人！<br>
+                        支持直线、扇形、螺旋三种弹幕模式
                     </div>
+                    
+                    <a href="bullet-hell-2d.html" class="play-button" target="_blank">
+                        ▶ 开始游戏
+                    </a>
                 </div>
             </section>
 
-            <!-- Reasoning Process -->
+            <!-- Features -->
             <section>
-                <h2>推理过程</h2>
+                <h2>游戏特性</h2>
                 
-                <div class="reasoning-flow">
-                    <div class="reasoning-step">
-                        <span class="step-number">1</span>
-                        <div class="step-content">
-                            <h4>锚点定位（直接线索）</h4>
-                            <p>利用最明确的线索建立初始确定值</p>
-                            <div class="step-deduction">
-                                • 线索9：房子1 = <strong>挪威</strong><br>
-                                • 线索8：房子3 = <strong>牛奶</strong>
-                            </div>
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <div class="feature-title">➡️ 直线弹幕</div>
+                        <div class="feature-desc">
+                            敌人向下直射子弹，基础但致命的攻击方式
                         </div>
                     </div>
                     
-                    <div class="reasoning-step">
-                        <span class="step-number">2</span>
-                        <div class="step-content">
-                            <h4>颜色与邻居推理</h4>
-                            <p>通过相邻关系和排除法确定房子颜色</p>
-                            <div class="step-deduction">
-                                • 线索14：房子2 = <strong>蓝色</strong>（挪威的邻居）<br>
-                                • 线索4+5：房子4 = <strong>绿色/咖啡</strong>，房子5 = <strong>白色</strong><br>
-                                • 线索1+7：房子1 = <strong>黄色/Dunhill</strong>，房子3 = <strong>红色/英国</strong>
-                            </div>
+                    <div class="feature-card">
+                        <div class="feature-title">🔀 扇形弹幕</div>
+                        <div class="feature-desc">
+                            多方向散射，需要快速判断安全区域
                         </div>
                     </div>
                     
-                    <div class="reasoning-step">
-                        <span class="step-number">3</span>
-                        <div class="step-content">
-                            <h4>关键突破口（饮料推理）</h4>
-                            <p>通过排除法确定房子1的饮料，进而推导其他</p>
-                            <div class="step-deduction">
-                                • 房子1不能喝茶（丹麦人喝茶，房子1是挪威人）<br>
-                                • 房子1不能喝啤酒（房子1抽Dunhill，不是Blue Master）<br>
-                                • ∴ 房子1 = <strong>水</strong>，房子2 = <strong>Blends</strong>（线索15）
-                            </div>
+                    <div class="feature-card">
+                        <div class="feature-title">🌀 螺旋弹幕</div>
+                        <div class="feature-desc">
+                            旋转扩散的弹幕，考验微操和预判
                         </div>
                     </div>
                     
-                    <div class="reasoning-step">
-                        <span class="step-number">4</span>
-                        <div class="step-content">
-                            <h4>国籍与香烟匹配</h4>
-                            <p>利用香烟品牌与国籍的对应关系</p>
-                            <div class="step-deduction">
-                                • 线索3：房子2 = <strong>丹麦/茶</strong><br>
-                                • 线索13：房子4 = <strong>德国/Prince</strong><br>
-                                • 线索12：房子5 = <strong>瑞典/啤酒/Blue Master</strong><br>
-                                • 房子3 = <strong>Pall Mall</strong>（剩余）
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="reasoning-step">
-                        <span class="step-number">5</span>
-                        <div class="step-content">
-                            <h4>宠物推导</h4>
-                            <p>通过宠物线索完成最后填充</p>
-                            <div class="step-deduction">
-                                • 线索2：房子5 = <strong>狗</strong>（瑞典人）<br>
-                                • 线索6：房子3 = <strong>鸟</strong>（Pall Mall）<br>
-                                • 线索10：房子1 = <strong>猫</strong>（Blends的邻居）<br>
-                                • ∴ 房子4 = <strong>鱼</strong>（剩余）
-                            </div>
+                    <div class="feature-card">
+                        <div class="feature-title">⚡ 60FPS性能</div>
+                        <div class="feature-desc">
+                            对象池优化，同时处理100+子弹保持流畅
                         </div>
                     </div>
                 </div>
             </section>
 
-            <!-- Solution Matrix -->
+            <!-- Tech Stack -->
             <section>
-                <h2>最终解矩阵</h2>
+                <h2>技术栈</h2>
                 
-                <div class="matrix-container">
-                    <table class="solution-matrix">
-                        <tr>
-                            <th>属性</th>
-                            <th>房子 1</th>
-                            <th>房子 2</th>
-                            <th>房子 3</th>
-                            <th>房子 4</th>
-                            <th>房子 5</th>
-                        </tr>
-                        <tr>
-                            <td class="row-label">🎨 颜色</td>
-                            <td>黄</td>
-                            <td>蓝</td>
-                            <td>红</td>
-                            <td>绿</td>
-                            <td>白</td>
-                        </tr>
-                        <tr>
-                            <td class="row-label">👤 国籍</td>
-                            <td class="highlight">挪威</td>
-                            <td>丹麦</td>
-                            <td>英国</td>
-                            <td class="highlight">德国</td>
-                            <td>瑞典</td>
-                        </tr>
-                        <tr>
-                            <td class="row-label">🥤 饮料</td>
-                            <td class="highlight">水</td>
-                            <td>茶</td>
-                            <td>牛奶</td>
-                            <td>咖啡</td>
-                            <td>啤酒</td>
-                        </tr>
-                        <tr>
-                            <td class="row-label">🚬 香烟</td>
-                            <td>Dunhill</td>
-                            <td>Blends</td>
-                            <td>Pall Mall</td>
-                            <td>Prince</td>
-                            <td>Blue Master</td>
-                        </tr>
-                        <tr>
-                            <td class="row-label">🐾 宠物</td>
-                            <td>猫</td>
-                            <td>马</td>
-                            <td>鸟</td>
-                            <td class="highlight">鱼</td>
-                            <td>狗</td>
-                        </tr>
-                    </table>
+                <div class="tech-list">
+                    <span class="tech-tag">🎨 HTML5 Canvas</span>
+                    <span class="tech-tag">⚡ Canvas 2D API</span>
+                    <span class="tech-tag">🎯 对象池模式</span>
+                    <span class="tech-tag">📐 三角函数计算</span>
+                    <span class="tech-tag">🎮 60fps 游戏循环</span>
+                    <span class="tech-tag">💥 粒子系统</span>
                 </div>
             </section>
 
-            <!-- Answers -->
+            <!-- Code Stats -->
             <section>
-                <h2>问题答案</h2>
+                <h2>代码统计</h2>
                 
-                <div class="answer-grid">
-                    <div class="answer-card fish">
-                        <div class="answer-emoji">🐟</div>
-                        <div class="answer-label">谁养鱼？</div>
-                        <div class="answer-person">德国人</div>
+                <div class="code-stats">
+                    <div class="stat-card">
+                        <div class="stat-value">~500</div>
+                        <div class="stat-label">代码行数</div>
                     </div>
-                    
-                    <div class="answer-card water">
-                        <div class="answer-emoji">💧</div>
-                        <div class="answer-label">谁喝水？</div>
-                        <div class="answer-person">挪威人</div>
+                    <div class="stat-card">
+                        <div class="stat-value">1</div>
+                        <div class="stat-label">HTML文件</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">0</div>
+                        <div class="stat-label">外部依赖</div>
                     </div>
                 </div>
             </section>
 
-            <!-- Complexity Comparison -->
+            <!-- Comparison -->
             <section>
-                <h2>复杂度对比</h2>
+                <h2>与前作对比</h2>
                 
-                <div class="comparison-section">
-                    <table class="comparison-table">
-                        <tr>
-                            <th>维度</th>
-                            <th class="simple">简单版（原版）</th>
-                            <th class="complex">复杂版（升级版）</th>
-                        </tr>
-                        <tr>
-                            <td>问题类型</td>
-                            <td class="simple">过河问题</td>
-                            <td class="complex">爱因斯坦斑马谜题</td>
-                        </tr>
-                        <tr>
-                            <td>约束条件</td>
-                            <td class="simple">4 条</td>
-                            <td class="complex">15 条</td>
-                        </tr>
-                        <tr>
-                            <td>变量数量</td>
-                            <td class="simple">4 个</td>
-                            <td class="complex">25 个（5×5矩阵）</td>
-                        </tr>
-                        <tr>
-                            <td>推理方法</td>
-                            <td class="simple">步骤枚举</td>
-                            <td class="complex">约束满足 + 排除法</td>
-                        </tr>
-                        <tr>
-                            <td>求解难度</td>
-                            <td class="simple">⭐⭐ 简单</td>
-                            <td class="complex">⭐⭐⭐⭐⭐ 极难</td>
-                        </tr>
-                    </table>
-                </div>
+                <table class="comparison-table">
+                    <tr>
+                        <th>维度</th>
+                        <th>TEST 05 (3D)</th>
+                        <th>TEST 06 (2D)</th>
+                    </tr>
+                    <tr>
+                        <td>技术</td>
+                        <td>Three.js / WebGL</td>
+                        <td>Canvas 2D API</td>
+                    </tr>
+                    <tr>
+                        <td>对象数</td>
+                        <td>~30个</td>
+                        <td>~100+个</td>
+                    </tr>
+                    <tr>
+                        <td>性能重点</td>
+                        <td>3D渲染</td>
+                        <td>大量对象管理</td>
+                    </tr>
+                    <tr>
+                        <td>数学</td>
+                        <td>3D变换</td>
+                        <td>三角函数/轨迹</td>
+                    </tr>
+                </table>
             </section>
 
             <!-- Conclusion -->
@@ -626,21 +436,21 @@
                 
                 <div class="conclusion-box">
                     <p style="font-size: 16px; line-height: 1.8;">
-                        Qwen3.5 在复杂逻辑推理测试中展现了<strong>卓越的约束求解能力</strong>：<br><br>
-                        1. <strong>系统化方法</strong>：使用5×5矩阵进行结构化推理，步骤清晰可追溯<br>
-                        2. <strong>约束处理</strong>：正确处理15条复杂约束，包括相邻关系、互斥条件<br>
-                        3. <strong>关键突破</strong>：通过饮料排除法找到突破口（房子1=水），体现启发式推理<br>
-                        4. <strong>完整验证</strong>：最终解满足所有15条线索，100%正确<br><br>
-                        爱因斯坦斑马谜题被公认为<strong>最难的逻辑谜题之一</strong>（仅2%的人能在不借助工具的情况下解出），
-                        Qwen3.5展现了接近<strong>专家级</strong>的逻辑推理水平。
+                        Qwen3.5 在2D弹幕射击游戏中展现了<strong>卓越的性能优化能力</strong>：<br><br>
+                        1. <strong>数学能力</strong>：使用三角函数精确计算弹幕轨迹（直线、扇形、螺旋）<br>
+                        2. <strong>性能优化</strong>：对象池技术确保100+子弹同时运行不掉帧<br>
+                        3. <strong>游戏设计>：多种弹幕类型、敌人类型、BOSS战完整系统<br>
+                        4. <strong>代码质量</strong>：纯原生JavaScript，无外部依赖，结构清晰<br><br>
+                        生成的游戏<strong>可直接运行</strong>，帧率稳定在60fps，
+                        展现了模型在高性能游戏开发领域的<strong>专业级水平</strong>。
                     </p>
                 </div>
             </section>
 
             <!-- Navigation -->
             <section style="display: flex; justify-content: space-between; margin-top: 60px; padding-top: 40px; border-top: 1px solid var(--border);">
-                <a href="test03.html" style="color: var(--text-secondary); text-decoration: none;">← 上一测试</a>
-                <span style="color: var(--success); font-weight: 600;">全部测试完成 🎉</span>
+                <a href="test05.html" style="color: var(--text-secondary); text-decoration: none;">← 上一测试</a>
+                <span style="color: var(--success); font-weight: 600;">全部6项测试完成 🎉</span>
             </section>
             
         </div>

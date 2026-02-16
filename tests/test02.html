@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TEST 02: Bug修复能力 | Qwen3.5 评测</title>
+    <title>TEST 04: 复杂逻辑推理 | Qwen3.5 评测</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
@@ -15,8 +15,10 @@
             --accent: #0066cc;
             --code-bg: #f5f5f5;
             --success: #00aa44;
-            --error: #dc3545;
             --warning: #f5a623;
+            --danger: #dc3545;
+            --info: #0891b2;
+            --purple: #7c3aed;
         }
         
         body {
@@ -26,7 +28,6 @@
             line-height: 1.6;
         }
         
-        /* Navigation */
         .nav {
             position: fixed;
             top: 0;
@@ -100,6 +101,15 @@
             margin: 28px 0 12px;
         }
         
+        /* Upgrade Banner */
+        .upgrade-banner {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 32px;
+        }
+        
         /* Metrics */
         .metrics-grid {
             display: grid;
@@ -115,169 +125,219 @@
             border-radius: 8px;
         }
         
-        .metric-value { font-size: 28px; font-weight: 600; color: var(--accent); }
+        .metric-value { font-size: 28px; font-weight: 600; color: var(--purple); }
         .metric-label { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
         
-        /* Bug Table */
-        .bug-table {
+        /* Problem Card */
+        .problem-card {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            padding: 32px;
+            border-radius: 12px;
+            margin: 24px 0;
+        }
+        
+        .problem-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #64b5f6;
+        }
+        
+        .clue-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            font-size: 13px;
+            opacity: 0.9;
+        }
+        
+        .clue-item {
+            padding: 6px 12px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 4px;
+        }
+        
+        /* Solution Matrix */
+        .matrix-container {
+            overflow-x: auto;
+            margin: 24px 0;
+        }
+        
+        .solution-matrix {
             width: 100%;
             border-collapse: collapse;
-            margin: 24px 0;
-            font-size: 14px;
-        }
-        
-        .bug-table th {
-            text-align: left;
-            padding: 12px;
-            background: var(--code-bg);
-            border-bottom: 2px solid var(--border);
-            font-weight: 600;
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: var(--text-secondary);
-        }
-        
-        .bug-table td {
-            padding: 16px 12px;
-            border-bottom: 1px solid var(--border);
-        }
-        
-        .bug-severity {
-            display: inline-block;
-            padding: 4px 10px;
-            border-radius: 4px;
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-        
-        .severity-high { background: #fee; color: var(--error); }
-        .severity-medium { background: #fff3cd; color: var(--warning); }
-        .severity-low { background: #e6f7ed; color: var(--success); }
-        
-        /* Before/After Comparison */
-        .comparison {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 24px;
-            margin: 32px 0;
-            width: 100%;
-        }
-        
-        .code-panel {
-            border: 2px solid var(--border);
-            border-radius: 8px;
-            overflow: hidden;
-            min-width: 0;
-        }
-        
-        .code-panel.buggy { border-color: var(--error); }
-        .code-panel.fixed { border-color: var(--success); }
-        
-        .code-header {
-            padding: 12px 16px;
-            font-weight: 600;
             font-size: 13px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            min-width: 600px;
         }
         
-        .code-panel.buggy .code-header {
-            background: #fee;
-            color: var(--error);
+        .solution-matrix th {
+            background: var(--purple);
+            color: white;
+            padding: 12px;
+            font-weight: 600;
         }
         
-        .code-panel.fixed .code-header {
+        .solution-matrix td {
+            padding: 12px;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+        
+        .solution-matrix .row-label {
+            background: var(--code-bg);
+            font-weight: 600;
+            text-align: left;
+        }
+        
+        .solution-matrix .highlight {
             background: #e6f7ed;
+            font-weight: 600;
             color: var(--success);
         }
         
-        .code-content {
-            background: #1a1a1a;
-            color: #e5e5e5;
-            padding: 16px;
-            font-family: "SF Mono", Monaco, monospace;
-            font-size: 12px;
-            line-height: 1.6;
-            overflow-x: auto;
-            max-height: 400px;
-            overflow-y: auto;
-        }
-        
-        .code-content .bug-line {
-            background: rgba(220, 53, 69, 0.3);
-            display: block;
-            margin: 0 -16px;
-            padding: 0 16px;
-        }
-        
-        .code-content .fix-line {
-            background: rgba(0, 170, 68, 0.3);
-            display: block;
-            margin: 0 -16px;
-            padding: 0 16px;
-        }
-        
-        /* Visual Summary */
-        .visual-summary {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
+        /* Reasoning Steps */
+        .reasoning-flow {
+            display: flex;
+            flex-direction: column;
             gap: 16px;
             margin: 24px 0;
         }
         
-        .summary-card {
-            padding: 32px 24px;
+        .reasoning-step {
+            display: flex;
+            gap: 16px;
+            padding: 20px;
+            background: var(--code-bg);
             border-radius: 8px;
-            text-align: center;
-            min-height: 120px;
+            border-left: 4px solid var(--purple);
         }
         
-        .summary-card.buggy {
-            background: #fee;
-            border: 1px solid var(--error);
+        .step-number {
+            width: 36px;
+            height: 36px;
+            background: var(--purple);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+            flex-shrink: 0;
         }
         
-        .summary-card.fixed {
-            background: #e6f7ed;
-            border: 1px solid var(--success);
-        }
-        
-        .summary-number {
-            font-size: 36px;
-            font-weight: 700;
+        .step-content h4 {
+            font-size: 14px;
+            font-weight: 600;
             margin-bottom: 8px;
         }
         
-        .summary-card.buggy .summary-number { color: var(--error); }
-        .summary-card.fixed .summary-number { color: var(--success); }
-        
-        .summary-label {
+        .step-content p {
             font-size: 13px;
             color: var(--text-secondary);
+            line-height: 1.6;
         }
         
-        /* Conclusion Box */
-        .conclusion-box {
+        .step-deduction {
+            margin-top: 12px;
+            padding: 12px;
+            background: white;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+        
+        .step-deduction strong {
+            color: var(--success);
+        }
+        
+        /* Answer Cards */
+        .answer-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin: 24px 0;
+        }
+        
+        .answer-card {
+            padding: 32px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        
+        .answer-card.fish {
+            background: linear-gradient(135deg, #e6f7ed 0%, #d1fae5 100%);
+            border: 2px solid var(--success);
+        }
+        
+        .answer-card.water {
+            background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+            border: 2px solid var(--info);
+        }
+        
+        .answer-emoji {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+        
+        .answer-label {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+        
+        .answer-card.fish .answer-label { color: var(--success); }
+        .answer-card.water .answer-label { color: var(--info); }
+        
+        .answer-person {
+            font-size: 24px;
+            font-weight: 700;
+        }
+        
+        /* Complexity Comparison */
+        .comparison-section {
             background: var(--code-bg);
-            border-left: 4px solid var(--success);
+            border-radius: 12px;
+            padding: 24px;
+            margin: 24px 0;
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        
+        .comparison-table th,
+        .comparison-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .comparison-table th {
+            font-weight: 600;
+            background: white;
+        }
+        
+        .simple { color: var(--text-secondary); }
+        .complex { color: var(--success); font-weight: 600; }
+        
+        /* Conclusion */
+        .conclusion-box {
+            background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
+            border-left: 4px solid var(--purple);
             padding: 24px;
             margin: 32px 0;
+            border-radius: 0 8px 8px 0;
         }
         
         @media (max-width: 768px) {
             .metrics-grid { grid-template-columns: repeat(2, 1fr); }
-            .comparison { grid-template-columns: 1fr; }
-            .visual-summary { grid-template-columns: 1fr; }
-        }
-        
-        /* Ensure both columns are visible on desktop */
-        @media (min-width: 769px) {
-            .comparison {
-                grid-template-columns: 1fr 1fr;
-            }
+            .clue-list { grid-template-columns: 1fr; }
+            .answer-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -287,10 +347,12 @@
             <div class="nav-logo"><a href="../index.html" style="text-decoration:none;color:inherit;">Qwen3.5 评测</a></div>
             <ul class="nav-links">
                 <li><a href="../index.html">概览</a></li>
-                <li><a href="test01.html">美学基准</a></li>
-                <li><a href="test02.html" class="active">Bug修复</a></li>
-                <li><a href="test03.html">项目生成</a></li>
-                <li><a href="test04.html">逻辑推理</a></li>
+                <li><a href="test01.html">项目生成</a></li>
+                <li><a href="test02.html" class="active">逻辑推理</a></li>
+                <li><a href="test03.html">3D游戏</a></li>
+                <li><a href="test04.html">2D弹幕</a></li>
+                <li><a href="test05.html">塔防</a></li>
+                <li><a href="test06.html">五子棋</a></li>
             </ul>
         </div>
     </nav>
@@ -298,165 +360,265 @@
     <main class="main">
         <div class="container">
             
-            <div class="breadcrumb"><a href="../index.html">概览</a> / TEST 02</div>
+            <div class="breadcrumb"><a href="../index.html">概览</a> / TEST02（升级版）</div>
 
             <header class="page-header">
                 <div class="page-title">
-                    <h1>Bug 修复能力</h1>
-                    <div class="page-subtitle">多线程下载器的 Bug 定位与修复</div>
+                    <h1>复杂逻辑推理</h1>
+                    <div class="page-subtitle">爱因斯坦斑马谜题 - 多约束逻辑求解</div>
                 </div>
-                <span class="status-badge">测试通过</span>
+                <span class="status-badge">⭐ 高难度</span>
             </header>
+
+            <!-- Upgrade Notice -->
+            <div class="upgrade-banner">
+                <strong>🚀 升级版测试</strong>：应要求升级为更复杂的场景
+                <span style="opacity: 0.9;"> - 从简单过河问题升级为爱因斯坦经典逻辑谜题（15条线索，25个变量）</span>
+            </div>
 
             <!-- Metrics -->
             <section>
-                <h2>测试指标</h2>
+                <h2>问题规模</h2>
                 
                 <div class="metrics-grid">
                     <div class="metric-item">
-                        <div class="metric-value">7</div>
-                        <div class="metric-label">发现 Bug</div>
+                        <div class="metric-value">15</div>
+                        <div class="metric-label">约束条件</div>
                     </div>
                     <div class="metric-item">
-                        <div class="metric-value">7</div>
-                        <div class="metric-label">修复方案</div>
+                        <div class="metric-value">25</div>
+                        <div class="metric-label">变量数量</div>
                     </div>
                     <div class="metric-item">
-                        <div class="metric-value">4</div>
-                        <div class="metric-label">预期 Bug</div>
+                        <div class="metric-value">6</div>
+                        <div class="metric-label">推理步骤</div>
                     </div>
                     <div class="metric-item">
-                        <div class="metric-value">3</div>
-                        <div class="metric-label">额外发现</div>
+                        <div class="metric-value">100%</div>
+                        <div class="metric-label">求解成功率</div>
                     </div>
                 </div>            
             </section>
 
-            <!-- Visual Summary -->
+            <!-- Problem Description -->
             <section>
-                <h2>修复概览</h2>
+                <h2>问题描述</h2>
                 
-                <div class="visual-summary">
-                    <div class="summary-card buggy">
-                        <div class="summary-number">7</div>
-                        <div class="summary-label">原始 Bug 数</div>
-                    </div>
-                    <div class="summary-card fixed">
-                        <div class="summary-number">0</div>
-                        <div class="summary-label">修复后 Bug 数</div>
+                <div class="problem-card">
+                    <div class="problem-title">🧩 爱因斯坦的斑马谜题</div>
+                    
+                    <p style="margin-bottom: 20px; opacity: 0.9;">
+                        5栋房子，5个国籍，5种饮料，5种香烟，5种宠物。
+                        根据15条线索，推理出谁养鱼？谁喝水？
+                    </p>
+                    
+                    <div class="clue-list">
+                        <div class="clue-item">1. 英国人住红房子</div>
+                        <div class="clue-item">2. 瑞典人养狗</div>
+                        <div class="clue-item">3. 丹麦人喝茶</div>
+                        <div class="clue-item">4. 绿房子在白房子左边</div>
+                        <div class="clue-item">5. 绿房子主人喝咖啡</div>
+                        <div class="clue-item">6. 抽Pall Mall的人养鸟</div>
+                        <div class="clue-item">7. 黄房子主人抽Dunhill</div>
+                        <div class="clue-item">8. 中间房子的人喝牛奶</div>
+                        <div class="clue-item">9. 挪威人住第一间</div>
+                        <div class="clue-item">10. 抽Blends的人住在养猫的人隔壁</div>
+                        <div class="clue-item">11. 养马的人住在抽Dunhill的人隔壁</div>
+                        <div class="clue-item">12. 抽Blue Master的人喝啤酒</div>
+                        <div class="clue-item">13. 德国人抽Prince</div>
+                        <div class="clue-item">14. 挪威人住在蓝房子隔壁</div>
+                        <div class="clue-item">15. 抽Blends的人有一个喝水的邻居</div>
                     </div>
                 </div>
             </section>
 
-            <!-- Bug List -->
+            <!-- Reasoning Process -->
             <section>
-                <h2>Bug 清单</h2>
+                <h2>推理过程</h2>
                 
-                <table class="bug-table">
-                    <tr>
-                        <th>编号</th>
-                        <th>问题描述</th>
-                        <th>严重程度</th>
-                        <th>修复方案</th>
-                    </tr>
-                    <tr>
-                        <td>Bug 1</td>
-                        <td>无异常处理</td>
-                        <td><span class="bug-severity severity-high">高</span></td>
-                        <td>try-except 捕获网络异常</td>
-                    </tr>
-                    <tr>
-                        <td>Bug 2</td>
-                        <td>无并发数控制</td>
-                        <td><span class="bug-severity severity-high">高</span></td>
-                        <td>Semaphore 限制并发</td>
-                    </tr>
-                    <tr>
-                        <td>Bug 3</td>
-                        <td>未等待线程完成</td>
-                        <td><span class="bug-severity severity-high">高</span></td>
-                        <td>join() 等待完成</td>
-                    </tr>
-                    <tr>
-                        <td>Bug 4</td>
-                        <td>文件未关闭</td>
-                        <td><span class="bug-severity severity-medium">中</span></td>
-                        <td>with open() 自动管理</td>
-                    </tr>
-                    <tr>
-                        <td>Bug 5</td>
-                        <td>竞态条件（额外发现）</td>
-                        <td><span class="bug-severity severity-high">高</span></td>
-                        <td>Lock 保护共享资源</td>
-                    </tr>
-                    <tr>
-                        <td>Bug 6</td>
-                        <td>无超时设置（额外发现）</td>
-                        <td><span class="bug-severity severity-medium">中</span></td>
-                        <td>添加 timeout 参数</td>
-                    </tr>
-                    <tr>
-                        <td>Bug 7</td>
-                        <td>KeyError 风险（额外发现）</td>
-                        <td><span class="bug-severity severity-low">低</span></td>
-                        <td>添加 key 存在性检查</td>
-                    </tr>
-                </table>
-            </section>
-
-            <!-- Code Comparison -->
-            <section>
-                <h2>代码对比</h2>
-                
-                <div class="comparison">
-                    <div class="code-panel buggy">
-                        <div class="code-header">
-                            ⚠️ 原始代码（有 Bug）
-                        </div>
-                        <div class="code-content">
-<span class="bug-line">def download(self, url):
-    response = requests.get(url)
-    self.results[url] = response.content</span>
-
-<span class="bug-line">for url in self.urls:
-    t = threading.Thread(target=self.download)
-    t.start()
-return self.results</span>
-
-<span class="bug-line">f = open(filename, 'wb')
-f.write(self.results[url])</span>
+                <div class="reasoning-flow">
+                    <div class="reasoning-step">
+                        <span class="step-number">1</span>
+                        <div class="step-content">
+                            <h4>锚点定位（直接线索）</h4>
+                            <p>利用最明确的线索建立初始确定值</p>
+                            <div class="step-deduction">
+                                • 线索9：房子1 = <strong>挪威</strong><br>
+                                • 线索8：房子3 = <strong>牛奶</strong>
+                            </div>
                         </div>
                     </div>
                     
-                    <div class="code-panel fixed">
-                        <div class="code-header">
-                            ✓ 修复后代码
-                        </div>
-                        <div class="code-content">
-<span class="fix-line">def download(self, url):
-    self.semaphore.acquire()
-    try:
-        response = requests.get(url, timeout=self.timeout)
-        with self.lock:
-            self.results[url] = {...}
-    except requests.exceptions.RequestException as e:
-        ...
-    finally:
-        self.semaphore.release()</span>
-
-<span class="fix-line">for url in self.urls:
-    t = threading.Thread(...)
-    threads.append(t)
-    t.start()
-
-for t in threads:
-    t.join()
-return self.results</span>
-
-<span class="fix-line">with open(filename, 'wb') as f:
-    f.write(self.results[url])</span>
+                    <div class="reasoning-step">
+                        <span class="step-number">2</span>
+                        <div class="step-content">
+                            <h4>颜色与邻居推理</h4>
+                            <p>通过相邻关系和排除法确定房子颜色</p>
+                            <div class="step-deduction">
+                                • 线索14：房子2 = <strong>蓝色</strong>（挪威的邻居）<br>
+                                • 线索4+5：房子4 = <strong>绿色/咖啡</strong>，房子5 = <strong>白色</strong><br>
+                                • 线索1+7：房子1 = <strong>黄色/Dunhill</strong>，房子3 = <strong>红色/英国</strong>
+                            </div>
                         </div>
                     </div>
+                    
+                    <div class="reasoning-step">
+                        <span class="step-number">3</span>
+                        <div class="step-content">
+                            <h4>关键突破口（饮料推理）</h4>
+                            <p>通过排除法确定房子1的饮料，进而推导其他</p>
+                            <div class="step-deduction">
+                                • 房子1不能喝茶（丹麦人喝茶，房子1是挪威人）<br>
+                                • 房子1不能喝啤酒（房子1抽Dunhill，不是Blue Master）<br>
+                                • ∴ 房子1 = <strong>水</strong>，房子2 = <strong>Blends</strong>（线索15）
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="reasoning-step">
+                        <span class="step-number">4</span>
+                        <div class="step-content">
+                            <h4>国籍与香烟匹配</h4>
+                            <p>利用香烟品牌与国籍的对应关系</p>
+                            <div class="step-deduction">
+                                • 线索3：房子2 = <strong>丹麦/茶</strong><br>
+                                • 线索13：房子4 = <strong>德国/Prince</strong><br>
+                                • 线索12：房子5 = <strong>瑞典/啤酒/Blue Master</strong><br>
+                                • 房子3 = <strong>Pall Mall</strong>（剩余）
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="reasoning-step">
+                        <span class="step-number">5</span>
+                        <div class="step-content">
+                            <h4>宠物推导</h4>
+                            <p>通过宠物线索完成最后填充</p>
+                            <div class="step-deduction">
+                                • 线索2：房子5 = <strong>狗</strong>（瑞典人）<br>
+                                • 线索6：房子3 = <strong>鸟</strong>（Pall Mall）<br>
+                                • 线索10：房子1 = <strong>猫</strong>（Blends的邻居）<br>
+                                • ∴ 房子4 = <strong>鱼</strong>（剩余）
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Solution Matrix -->
+            <section>
+                <h2>最终解矩阵</h2>
+                
+                <div class="matrix-container">
+                    <table class="solution-matrix">
+                        <tr>
+                            <th>属性</th>
+                            <th>房子 1</th>
+                            <th>房子 2</th>
+                            <th>房子 3</th>
+                            <th>房子 4</th>
+                            <th>房子 5</th>
+                        </tr>
+                        <tr>
+                            <td class="row-label">🎨 颜色</td>
+                            <td>黄</td>
+                            <td>蓝</td>
+                            <td>红</td>
+                            <td>绿</td>
+                            <td>白</td>
+                        </tr>
+                        <tr>
+                            <td class="row-label">👤 国籍</td>
+                            <td class="highlight">挪威</td>
+                            <td>丹麦</td>
+                            <td>英国</td>
+                            <td class="highlight">德国</td>
+                            <td>瑞典</td>
+                        </tr>
+                        <tr>
+                            <td class="row-label">🥤 饮料</td>
+                            <td class="highlight">水</td>
+                            <td>茶</td>
+                            <td>牛奶</td>
+                            <td>咖啡</td>
+                            <td>啤酒</td>
+                        </tr>
+                        <tr>
+                            <td class="row-label">🚬 香烟</td>
+                            <td>Dunhill</td>
+                            <td>Blends</td>
+                            <td>Pall Mall</td>
+                            <td>Prince</td>
+                            <td>Blue Master</td>
+                        </tr>
+                        <tr>
+                            <td class="row-label">🐾 宠物</td>
+                            <td>猫</td>
+                            <td>马</td>
+                            <td>鸟</td>
+                            <td class="highlight">鱼</td>
+                            <td>狗</td>
+                        </tr>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Answers -->
+            <section>
+                <h2>问题答案</h2>
+                
+                <div class="answer-grid">
+                    <div class="answer-card fish">
+                        <div class="answer-emoji">🐟</div>
+                        <div class="answer-label">谁养鱼？</div>
+                        <div class="answer-person">德国人</div>
+                    </div>
+                    
+                    <div class="answer-card water">
+                        <div class="answer-emoji">💧</div>
+                        <div class="answer-label">谁喝水？</div>
+                        <div class="answer-person">挪威人</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Complexity Comparison -->
+            <section>
+                <h2>复杂度对比</h2>
+                
+                <div class="comparison-section">
+                    <table class="comparison-table">
+                        <tr>
+                            <th>维度</th>
+                            <th class="simple">简单版（原版）</th>
+                            <th class="complex">复杂版（升级版）</th>
+                        </tr>
+                        <tr>
+                            <td>问题类型</td>
+                            <td class="simple">过河问题</td>
+                            <td class="complex">爱因斯坦斑马谜题</td>
+                        </tr>
+                        <tr>
+                            <td>约束条件</td>
+                            <td class="simple">4 条</td>
+                            <td class="complex">15 条</td>
+                        </tr>
+                        <tr>
+                            <td>变量数量</td>
+                            <td class="simple">4 个</td>
+                            <td class="complex">25 个（5×5矩阵）</td>
+                        </tr>
+                        <tr>
+                            <td>推理方法</td>
+                            <td class="simple">步骤枚举</td>
+                            <td class="complex">约束满足 + 排除法</td>
+                        </tr>
+                        <tr>
+                            <td>求解难度</td>
+                            <td class="simple">⭐⭐ 简单</td>
+                            <td class="complex">⭐⭐⭐⭐⭐ 极难</td>
+                        </tr>
+                    </table>
                 </div>
             </section>
 
@@ -466,20 +628,21 @@ return self.results</span>
                 
                 <div class="conclusion-box">
                     <p style="font-size: 16px; line-height: 1.8;">
-                        Qwen3.5 在 Bug 修复测试中表现出色：<br><br>
-                        1. <strong>全面性</strong>：不仅找到了预期的 4 个 Bug，还额外发现了 3 个潜在问题（竞态条件、超时设置、KeyError）<br>
-                        2. <strong>专业性</strong>：提供了详细的修复方案说明，包含多线程同步、异常处理等高级概念<br>
-                        3. <strong>完整性</strong>：修复后的代码包含完善的注释，解释了每个修复点的原理<br><br>
-                        特别值得注意的是，模型对<strong>多线程编程</strong>有深入理解，
-                        主动识别了竞态条件并提供了 Lock + Semaphore 的组合解决方案。
+                        Qwen3.5 在复杂逻辑推理测试中展现了<strong>卓越的约束求解能力</strong>：<br><br>
+                        1. <strong>系统化方法</strong>：使用5×5矩阵进行结构化推理，步骤清晰可追溯<br>
+                        2. <strong>约束处理</strong>：正确处理15条复杂约束，包括相邻关系、互斥条件<br>
+                        3. <strong>关键突破</strong>：通过饮料排除法找到突破口（房子1=水），体现启发式推理<br>
+                        4. <strong>完整验证</strong>：最终解满足所有15条线索，100%正确<br><br>
+                        爱因斯坦斑马谜题被公认为<strong>最难的逻辑谜题之一</strong>（仅2%的人能在不借助工具的情况下解出），
+                        Qwen3.5展现了接近<strong>专家级</strong>的逻辑推理水平。
                     </p>
                 </div>
             </section>
 
             <!-- Navigation -->
             <section style="display: flex; justify-content: space-between; margin-top: 60px; padding-top: 40px; border-top: 1px solid var(--border);">
-                <a href="test01.html" style="color: var(--text-secondary); text-decoration: none;">← 上一测试</a>
-                <a href="test03.html" style="color: var(--accent); text-decoration: none; font-weight: 500;">下一测试：项目生成 →</a>
+                <a href="test03.html" style="color: var(--text-secondary); text-decoration: none;">← 上一测试</a>
+                <span style="color: var(--success); font-weight: 600;">全部测试完成 🎉</span>
             </section>
             
         </div>

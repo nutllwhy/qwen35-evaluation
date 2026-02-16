@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TEST 01: 可视化仪表盘生成 | Qwen3.5 评测</title>
+    <title>TEST 03: 企业级项目生成 | Qwen3.5 评测</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
@@ -16,6 +16,8 @@
             --code-bg: #f5f5f5;
             --success: #00aa44;
             --warning: #f5a623;
+            --danger: #dc3545;
+            --info: #0891b2;
         }
         
         body {
@@ -25,7 +27,6 @@
             line-height: 1.6;
         }
         
-        /* Navigation */
         .nav {
             position: fixed;
             top: 0;
@@ -48,36 +49,16 @@
         }
         
         .nav-logo { font-weight: 600; font-size: 18px; }
-        
-        .nav-links {
-            display: flex;
-            gap: 32px;
-            list-style: none;
-        }
-        
-        .nav-links a {
-            text-decoration: none;
-            color: var(--text-secondary);
-            font-size: 14px;
-            transition: color 0.2s;
-        }
-        
+        .nav-links { display: flex; gap: 32px; list-style: none; }
+        .nav-links a { text-decoration: none; color: var(--text-secondary); font-size: 14px; }
         .nav-links a:hover, .nav-links a.active { color: var(--text); }
         
-        /* Main */
         .main { margin-top: 60px; }
         .container { max-width: 1000px; margin: 0 auto; padding: 40px 24px; }
         
-        /* Breadcrumb */
-        .breadcrumb {
-            font-size: 13px;
-            color: var(--text-secondary);
-            margin-bottom: 24px;
-        }
-        
+        .breadcrumb { font-size: 13px; color: var(--text-secondary); margin-bottom: 24px; }
         .breadcrumb a { color: var(--accent); text-decoration: none; }
         
-        /* Header */
         .page-header {
             display: flex;
             justify-content: space-between;
@@ -85,16 +66,8 @@
             margin-bottom: 40px;
         }
         
-        .page-title h1 {
-            font-size: 32px;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-        
-        .page-subtitle {
-            font-size: 16px;
-            color: var(--text-secondary);
-        }
+        .page-title h1 { font-size: 32px; font-weight: 600; margin-bottom: 8px; }
+        .page-subtitle { font-size: 16px; color: var(--text-secondary); }
         
         .status-badge {
             display: inline-flex;
@@ -108,7 +81,6 @@
             font-weight: 600;
         }
         
-        /* Section */
         section { margin: 48px 0; }
         
         h2 {
@@ -128,66 +100,7 @@
             margin: 28px 0 12px;
         }
         
-        /* Visual Box */
-        .visual-box {
-            background: var(--code-bg);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 24px;
-            margin: 20px 0;
-        }
-        
-        .visual-label {
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--text-secondary);
-            margin-bottom: 16px;
-        }
-        
-        /* Demo Preview */
-        .demo-preview {
-            border: 2px solid var(--border);
-            border-radius: 12px;
-            overflow: hidden;
-            margin: 24px 0;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-        }
-        
-        .demo-header {
-            background: var(--code-bg);
-            padding: 12px 16px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            border-bottom: 1px solid var(--border);
-        }
-        
-        .demo-dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-        }
-        
-        .demo-dot.red { background: #ff5f56; }
-        .demo-dot.yellow { background: #ffbd2e; }
-        .demo-dot.green { background: #27c93f; }
-        
-        .demo-title {
-            font-size: 13px;
-            color: var(--text-secondary);
-            margin-left: 8px;
-        }
-        
-        .demo-iframe {
-            width: 100%;
-            height: 500px;
-            border: none;
-            background: white;
-        }
-        
-        /* Metrics Grid */
+        /* Metrics - Enterprise Level */
         .metrics-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -197,115 +110,242 @@
         
         .metric-item {
             text-align: center;
+            padding: 24px;
+            background: var(--code-bg);
+            border-radius: 8px;
+        }
+        
+        .metric-value { 
+            font-size: 32px; 
+            font-weight: 700; 
+            background: linear-gradient(135deg, var(--accent), var(--info));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .metric-label { font-size: 12px; color: var(--text-secondary); margin-top: 8px; }
+        
+        /* Architecture Diagram */
+        .arch-diagram {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 12px;
+            padding: 32px;
+            color: white;
+            margin: 24px 0;
+        }
+        
+        .arch-title {
+            text-align: center;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 32px;
+            color: #64b5f6;
+        }
+        
+        .arch-layers {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        
+        .arch-layer {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px 20px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .layer-name {
+            width: 100px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #64b5f6;
+        }
+        
+        .layer-components {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .component-tag {
+            padding: 6px 12px;
+            background: rgba(100, 181, 246, 0.2);
+            border: 1px solid rgba(100, 181, 246, 0.4);
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        
+        /* Complex File Tree */
+        .file-tree {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 24px;
+            font-family: "SF Mono", Monaco, monospace;
+            font-size: 13px;
+            line-height: 2;
+        }
+        
+        .tree-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .tree-folder { color: var(--warning); font-weight: 600; }
+        .tree-file { color: var(--text-secondary); }
+        .tree-indent { margin-left: 24px; }
+        .tree-icon { width: 20px; text-align: center; }
+        
+        /* Tech Stack */
+        .tech-stack {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin: 24px 0;
+        }
+        
+        .tech-card {
+            padding: 20px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            border-left: 4px solid var(--accent);
+        }
+        
+        .tech-card.backend { border-color: var(--success); }
+        .tech-card.frontend { border-color: var(--warning); }
+        .tech-card.database { border-color: var(--info); }
+        .tech-card.security { border-color: var(--danger); }
+        
+        .tech-name { font-weight: 600; font-size: 14px; margin-bottom: 8px; }
+        .tech-items { font-size: 13px; color: var(--text-secondary); }
+        
+        /* Feature List */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin: 24px 0;
+        }
+        
+        .feature-category {
             padding: 20px;
             background: var(--code-bg);
             border-radius: 8px;
         }
         
-        .metric-value {
-            font-size: 28px;
+        .feature-title {
             font-weight: 600;
-            color: var(--accent);
+            font-size: 14px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
         
-        .metric-label {
-            font-size: 12px;
-            color: var(--text-secondary);
-            margin-top: 4px;
-        }
-        
-        /* Checklist */
-        .checklist {
+        .feature-list {
             list-style: none;
+            font-size: 13px;
+            color: var(--text-secondary);
         }
         
-        .checklist li {
-            padding: 12px 0;
+        .feature-list li {
+            padding: 6px 0;
             display: flex;
             align-items: center;
-            gap: 12px;
-            border-bottom: 1px solid var(--border);
+            gap: 8px;
         }
         
-        .checklist li:before {
+        .feature-list li:before {
             content: "✓";
-            width: 20px;
-            height: 20px;
-            background: var(--success);
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            flex-shrink: 0;
+            color: var(--success);
+            font-weight: 600;
         }
         
-        /* Aesthetic Score */
-        .aesthetic-score {
-            display: flex;
-            gap: 24px;
+        /* Code Preview */
+        .code-preview {
+            background: #1a1a1a;
+            border-radius: 8px;
+            overflow: hidden;
             margin: 24px 0;
         }
         
-        .score-item {
-            flex: 1;
-            text-align: center;
-            padding: 24px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-radius: 12px;
+        .code-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: #2d2d2d;
+            border-bottom: 1px solid #3d3d3d;
         }
         
-        .score-value {
-            font-size: 42px;
-            font-weight: 700;
+        .code-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
         }
+        .dot-red { background: #ff5f56; }
+        .dot-yellow { background: #ffbd2e; }
+        .dot-green { background: #27c93f; }
         
-        .score-label {
-            font-size: 13px;
-            opacity: 0.9;
-            margin-top: 4px;
-        }
-        
-        /* Code Preview Toggle */
-        .code-toggle {
-            margin-top: 16px;
-        }
-        
-        .code-toggle-btn {
-            background: var(--text);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
-            font-size: 13px;
-            cursor: pointer;
-            font-weight: 500;
-        }
+        .code-filename { font-size: 13px; color: #e5e5e5; }
         
         .code-content {
-            display: none;
-            margin-top: 16px;
-            background: #1a1a1a;
-            color: #e5e5e5;
-            padding: 20px;
-            border-radius: 8px;
-            font-family: monospace;
+            padding: 16px;
+            font-family: "SF Mono", Monaco, monospace;
             font-size: 12px;
+            line-height: 1.6;
+            color: #e5e5e5;
             overflow-x: auto;
-            max-height: 400px;
+            max-height: 300px;
             overflow-y: auto;
         }
         
-        .code-content.active {
-            display: block;
+        /* Comparison */
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 24px 0;
+            font-size: 14px;
+        }
+        
+        .comparison-table th {
+            text-align: left;
+            padding: 12px;
+            background: var(--code-bg);
+            border-bottom: 2px solid var(--border);
+            font-weight: 600;
+        }
+        
+        .comparison-table td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .comparison-table .simple { color: var(--text-secondary); }
+        .comparison-table .complex { 
+            color: var(--success); 
+            font-weight: 600;
+        }
+        
+        /* Conclusion */
+        .conclusion-box {
+            background: linear-gradient(135deg, #e6f7ed 0%, #d1fae5 100%);
+            border-left: 4px solid var(--success);
+            padding: 24px;
+            margin: 32px 0;
+            border-radius: 0 8px 8px 0;
         }
         
         @media (max-width: 768px) {
             .metrics-grid { grid-template-columns: repeat(2, 1fr); }
-            .aesthetic-score { flex-direction: column; }
-            .demo-iframe { height: 350px; }
+            .tech-stack { grid-template-columns: 1fr; }
+            .feature-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -315,10 +355,12 @@
             <div class="nav-logo"><a href="../index.html" style="text-decoration:none;color:inherit;">Qwen3.5 评测</a></div>
             <ul class="nav-links">
                 <li><a href="../index.html">概览</a></li>
-                <li><a href="test01.html" class="active">美学基准</a></li>
-                <li><a href="test02.html">Bug修复</a></li>
-                <li><a href="test03.html">项目生成</a></li>
-                <li><a href="test04.html">逻辑推理</a></li>
+                <li><a href="test01.html" class="active">项目生成</a></li>
+                <li><a href="test02.html">逻辑推理</a></li>
+                <li><a href="test03.html">3D游戏</a></li>
+                <li><a href="test04.html">2D弹幕</a></li>
+                <li><a href="test05.html">塔防</a></li>
+                <li><a href="test06.html">五子棋</a></li>
             </ul>
         </div>
     </nav>
@@ -326,134 +368,304 @@
     <main class="main">
         <div class="container">
             
-            <div class="breadcrumb">
-                <a href="../index.html">概览</a> / TEST 01
-            </div>
+            <div class="breadcrumb"><a href="../index.html">概览</a> / TEST 01</div>
 
             <header class="page-header">
                 <div class="page-title">
-                    <h1>美学基准：可视化仪表盘</h1>
-                    <div class="page-subtitle">测试复杂UI组件生成能力与美学设计水平</div>
+                    <h1>企业级项目生成</h1>
+                    <div class="page-subtitle">完整任务管理 Web 应用 - 生产级架构设计</div>
                 </div>
-                <span class="status-badge">测试通过</span>
+                <span class="status-badge">⭐ 企业级</span>
             </header>
+
+            <!-- Upgrade Notice -->
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 8px; margin-bottom: 32px;">
+                <strong>🚀 升级版测试</strong>：应要求升级为更复杂的场景
+                <span style="opacity: 0.9;"> - 从简单的待办事项升级为完整的企业级任务管理系统</span>
+            </div>
 
             <!-- Metrics -->
             <section>
-                <h2>测试指标</h2>
+                <h2>项目规模</h2>
+                
                 <div class="metrics-grid">
                     <div class="metric-item">
-                        <div class="metric-value">10.6k</div>
-                        <div class="metric-label">代码行数</div>
+                        <div class="metric-value">15+</div>
+                        <div class="metric-label">文件数量</div>
                     </div>
                     <div class="metric-item">
-                        <div class="metric-value">8.2s</div>
-                        <div class="metric-label">生成时间</div>
+                        <div class="metric-value">23K</div>
+                        <div class="metric-label">代码规模</div>
                     </div>
                     <div class="metric-item">
-                        <div class="metric-value">3种</div>
-                        <div class="metric-label">图表类型</div>
+                        <div class="metric-value">4</div>
+                        <div class="metric-label">架构层级</div>
                     </div>
                     <div class="metric-item">
-                        <div class="metric-value">100%</div>
-                        <div class="metric-label">功能完整</div>
+                        <div class="metric-value">8</div>
+                        <div class="metric-label">技术组件</div>
+                    </div>
+                </div>            
+            </section>
+
+            <!-- Architecture Diagram -->
+            <section>
+                <h2>系统架构</h2>
+                
+                <div class="arch-diagram">
+                    <div class="arch-title">🏗️ 分层架构设计</div>
+                    
+                    <div class="arch-layers">
+                        <div class="arch-layer">
+                            <span class="layer-name">前端层</span>
+                            <div class="layer-components">
+                                <span class="component-tag">Vue 3</span>
+                                <span class="component-tag">Element Plus</span>
+                                <span class="component-tag">Vuex</span>
+                                <span class="component-tag">Axios</span>
+                            </div>
+                        </div>
+                        
+                        <div class="arch-layer">
+                            <span class="layer-name">API 层</span>
+                            <div class="layer-components">
+                                <span class="component-tag">Flask</span>
+                                <span class="component-tag">JWT Auth</span>
+                                <span class="component-tag">Rate Limit</span>
+                                <span class="component-tag">CORS</span>
+                            </div>
+                        </div>
+                        
+                        <div class="arch-layer">
+                            <span class="layer-name">业务层</span>
+                            <div class="layer-components">
+                                <span class="component-tag">Services</span>
+                                <span class="component-tag">Decorators</span>
+                                <span class="component-tag">Validators</span>
+                                <span class="component-tag">Error Handler</span>
+                            </div>
+                        </div>
+                        
+                        <div class="arch-layer">
+                            <span class="layer-name">数据层</span>
+                            <div class="layer-components">
+                                <span class="component-tag">PostgreSQL</span>
+                                <span class="component-tag">SQLAlchemy</span>
+                                <span class="component-tag">Redis</span>
+                                <span class="component-tag">Alembic</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
 
-            <!-- Aesthetic Scores -->
+            <!-- Tech Stack -->
             <section>
-                <h2>美学评分</h2>                
-                <div class="aesthetic-score">
-                    <div class="score-item">
-                        <div class="score-value">9.2</div>
-                        <div class="score-label">配色协调度</div>
+                <h2>技术栈</h2>
+                
+                <div class="tech-stack">
+                    <div class="tech-card backend">
+                        <div class="tech-name">🐍 后端框架</div>
+                        <div class="tech-items">Flask + Flask-SQLAlchemy + Flask-JWT-Extended + Flask-Limiter</div>
                     </div>
-                    <div class="score-item">
-                        <div class="score-value">8.8</div>
-                        <div class="score-label">布局合理性</div>
+                    
+                    <div class="tech-card frontend">
+                        <div class="tech-name">⚡ 前端框架</div>
+                        <div class="tech-items">Vue 3 + Element Plus + Vuex + Vue Router</div>
                     </div>
-                    <div class="score-item">
-                        <div class="score-value">9.0</div>
-                        <div class="score-label">交互细腻度</div>
+                    
+                    <div class="tech-card database">
+                        <div class="tech-name">🗄️ 数据存储</div>
+                        <div class="tech-items">PostgreSQL + Redis + Alembic 迁移</div>
+                    </div>
+                    
+                    <div class="tech-card security">
+                        <div class="tech-name">🔒 安全认证</div>
+                        <div class="tech-items">JWT Token + Bcrypt + Role-based Access + Rate Limiting</div>
                     </div>
                 </div>
             </section>
 
-            <!-- Prompt -->
+            <!-- File Structure -->
             <section>
-                <h2>测试输入</h2>                
-                <div class="visual-box">
-                    <div class="visual-label">Prompt</div>
-                    <div style="font-size: 15px; line-height: 1.8;">
-                        创建一个交互式数据可视化仪表盘的HTML/CSS/JavaScript代码：
-                        <ol style="margin-left: 20px; margin-top: 12px;">
-                            <li>使用Chart.js库</li>
-                            <li>包含折线图、饼图、柱状图</li>
-                            <li>现代简约设计风格，配色优雅</li>
-                            <li>响应式布局</li>
-                            <li>悬停交互效果</li>
-                        </ol>
+                <h2>项目结构</h2>
+                
+                <div class="file-tree">
+                    <div class="tree-item">
+                        <span class="tree-icon">📁</span>
+                        <span class="tree-folder">task_manager/</span>
+                    </div>
+                    <div class="tree-item tree-indent">
+                        <span class="tree-icon">📁</span>
+                        <span class="tree-folder">app/</span>
+                    </div>
+                    <div class="tree-item tree-indent" style="margin-left: 48px;">
+                        <span class="tree-icon">📄</span>
+                        <span class="tree-file">__init__.py (应用工厂)</span>
+                    </div>
+                    <div class="tree-item tree-indent" style="margin-left: 48px;">
+                        <span class="tree-icon">📄</span>
+                        <span class="tree-file">models.py (数据模型)</span>
+                    </div>
+                    <div class="tree-item tree-indent" style="margin-left: 48px;">
+                        <span class="tree-icon">📁</span>
+                        <span class="tree-folder">routes/ (auth, tasks, projects)</span>
+                    </div>
+                    <div class="tree-item tree-indent" style="margin-left: 48px;">
+                        <span class="tree-icon">📁</span>
+                        <span class="tree-folder">services/ (业务逻辑层)</span>
+                    </div>
+                    <div class="tree-item tree-indent" style="margin-left: 48px;">
+                        <span class="tree-icon">📁</span>
+                        <span class="tree-folder">utils/ (decorators, validators)</span>
+                    </div>
+                    <div class="tree-item tree-indent">
+                        <span class="tree-icon">📁</span>
+                        <span class="tree-folder">frontend/src/</span>
+                    </div>
+                    <div class="tree-item tree-indent" style="margin-left: 48px;">
+                        <span class="tree-icon">📄</span>
+                        <span class="tree-file">components/TaskBoard.vue</span>
+                    </div>
+                    <div class="tree-item tree-indent" style="margin-left: 48px;">
+                        <span class="tree-icon">📄</span>
+                        <span class="tree-file">store/index.js (Vuex)</span>
+                    </div>
+                    <div class="tree-item tree-indent">
+                        <span class="tree-icon">📁</span>
+                        <span class="tree-folder">migrations/ (Alembic)</span>
+                    </div>
+                    <div class="tree-item tree-indent">
+                        <span class="tree-icon">📁</span>
+                        <span class="tree-folder">tests/</span>
+                    </div>
+                    <div class="tree-item tree-indent">
+                        <span class="tree-icon">⚙️</span>
+                        <span class="tree-file">config.py / docker-compose.yml / Dockerfile</span>
                     </div>
                 </div>
             </section>
 
-            <!-- Visual Output -->
+            <!-- Features -->
             <section>
-                <h2>视觉输出</h2>
+                <h2>功能完整性</h2>
                 
-                <div class="visual-box" style="text-align: center; padding: 40px;">
-                    <div style="font-size: 64px; margin-bottom: 20px;">📊</div>
-                    <h3 style="margin-bottom: 16px; color: var(--text-primary);">交互式数据仪表盘</h3>
-                    <p style="color: var(--text-secondary); margin-bottom: 24px; max-width: 500px; margin-left: auto; margin-right: auto;">
-                        包含柱状图、饼图、折线图的完整仪表盘，采用莫兰迪色系配色，支持响应式布局和悬停交互效果。
-                    </p>
-                    <a href="dashboard-demo.html" target="_blank" style="display: inline-block; padding: 14px 32px; background: var(--accent); color: white; text-decoration: none; border-radius: 8px; font-weight: 500; transition: all 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                        查看完整案例 →
-                    </a>
-                </div>
-                
-                <div class="code-toggle">
-                    <button class="code-toggle-btn" onclick="document.querySelector('.code-content').classList.toggle('active')">
-                        查看源代码
-                    </button>
-                    <div class="code-content">
-                        代码已保存至 dashboard-demo.html
-                        <br><br>
-                        包含：
-                        <br>- HTML5 结构
-                        <br>- CSS3 Grid/Flexbox 布局
-                        <br>- Chart.js 数据可视化
-                        <br>- 响应式设计
-                        <br>- 悬停交互动效
+                <div class="feature-grid">
+                    <div class="feature-category">
+                        <div class="feature-title">👤 用户系统</div>
+                        <ul class="feature-list">
+                            <li>JWT 认证（Access/Refresh Token）</li>
+                            <li>角色权限管理（Admin/User）</li>
+                            <li>密码加密（Bcrypt）</li>
+                            <li>API 限流保护</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="feature-category">
+                        <div class="feature-title">📋 任务系统</div>
+                        <ul class="feature-list">
+                            <li>CRUD + 批量操作</li>
+                            <li>状态流转（4种状态）</li>
+                            <li>优先级管理（4级）</li>
+                            <li>标签 + 子任务 + 评论</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="feature-category">
+                        <div class="feature-title">📊 项目管理</div>
+                        <ul class="feature-list">
+                            <li>项目创建与成员管理</li>
+                            <li>Kanban 看板视图</li>
+                            <li>统计报表</li>
+                            <li>多项目支持</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="feature-category">
+                        <div class="feature-title">🔧 工程化</div>
+                        <ul class="feature-list">
+                            <li>分层架构设计</li>
+                            <li>数据库迁移（Alembic）</li>
+                            <li>Redis 缓存</li>
+                            <li>Docker 容器化</li>
+                        </ul>
                     </div>
                 </div>
             </section>
 
-            <!-- Output Analysis -->
+            <!-- Complexity Comparison -->
             <section>
-                <h2>输出分析</h2>
+                <h2>复杂度对比</h2>
                 
-                <h3>设计亮点</h3>
-                <ul class="checklist">
-                    <li>采用莫兰迪色系配色方案，视觉柔和优雅</li>
-                    <li>CSS Grid + Flexbox 响应式布局</li>
-                    <li>卡片悬停动效（transform + shadow）</li>
-                    <li>Chart.js 三种图表完整配置</li>
-                    <li>CSS 变量统一管理设计系统</li>
-                    <li>移动端适配（@media 断点）</li>
-                </ul>
+                <table class="comparison-table">
+                    <tr>
+                        <th>维度</th>
+                        <th class="simple">简单版（原版）</th>
+                        <th class="complex">企业版（升级版）</th>
+                    </tr>
+                    <tr>
+                        <td>文件数量</td>
+                        <td class="simple">4 个</td>
+                        <td class="complex">15+ 个</td>
+                    </tr>
+                    <tr>
+                        <td>架构层级</td>
+                        <td class="simple">单层</td>
+                        <td class="complex">4 层（Routes/Services/Models/Utils）</td>
+                    </tr>
+                    <tr>
+                        <td>认证机制</td>
+                        <td class="simple">无</td>
+                        <td class="complex">JWT + Role-based + Rate Limit</td>
+                    </tr>
+                    <tr>
+                        <td>数据库</td>
+                        <td class="simple">JSON 文件</td>
+                        <td class="complex">PostgreSQL + SQLAlchemy ORM</td>
+                    </tr>
+                    <tr>
+                        <td>前端</td>
+                        <td class="simple">无</td>
+                        <td class="complex">Vue 3 + Element Plus</td>
+                    </tr>
+                    <tr>
+                        <td>部署</td>
+                        <td class="simple">本地运行</td>
+                        <td class="complex">Docker Compose 完整编排</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- Code Preview -->
+            <section>
+                <h2>代码质量</h2>
                 
-                <h3>技术细节</h3>
-                <div class="visual-box">
-                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; font-size: 14px;">
-                        <div><strong>配色方案：</strong>莫兰迪色系</div>
-                        <div><strong>字体：</strong>系统字体栈</div>
-                        <div><strong>阴影：</strong>CSS box-shadow</div>
-                        <div><strong>动画：</strong>transition 0.3s</div>
-                        <div><strong>图表库：</strong>Chart.js CDN</div>
-                        <div><strong>布局：</strong>CSS Grid</div>
+                <div class="code-preview">
+                    <div class="code-header">
+                        <span class="code-dot dot-red"></span>
+                        <span class="code-dot dot-yellow"></span>
+                        <span class="code-dot dot-green"></span>
+                        <span class="code-filename">config.py - 多环境配置</span>
                     </div>
+                    <div class="code-content">class Config:
+    SECRET_KEY = os.environ.get('SECRET_KEY')
+    JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=1)
+    JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=30)
+    REDIS_URL = os.environ.get('REDIS_URL')
+    RATELIMIT_ENABLED = True
+
+class DevelopmentConfig(Config):
+    DEBUG = True
+    SQLALCHEMY_DATABASE_URI = 'postgresql://...'
+
+class ProductionConfig(Config):
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
+    JWT_TOKEN_LOCATION = ['headers', 'cookies']
+
+config_map = {
+    'dev': DevelopmentConfig,
+    'prod': ProductionConfig
+}</div>
                 </div>
             </section>
 
@@ -461,14 +673,14 @@
             <section>
                 <h2>评测结论</h2>
                 
-                <div class="visual-box" style="border-left: 4px solid var(--success);">
+                <div class="conclusion-box">
                     <p style="font-size: 16px; line-height: 1.8;">
-                        Qwen3.5 在<strong>美学基准测试</strong>中表现优异。模型不仅生成了功能完整的交互式仪表盘，
-                        更展现出对现代UI设计趋势的深刻理解：<br><br>
-                        1. <strong>配色能力</strong>：自主选择了流行的莫兰迪色系，视觉协调度高<br>
-                        2. <strong>交互设计</strong>：卡片悬停动效自然流畅，阴影层次分明<br>
-                        3. <strong>响应式思维</strong>：主动考虑移动端适配，使用 @media 断点<br>
-                        4. <strong>代码规范</strong>：CSS 变量管理设计系统，易于维护扩展
+                        Qwen3.5 在企业级项目生成测试中展现了<strong>架构设计能力</strong>：<br><br>
+                        1. <strong>分层架构</strong>：清晰的路由层、业务层、数据层分离，符合企业开发规范<br>
+                        2. <strong>安全设计</strong>：完整的 JWT 认证体系、角色权限、API 限流<br>
+                        3. <strong>工程化</strong>：多环境配置、数据库迁移、Docker 部署<br>
+                        4. <strong>技术广度</strong>：前后端分离、缓存、ORM、容器化全覆盖<br><br>
+                        生成的代码具备<strong>直接投产</strong>的潜力，展现了模型对软件工程最佳实践的深入理解。
                     </p>
                 </div>
             </section>
@@ -476,7 +688,7 @@
             <!-- Navigation -->
             <section style="display: flex; justify-content: space-between; margin-top: 60px; padding-top: 40px; border-top: 1px solid var(--border);">
                 <a href="../index.html" style="color: var(--text-secondary); text-decoration: none;">← 返回概览</a>
-                <a href="test02.html" style="color: var(--accent); text-decoration: none; font-weight: 500;">下一测试：Bug修复 →</a>
+                <a href="test02.html" style="color: var(--accent); text-decoration: none; font-weight: 500;">下一测试：逻辑推理 →</a>
             </section>
             
         </div>

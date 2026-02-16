@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TEST 03: 企业级项目生成 | Qwen3.5 评测</title>
+    <title>TEST 05: 3D游戏生成 | Qwen3.5 评测</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
@@ -16,8 +16,7 @@
             --code-bg: #f5f5f5;
             --success: #00aa44;
             --warning: #f5a623;
-            --danger: #dc3545;
-            --info: #0891b2;
+            --purple: #7c3aed;
         }
         
         body {
@@ -74,8 +73,8 @@
             align-items: center;
             gap: 8px;
             padding: 8px 16px;
-            background: #e6f7ed;
-            color: var(--success);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
             border-radius: 20px;
             font-size: 13px;
             font-weight: 600;
@@ -100,7 +99,7 @@
             margin: 28px 0 12px;
         }
         
-        /* Metrics - Enterprise Level */
+        /* Metrics */
         .metrics-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -110,122 +109,79 @@
         
         .metric-item {
             text-align: center;
-            padding: 24px;
+            padding: 20px;
             background: var(--code-bg);
             border-radius: 8px;
         }
         
-        .metric-value { 
-            font-size: 32px; 
-            font-weight: 700; 
-            background: linear-gradient(135deg, var(--accent), var(--info));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        .metric-label { font-size: 12px; color: var(--text-secondary); margin-top: 8px; }
+        .metric-value { font-size: 28px; font-weight: 600; color: var(--purple); }
+        .metric-label { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
         
-        /* Architecture Diagram */
-        .arch-diagram {
+        /* Game Preview */
+        .game-preview {
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
             border-radius: 12px;
             padding: 32px;
             color: white;
+            text-align: center;
             margin: 24px 0;
         }
         
-        .arch-title {
-            text-align: center;
-            font-size: 16px;
+        .game-title {
+            font-size: 24px;
             font-weight: 600;
-            margin-bottom: 32px;
+            margin-bottom: 16px;
             color: #64b5f6;
         }
         
-        .arch-layers {
+        .game-desc {
+            font-size: 14px;
+            opacity: 0.8;
+            margin-bottom: 24px;
+        }
+        
+        .game-controls {
             display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-        
-        .arch-layer {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            padding: 16px 20px;
-            background: rgba(255,255,255,0.05);
-            border-radius: 8px;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-        
-        .layer-name {
-            width: 100px;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            color: #64b5f6;
-        }
-        
-        .layer-components {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-        
-        .component-tag {
-            padding: 6px 12px;
-            background: rgba(100, 181, 246, 0.2);
-            border: 1px solid rgba(100, 181, 246, 0.4);
-            border-radius: 4px;
-            font-size: 12px;
-        }
-        
-        /* Complex File Tree */
-        .file-tree {
-            background: var(--code-bg);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 24px;
-            font-family: "SF Mono", Monaco, monospace;
+            justify-content: center;
+            gap: 32px;
+            margin-bottom: 24px;
             font-size: 13px;
-            line-height: 2;
         }
         
-        .tree-item {
+        .control-item {
             display: flex;
             align-items: center;
             gap: 8px;
+            padding: 8px 16px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 6px;
         }
         
-        .tree-folder { color: var(--warning); font-weight: 600; }
-        .tree-file { color: var(--text-secondary); }
-        .tree-indent { margin-left: 24px; }
-        .tree-icon { width: 20px; text-align: center; }
-        
-        /* Tech Stack */
-        .tech-stack {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 16px;
-            margin: 24px 0;
+        .key {
+            padding: 4px 12px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 4px;
+            font-weight: 600;
         }
         
-        .tech-card {
-            padding: 20px;
-            background: var(--code-bg);
+        .play-button {
+            display: inline-block;
+            padding: 16px 48px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
             border-radius: 8px;
-            border-left: 4px solid var(--accent);
+            font-weight: 600;
+            font-size: 16px;
+            transition: transform 0.2s, box-shadow 0.2s;
         }
         
-        .tech-card.backend { border-color: var(--success); }
-        .tech-card.frontend { border-color: var(--warning); }
-        .tech-card.database { border-color: var(--info); }
-        .tech-card.security { border-color: var(--danger); }
+        .play-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+        }
         
-        .tech-name { font-weight: 600; font-size: 14px; margin-bottom: 8px; }
-        .tech-items { font-size: 13px; color: var(--text-secondary); }
-        
-        /* Feature List */
+        /* Feature Cards */
         .feature-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -233,110 +189,66 @@
             margin: 24px 0;
         }
         
-        .feature-category {
+        .feature-card {
             padding: 20px;
             background: var(--code-bg);
             border-radius: 8px;
+            border-left: 4px solid var(--purple);
         }
         
         .feature-title {
             font-weight: 600;
             font-size: 14px;
-            margin-bottom: 12px;
+            margin-bottom: 8px;
             display: flex;
             align-items: center;
             gap: 8px;
         }
         
-        .feature-list {
-            list-style: none;
+        .feature-desc {
             font-size: 13px;
             color: var(--text-secondary);
         }
         
-        .feature-list li {
-            padding: 6px 0;
+        /* Tech Stack */
+        .tech-list {
             display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .feature-list li:before {
-            content: "✓";
-            color: var(--success);
-            font-weight: 600;
-        }
-        
-        /* Code Preview */
-        .code-preview {
-            background: #1a1a1a;
-            border-radius: 8px;
-            overflow: hidden;
-            margin: 24px 0;
-        }
-        
-        .code-header {
-            display: flex;
-            align-items: center;
+            flex-wrap: wrap;
             gap: 12px;
-            padding: 12px 16px;
-            background: #2d2d2d;
-            border-bottom: 1px solid #3d3d3d;
-        }
-        
-        .code-dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-        }
-        .dot-red { background: #ff5f56; }
-        .dot-yellow { background: #ffbd2e; }
-        .dot-green { background: #27c93f; }
-        
-        .code-filename { font-size: 13px; color: #e5e5e5; }
-        
-        .code-content {
-            padding: 16px;
-            font-family: "SF Mono", Monaco, monospace;
-            font-size: 12px;
-            line-height: 1.6;
-            color: #e5e5e5;
-            overflow-x: auto;
-            max-height: 300px;
-            overflow-y: auto;
-        }
-        
-        /* Comparison */
-        .comparison-table {
-            width: 100%;
-            border-collapse: collapse;
             margin: 24px 0;
-            font-size: 14px;
         }
         
-        .comparison-table th {
-            text-align: left;
-            padding: 12px;
+        .tech-tag {
+            padding: 8px 16px;
             background: var(--code-bg);
-            border-bottom: 2px solid var(--border);
-            font-weight: 600;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
         }
         
-        .comparison-table td {
-            padding: 12px;
-            border-bottom: 1px solid var(--border);
+        /* Code Stats */
+        .code-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin: 24px 0;
         }
         
-        .comparison-table .simple { color: var(--text-secondary); }
-        .comparison-table .complex { 
-            color: var(--success); 
-            font-weight: 600;
+        .stat-card {
+            padding: 20px;
+            background: linear-gradient(135deg, #f5f5f5 0%, #ffffff 100%);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            text-align: center;
         }
+        
+        .stat-value { font-size: 24px; font-weight: 700; color: var(--purple); }
+        .stat-label { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
         
         /* Conclusion */
         .conclusion-box {
-            background: linear-gradient(135deg, #e6f7ed 0%, #d1fae5 100%);
-            border-left: 4px solid var(--success);
+            background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
+            border-left: 4px solid var(--purple);
             padding: 24px;
             margin: 32px 0;
             border-radius: 0 8px 8px 0;
@@ -344,8 +256,9 @@
         
         @media (max-width: 768px) {
             .metrics-grid { grid-template-columns: repeat(2, 1fr); }
-            .tech-stack { grid-template-columns: 1fr; }
             .feature-grid { grid-template-columns: 1fr; }
+            .code-stats { grid-template-columns: 1fr; }
+            .game-controls { flex-direction: column; gap: 12px; }
         }
     </style>
 </head>
@@ -355,10 +268,12 @@
             <div class="nav-logo"><a href="../index.html" style="text-decoration:none;color:inherit;">Qwen3.5 评测</a></div>
             <ul class="nav-links">
                 <li><a href="../index.html">概览</a></li>
-                <li><a href="test01.html">美学基准</a></li>
-                <li><a href="test02.html">Bug修复</a></li>
-                <li><a href="test03.html" class="active">项目生成</a></li>
-                <li><a href="test04.html">逻辑推理</a></li>
+                <li><a href="test01.html">项目生成</a></li>
+                <li><a href="test02.html">逻辑推理</a></li>
+                <li><a href="test03.html" class="active">3D游戏</a></li>
+                <li><a href="test04.html">2D弹幕</a></li>
+                <li><a href="test05.html">塔防</a></li>
+                <li><a href="test06.html">五子棋</a></li>
             </ul>
         </div>
     </nav>
@@ -366,21 +281,15 @@
     <main class="main">
         <div class="container">
             
-            <div class="breadcrumb"><a href="../index.html">概览</a> / TEST 03（升级版）</div>
+            <div class="breadcrumb"><a href="../index.html">概览</a> / TEST03</div>
 
             <header class="page-header">
                 <div class="page-title">
-                    <h1>企业级项目生成</h1>
-                    <div class="page-subtitle">完整任务管理 Web 应用 - 生产级架构设计</div>
+                    <h1>3D 游戏生成</h1>
+                    <div class="page-subtitle">基于 Three.js 的完整太空射击游戏</div>
                 </div>
-                <span class="status-badge">⭐ 企业级</span>
+                <span class="status-badge">🎮 可运行</span>
             </header>
-
-            <!-- Upgrade Notice -->
-            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 8px; margin-bottom: 32px;">
-                <strong>🚀 升级版测试</strong>：应要求升级为更复杂的场景
-                <span style="opacity: 0.9;"> - 从简单的待办事项升级为完整的企业级任务管理系统</span>
-            </div>
 
             <!-- Metrics -->
             <section>
@@ -388,72 +297,53 @@
                 
                 <div class="metrics-grid">
                     <div class="metric-item">
-                        <div class="metric-value">15+</div>
-                        <div class="metric-label">文件数量</div>
+                        <div class="metric-value">3D</div>
+                        <div class="metric-label">游戏维度</div>
                     </div>
                     <div class="metric-item">
-                        <div class="metric-value">23K</div>
-                        <div class="metric-label">代码规模</div>
+                        <div class="metric-value">21K</div>
+                        <div class="metric-label">代码字符</div>
                     </div>
                     <div class="metric-item">
-                        <div class="metric-value">4</div>
-                        <div class="metric-label">架构层级</div>
+                        <div class="metric-value">6+</div>
+                        <div class="metric-label">游戏系统</div>
                     </div>
                     <div class="metric-item">
-                        <div class="metric-value">8</div>
-                        <div class="metric-label">技术组件</div>
+                        <div class="metric-value">1</div>
+                        <div class="metric-label">文件完成</div>
                     </div>
                 </div>            
             </section>
 
-            <!-- Architecture Diagram -->
+            <!-- Game Preview -->
             <section>
-                <h2>系统架构</h2>
+                <h2>游戏演示</h2>
                 
-                <div class="arch-diagram">
-                    <div class="arch-title">🏗️ 分层架构设计</div>
+                <div class="game-preview">
+                    <div class="game-title">🚀 3D 太空射击</div>
+                    <div class="game-desc">
+                        使用 Three.js 构建的完整3D太空射击游戏，
+                        包含粒子系统、碰撞检测、敌机AI等完整游戏机制
+                    </div>
                     
-                    <div class="arch-layers">
-                        <div class="arch-layer">
-                            <span class="layer-name">前端层</span>
-                            <div class="layer-components">
-                                <span class="component-tag">Vue 3</span>
-                                <span class="component-tag">Element Plus</span>
-                                <span class="component-tag">Vuex</span>
-                                <span class="component-tag">Axios</span>
-                            </div>
+                    <div class="game-controls">
+                        <div class="control-item">
+                            <span>移动:</span>
+                            <span class="key">WASD</span>
                         </div>
-                        
-                        <div class="arch-layer">
-                            <span class="layer-name">API 层</span>
-                            <div class="layer-components">
-                                <span class="component-tag">Flask</span>
-                                <span class="component-tag">JWT Auth</span>
-                                <span class="component-tag">Rate Limit</span>
-                                <span class="component-tag">CORS</span>
-                            </div>
+                        <div class="control-item">
+                            <span>射击:</span>
+                            <span class="key">SPACE</span>
                         </div>
-                        
-                        <div class="arch-layer">
-                            <span class="layer-name">业务层</span>
-                            <div class="layer-components">
-                                <span class="component-tag">Services</span>
-                                <span class="component-tag">Decorators</span>
-                                <span class="component-tag">Validators</span>
-                                <span class="component-tag">Error Handler</span>
-                            </div>
-                        </div>
-                        
-                        <div class="arch-layer">
-                            <span class="layer-name">数据层</span>
-                            <div class="layer-components">
-                                <span class="component-tag">PostgreSQL</span>
-                                <span class="component-tag">SQLAlchemy</span>
-                                <span class="component-tag">Redis</span>
-                                <span class="component-tag">Alembic</span>
-                            </div>
+                        <div class="control-item">
+                            <span>暂停:</span>
+                            <span class="key">P</span>
                         </div>
                     </div>
+                    
+                    <a href="space-shooter-3d.html" class="play-button" target="_blank">
+                        ▶ 开始游戏
+                    </a>
                 </div>
             </section>
 
@@ -461,209 +351,89 @@
             <section>
                 <h2>技术栈</h2>
                 
-                <div class="tech-stack">
-                    <div class="tech-card backend">
-                        <div class="tech-name">🐍 后端框架</div>
-                        <div class="tech-items">Flask + Flask-SQLAlchemy + Flask-JWT-Extended + Flask-Limiter</div>
-                    </div>
-                    
-                    <div class="tech-card frontend">
-                        <div class="tech-name">⚡ 前端框架</div>
-                        <div class="tech-items">Vue 3 + Element Plus + Vuex + Vue Router</div>
-                    </div>
-                    
-                    <div class="tech-card database">
-                        <div class="tech-name">🗄️ 数据存储</div>
-                        <div class="tech-items">PostgreSQL + Redis + Alembic 迁移</div>
-                    </div>
-                    
-                    <div class="tech-card security">
-                        <div class="tech-name">🔒 安全认证</div>
-                        <div class="tech-items">JWT Token + Bcrypt + Role-based Access + Rate Limiting</div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- File Structure -->
-            <section>
-                <h2>项目结构</h2>
-                
-                <div class="file-tree">
-                    <div class="tree-item">
-                        <span class="tree-icon">📁</span>
-                        <span class="tree-folder">task_manager/</span>
-                    </div>
-                    <div class="tree-item tree-indent">
-                        <span class="tree-icon">📁</span>
-                        <span class="tree-folder">app/</span>
-                    </div>
-                    <div class="tree-item tree-indent" style="margin-left: 48px;">
-                        <span class="tree-icon">📄</span>
-                        <span class="tree-file">__init__.py (应用工厂)</span>
-                    </div>
-                    <div class="tree-item tree-indent" style="margin-left: 48px;">
-                        <span class="tree-icon">📄</span>
-                        <span class="tree-file">models.py (数据模型)</span>
-                    </div>
-                    <div class="tree-item tree-indent" style="margin-left: 48px;">
-                        <span class="tree-icon">📁</span>
-                        <span class="tree-folder">routes/ (auth, tasks, projects)</span>
-                    </div>
-                    <div class="tree-item tree-indent" style="margin-left: 48px;">
-                        <span class="tree-icon">📁</span>
-                        <span class="tree-folder">services/ (业务逻辑层)</span>
-                    </div>
-                    <div class="tree-item tree-indent" style="margin-left: 48px;">
-                        <span class="tree-icon">📁</span>
-                        <span class="tree-folder">utils/ (decorators, validators)</span>
-                    </div>
-                    <div class="tree-item tree-indent">
-                        <span class="tree-icon">📁</span>
-                        <span class="tree-folder">frontend/src/</span>
-                    </div>
-                    <div class="tree-item tree-indent" style="margin-left: 48px;">
-                        <span class="tree-icon">📄</span>
-                        <span class="tree-file">components/TaskBoard.vue</span>
-                    </div>
-                    <div class="tree-item tree-indent" style="margin-left: 48px;">
-                        <span class="tree-icon">📄</span>
-                        <span class="tree-file">store/index.js (Vuex)</span>
-                    </div>
-                    <div class="tree-item tree-indent">
-                        <span class="tree-icon">📁</span>
-                        <span class="tree-folder">migrations/ (Alembic)</span>
-                    </div>
-                    <div class="tree-item tree-indent">
-                        <span class="tree-icon">📁</span>
-                        <span class="tree-folder">tests/</span>
-                    </div>
-                    <div class="tree-item tree-indent">
-                        <span class="tree-icon">⚙️</span>
-                        <span class="tree-file">config.py / docker-compose.yml / Dockerfile</span>
-                    </div>
+                <div class="tech-list">
+                    <span class="tech-tag">🎨 Three.js (ES Modules)</span>
+                    <span class="tech-tag">📐 WebGL</span>
+                    <span class="tech-tag">🎮 Game Loop</span>
+                    <span class="tech-tag">💥 Particle System</span>
+                    <span class="tech-tag">🎯 Collision Detection</span>
+                    <span class="tech-tag">🤖 Enemy AI</span>
+                    <span class="tech-tag">♻️ Object Pool</span>
                 </div>
             </section>
 
             <!-- Features -->
             <section>
-                <h2>功能完整性</h2>
+                <h2>游戏特性</h2>
                 
                 <div class="feature-grid">
-                    <div class="feature-category">
-                        <div class="feature-title">👤 用户系统</div>
-                        <ul class="feature-list">
-                            <li>JWT 认证（Access/Refresh Token）</li>
-                            <li>角色权限管理（Admin/User）</li>
-                            <li>密码加密（Bcrypt）</li>
-                            <li>API 限流保护</li>
-                        </ul>
+                    <div class="feature-card">
+                        <div class="feature-title">🌌 3D 星空场景</div>
+                        <div class="feature-desc">
+                            粒子系统生成的动态星空背景，
+                            营造沉浸式太空环境
+                        </div>
                     </div>
                     
-                    <div class="feature-category">
-                        <div class="feature-title">📋 任务系统</div>
-                        <ul class="feature-list">
-                            <li>CRUD + 批量操作</li>
-                            <li>状态流转（4种状态）</li>
-                            <li>优先级管理（4级）</li>
-                            <li>标签 + 子任务 + 评论</li>
-                        </ul>
+                    <div class="feature-card">
+                        <div class="feature-title">🚀 3D 飞船模型</div>
+                        <div class="feature-desc">
+                            使用基本几何体组合的3D飞船，
+                            发光材质（Emissive）效果
+                        </div>
                     </div>
                     
-                    <div class="feature-category">
-                        <div class="feature-title">📊 项目管理</div>
-                        <ul class="feature-list">
-                            <li>项目创建与成员管理</li>
-                            <li>Kanban 看板视图</li>
-                            <li>统计报表</li>
-                            <li>多项目支持</li>
-                        </ul>
+                    <div class="feature-card">
+                        <div class="feature-title">👾 敌机 AI</div>
+                        <div class="feature-desc">
+                            智能敌机生成和移动算法，
+                            难度随时间递增
+                        </div>
                     </div>
                     
-                    <div class="feature-category">
-                        <div class="feature-title">🔧 工程化</div>
-                        <ul class="feature-list">
-                            <li>分层架构设计</li>
-                            <li>数据库迁移（Alembic）</li>
-                            <li>Redis 缓存</li>
-                            <li>Docker 容器化</li>
-                        </ul>
+                    <div class="feature-card">
+                        <div class="feature-title">💥 爆炸特效</div>
+                        <div class="feature-desc">
+                            粒子系统实现的爆炸动画，
+                            视觉反馈丰富
+                        </div>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-title">🎯 碰撞检测</div>
+                        <div class="feature-desc">
+                            3D空间碰撞检测系统，
+                            子弹-敌机、敌机-玩家检测
+                        </div>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-title">♻️ 对象池优化</div>
+                        <div class="feature-desc">
+                            对象池管理子弹和敌机，
+                            避免频繁创建销毁的性能开销
+                        </div>
                     </div>
                 </div>
             </section>
 
-            <!-- Complexity Comparison -->
+            <!-- Code Stats -->
             <section>
-                <h2>复杂度对比</h2>
+                <h2>代码统计</h2>
                 
-                <table class="comparison-table">
-                    <tr>
-                        <th>维度</th>
-                        <th class="simple">简单版（原版）</th>
-                        <th class="complex">企业版（升级版）</th>
-                    </tr>
-                    <tr>
-                        <td>文件数量</td>
-                        <td class="simple">4 个</td>
-                        <td class="complex">15+ 个</td>
-                    </tr>
-                    <tr>
-                        <td>架构层级</td>
-                        <td class="simple">单层</td>
-                        <td class="complex">4 层（Routes/Services/Models/Utils）</td>
-                    </tr>
-                    <tr>
-                        <td>认证机制</td>
-                        <td class="simple">无</td>
-                        <td class="complex">JWT + Role-based + Rate Limit</td>
-                    </tr>
-                    <tr>
-                        <td>数据库</td>
-                        <td class="simple">JSON 文件</td>
-                        <td class="complex">PostgreSQL + SQLAlchemy ORM</td>
-                    </tr>
-                    <tr>
-                        <td>前端</td>
-                        <td class="simple">无</td>
-                        <td class="complex">Vue 3 + Element Plus</td>
-                    </tr>
-                    <tr>
-                        <td>部署</td>
-                        <td class="simple">本地运行</td>
-                        <td class="complex">Docker Compose 完整编排</td>
-                    </tr>
-                </table>
-            </section>
-
-            <!-- Code Preview -->
-            <section>
-                <h2>代码质量</h2>
-                
-                <div class="code-preview">
-                    <div class="code-header">
-                        <span class="code-dot dot-red"></span>
-                        <span class="code-dot dot-yellow"></span>
-                        <span class="code-dot dot-green"></span>
-                        <span class="code-filename">config.py - 多环境配置</span>
+                <div class="code-stats">
+                    <div class="stat-card">
+                        <div class="stat-value">~600</div>
+                        <div class="stat-label">代码行数</div>
                     </div>
-                    <div class="code-content">class Config:
-    SECRET_KEY = os.environ.get('SECRET_KEY')
-    JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=1)
-    JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=30)
-    REDIS_URL = os.environ.get('REDIS_URL')
-    RATELIMIT_ENABLED = True
-
-class DevelopmentConfig(Config):
-    DEBUG = True
-    SQLALCHEMY_DATABASE_URI = 'postgresql://...'
-
-class ProductionConfig(Config):
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
-    JWT_TOKEN_LOCATION = ['headers', 'cookies']
-
-config_map = {
-    'dev': DevelopmentConfig,
-    'prod': ProductionConfig
-}</div>
+                    <div class="stat-card">
+                        <div class="stat-value">1</div>
+                        <div class="stat-label">HTML文件</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">0</div>
+                        <div class="stat-label">外部依赖</div>
+                    </div>
                 </div>
             </section>
 
@@ -673,20 +443,20 @@ config_map = {
                 
                 <div class="conclusion-box">
                     <p style="font-size: 16px; line-height: 1.8;">
-                        Qwen3.5 在企业级项目生成测试中展现了<strong>架构设计能力</strong>：<br><br>
-                        1. <strong>分层架构</strong>：清晰的路由层、业务层、数据层分离，符合企业开发规范<br>
-                        2. <strong>安全设计</strong>：完整的 JWT 认证体系、角色权限、API 限流<br>
-                        3. <strong>工程化</strong>：多环境配置、数据库迁移、Docker 部署<br>
-                        4. <strong>技术广度</strong>：前后端分离、缓存、ORM、容器化全覆盖<br><br>
-                        生成的代码具备<strong>直接投产</strong>的潜力，展现了模型对软件工程最佳实践的深入理解。
+                        Qwen3.5 在3D游戏生成测试中展现了<strong>强大的综合能力</strong>：<br><br>
+                        1. <strong>3D图形编程</strong>：熟练使用Three.js创建3D场景、模型、光照和粒子效果<br>
+                        2. <strong>游戏开发</strong>：完整的游戏循环、输入处理、碰撞检测和AI逻辑<br>
+                        3. <strong>性能优化</strong>：主动实现对象池模式，避免内存泄漏<br>
+                        4. <strong>代码组织</strong>：单文件完成复杂功能，结构清晰可维护<br><br>
+                        生成的游戏<strong>可直接运行</strong>，无需任何配置，展现了模型在创意编程领域的高水平能力。
                     </p>
                 </div>
             </section>
 
             <!-- Navigation -->
             <section style="display: flex; justify-content: space-between; margin-top: 60px; padding-top: 40px; border-top: 1px solid var(--border);">
-                <a href="test02.html" style="color: var(--text-secondary); text-decoration: none;">← 上一测试</a>
-                <a href="test04.html" style="color: var(--accent); text-decoration: none; font-weight: 500;">下一测试：逻辑推理 →</a>
+                <a href="test04.html" style="color: var(--text-secondary); text-decoration: none;">← 上一测试</a>
+                <span style="color: var(--success); font-weight: 600;">全部测试完成 🎉</span>
             </section>
             
         </div>

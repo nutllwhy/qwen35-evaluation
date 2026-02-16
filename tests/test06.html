@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TEST 06: 2D弹幕射击 | Qwen3.5 评测</title>
+    <title>TEST 08: AI五子棋 | Qwen3.5 评测</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
@@ -15,8 +15,6 @@
             --accent: #0066cc;
             --code-bg: #f5f5f5;
             --success: #00aa44;
-            --warning: #f5a623;
-            --danger: #dc3545;
             --purple: #7c3aed;
         }
         
@@ -74,7 +72,7 @@
             align-items: center;
             gap: 8px;
             padding: 8px 16px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
             color: white;
             border-radius: 20px;
             font-size: 13px;
@@ -91,16 +89,6 @@
             border-bottom: 2px solid var(--text);
         }
         
-        h3 {
-            font-size: 14px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: var(--text-secondary);
-            margin: 28px 0 12px;
-        }
-        
-        /* Metrics */
         .metrics-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -118,9 +106,8 @@
         .metric-value { font-size: 28px; font-weight: 600; color: var(--purple); }
         .metric-label { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
         
-        /* Game Preview */
         .game-preview {
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            background: linear-gradient(135deg, #1a1a2e 0%, #2a1a3e 100%);
             border-radius: 12px;
             padding: 32px;
             text-align: center;
@@ -130,9 +117,9 @@
         .game-title {
             font-size: 24px;
             font-weight: 600;
-            color: #ff6b6b;
+            color: #f0f;
             margin-bottom: 16px;
-            text-shadow: 0 0 20px #ff6b6b;
+            text-shadow: 0 0 20px #f0f;
         }
         
         .game-desc {
@@ -144,8 +131,8 @@
         .play-button {
             display: inline-block;
             padding: 16px 48px;
-            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
-            color: white;
+            background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
+            color: #fff;
             text-decoration: none;
             border-radius: 8px;
             font-weight: 600;
@@ -155,10 +142,9 @@
         
         .play-button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(238, 90, 36, 0.4);
+            box-shadow: 0 8px 24px rgba(168, 85, 247, 0.4);
         }
         
-        /* Feature Cards */
         .feature-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -187,7 +173,6 @@
             color: var(--text-secondary);
         }
         
-        /* Tech Specs */
         .tech-list {
             display: flex;
             flex-wrap: wrap;
@@ -203,46 +188,6 @@
             font-weight: 500;
         }
         
-        /* Code Stats */
-        .code-stats {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 16px;
-            margin: 24px 0;
-        }
-        
-        .stat-card {
-            padding: 20px;
-            background: linear-gradient(135deg, #f5f5f5 0%, #ffffff 100%);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            text-align: center;
-        }
-        
-        .stat-value { font-size: 24px; font-weight: 700; color: var(--purple); }
-        .stat-label { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
-        
-        /* Comparison Table */
-        .comparison-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 24px 0;
-            font-size: 14px;
-        }
-        
-        .comparison-table th,
-        .comparison-table td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid var(--border);
-        }
-        
-        .comparison-table th {
-            font-weight: 600;
-            background: var(--code-bg);
-        }
-        
-        /* Conclusion */
         .conclusion-box {
             background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
             border-left: 4px solid var(--purple);
@@ -251,10 +196,34 @@
             border-radius: 0 8px 8px 0;
         }
         
+        .ai-levels {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin: 20px 0;
+        }
+        
+        .ai-level {
+            padding: 15px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .ai-level-name {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        
+        .ai-level-desc {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
         @media (max-width: 768px) {
-            .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+            .metrics-grid, .ai-levels { grid-template-columns: repeat(2, 1fr); }
             .feature-grid { grid-template-columns: 1fr; }
-            .code-stats { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -264,12 +233,12 @@
             <div class="nav-logo"><a href="../index.html" style="text-decoration:none;color:inherit;">Qwen3.5 评测</a></div>
             <ul class="nav-links">
                 <li><a href="../index.html">概览</a></li>
-                <li><a href="test01.html">美学基准</a></li>
-                <li><a href="test02.html">Bug修复</a></li>
-                <li><a href="test03.html">项目生成</a></li>
-                <li><a href="test04.html">逻辑推理</a></li>
-                <li><a href="test05.html">3D游戏</a></li>
-                <li><a href="test06.html" class="active">2D弹幕</a></li>
+                <li><a href="test01.html">项目生成</a></li>
+                <li><a href="test02.html">逻辑推理</a></li>
+                <li><a href="test03.html">3D游戏</a></li>
+                <li><a href="test04.html">2D弹幕</a></li>
+                <li><a href="test05.html">塔防</a></li>
+                <li><a href="test06.html" class="active">五子棋</a></li>
             </ul>
         </div>
     </nav>
@@ -277,180 +246,144 @@
     <main class="main">
         <div class="container">
             
-            <div class="breadcrumb"><a href="../index.html">概览</a> / TEST 06</div>
+            <div class="breadcrumb"><a href="../index.html">概览</a> / TEST06</div>
 
             <header class="page-header">
                 <div class="page-title">
-                    <h1>2D 弹幕射击</h1>
-                    <div class="page-subtitle">Canvas 2D Bullet Hell 游戏性能测试</div>
+                    <h1>AI五子棋对战</h1>
+                    <div class="page-subtitle">Minimax + Alpha-Beta 剪枝算法测试</div>
                 </div>
-                <span class="status-badge">🎮 可运行</span>
+                <span class="status-badge">🧠 AI对战</span>
             </header>
 
-            <!-- Metrics -->
             <section>
                 <h2>测试指标</h2>
                 
                 <div class="metrics-grid">
                     <div class="metric-item">
-                        <div class="metric-value">2D</div>
-                        <div class="metric-label">游戏维度</div>
-                    </div>
-                    <div class="metric-item">
-                        <div class="metric-value">100+</div>
-                        <div class="metric-label">同屏子弹数</div>
-                    </div>
-                    <div class="metric-item">
-                        <div class="metric-value">60</div>
-                        <div class="metric-label">目标FPS</div>
+                        <div class="metric-value">4</div>
+                        <div class="metric-label">AI难度等级</div>
                     </div>
                     <div class="metric-item">
                         <div class="metric-value">3</div>
-                        <div class="metric-label">弹幕类型</div>
+                        <div class="metric-label">玩家技能</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value">15×15</div>
+                        <div class="metric-label">棋盘大小</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value">24KB</div>
+                        <div class="metric-label">代码大小</div>
                     </div>
                 </div>            
             </section>
 
-            <!-- Game Preview -->
             <section>
                 <h2>游戏演示</h2>
                 
                 <div class="game-preview">
-                    <div class="game-title">🔴 BULLET HELL 🔴</div>
+                    <div class="game-title">🔮 技能五子棋</div>
                     <div class="game-desc">
-                        2D弹幕射击游戏 - 躲避密集的弹幕，消灭敌人！<br>
-                        支持直线、扇形、螺旋三种弹幕模式
+                        与AI对战的五子棋游戏 - 4种难度选择，3种特殊技能！<br>
+                        专家级AI使用Minimax + Alpha-Beta剪枝算法
                     </div>
                     
-                    <a href="bullet-hell-2d.html" class="play-button" target="_blank">
-                        ▶ 开始游戏
+                    <a href="gomoku-ai.html" class="play-button" target="_blank">
+                        ▶ 开始对战
                     </a>
                 </div>
             </section>
 
-            <!-- Features -->
+            <section>
+                <h2>AI难度等级</h2>
+                
+                <div class="ai-levels">
+                    <div class="ai-level">
+                        <div class="ai-level-name" style="color: #4a4;">🟢 简单</div>
+                        <div class="ai-level-desc">随机落子</div>
+                    </div>
+                    <div class="ai-level">
+                        <div class="ai-level-name" style="color: #aa4;">🟡 中等</div>
+                        <div class="ai-level-desc">贪心评分</div>
+                    </div>
+                    <div class="ai-level">
+                        <div class="ai-level-name" style="color: #a44;">🔴 困难</div>
+                        <div class="ai-level-desc">Minimax 2层</div>
+                    </div>
+                    <div class="ai-level">
+                        <div class="ai-level-name" style="color: #a4a;">💀 专家</div>
+                        <div class="ai-level-desc">Alpha-Beta 4层</div>
+                    </div>
+                </div>
+            </section>
+
             <section>
                 <h2>游戏特性</h2>
                 
                 <div class="feature-grid">
                     <div class="feature-card">
-                        <div class="feature-title">➡️ 直线弹幕</div>
+                        <div class="feature-title">🎯 双重打击</div>
                         <div class="feature-desc">
-                            敌人向下直射子弹，基础但致命的攻击方式
+                            玩家技能：开局阶段可使用，连续下两子
                         </div>
                     </div>
                     
                     <div class="feature-card">
-                        <div class="feature-title">🔀 扇形弹幕</div>
+                        <div class="feature-title">🛡️ 防守反击</div>
                         <div class="feature-desc">
-                            多方向散射，需要快速判断安全区域
+                            玩家技能：移除AI的一个棋子，打破对方阵形
                         </div>
                     </div>
                     
                     <div class="feature-card">
-                        <div class="feature-title">🌀 螺旋弹幕</div>
+                        <div class="feature-title">⚡ 时空回溯</div>
                         <div class="feature-desc">
-                            旋转扩散的弹幕，考验微操和预判
+                            玩家技能：悔棋3步，撤销失误操作
                         </div>
                     </div>
                     
                     <div class="feature-card">
-                        <div class="feature-title">⚡ 60FPS性能</div>
+                        <div class="feature-title">💡 智能提示</div>
                         <div class="feature-desc">
-                            对象池优化，同时处理100+子弹保持流畅
+                            系统会高亮显示当前最佳落子位置
                         </div>
                     </div>
                 </div>
             </section>
 
-            <!-- Tech Stack -->
             <section>
                 <h2>技术栈</h2>
                 
                 <div class="tech-list">
-                    <span class="tech-tag">🎨 HTML5 Canvas</span>
-                    <span class="tech-tag">⚡ Canvas 2D API</span>
-                    <span class="tech-tag">🎯 对象池模式</span>
-                    <span class="tech-tag">📐 三角函数计算</span>
-                    <span class="tech-tag">🎮 60fps 游戏循环</span>
-                    <span class="tech-tag">💥 粒子系统</span>
+                    <span class="tech-tag">🧠 Minimax算法</span>
+                    <span class="tech-tag">✂️ Alpha-Beta剪枝</span>
+                    <span class="tech-tag">🎮 博弈论</span>
+                    <span class="tech-tag">📊 评估函数</span>
+                    <span class="tech-tag">⚡ 候选移动优化</span>
+                    <span class="tech-tag">🎯 启发式搜索</span>
                 </div>
             </section>
 
-            <!-- Code Stats -->
-            <section>
-                <h2>代码统计</h2>
-                
-                <div class="code-stats">
-                    <div class="stat-card">
-                        <div class="stat-value">~500</div>
-                        <div class="stat-label">代码行数</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value">1</div>
-                        <div class="stat-label">HTML文件</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value">0</div>
-                        <div class="stat-label">外部依赖</div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Comparison -->
-            <section>
-                <h2>与前作对比</h2>
-                
-                <table class="comparison-table">
-                    <tr>
-                        <th>维度</th>
-                        <th>TEST 05 (3D)</th>
-                        <th>TEST 06 (2D)</th>
-                    </tr>
-                    <tr>
-                        <td>技术</td>
-                        <td>Three.js / WebGL</td>
-                        <td>Canvas 2D API</td>
-                    </tr>
-                    <tr>
-                        <td>对象数</td>
-                        <td>~30个</td>
-                        <td>~100+个</td>
-                    </tr>
-                    <tr>
-                        <td>性能重点</td>
-                        <td>3D渲染</td>
-                        <td>大量对象管理</td>
-                    </tr>
-                    <tr>
-                        <td>数学</td>
-                        <td>3D变换</td>
-                        <td>三角函数/轨迹</td>
-                    </tr>
-                </table>
-            </section>
-
-            <!-- Conclusion -->
             <section>
                 <h2>评测结论</h2>
                 
                 <div class="conclusion-box">
                     <p style="font-size: 16px; line-height: 1.8;">
-                        Qwen3.5 在2D弹幕射击游戏中展现了<strong>卓越的性能优化能力</strong>：<br><br>
-                        1. <strong>数学能力</strong>：使用三角函数精确计算弹幕轨迹（直线、扇形、螺旋）<br>
-                        2. <strong>性能优化</strong>：对象池技术确保100+子弹同时运行不掉帧<br>
-                        3. <strong>游戏设计>：多种弹幕类型、敌人类型、BOSS战完整系统<br>
-                        4. <strong>代码质量</strong>：纯原生JavaScript，无外部依赖，结构清晰<br><br>
-                        生成的游戏<strong>可直接运行</strong>，帧率稳定在60fps，
-                        展现了模型在高性能游戏开发领域的<strong>专业级水平</strong>。
+                        Qwen3.5 在AI五子棋中展现了<strong>卓越的算法实现能力</strong>：<br><br>
+                        1. <strong>AI算法</strong>：完整的Minimax实现 + Alpha-Beta剪枝优化<br>
+                        2. <strong>评估系统</strong>：多方向连子评分，攻防兼备<br>
+                        3. <strong>性能优化</strong>：候选移动筛选，搜索空间剪枝<br>
+                        4. <strong>难度分层</strong>：4级AI从随机到专家级推理<br><br>
+                        生成的AI具有<strong>真正的对战强度</strong>，专家级难度具有挑战性，
+                        展现了模型在<strong>博弈AI</strong>领域的专业能力。
                     </p>
                 </div>
             </section>
 
-            <!-- Navigation -->
             <section style="display: flex; justify-content: space-between; margin-top: 60px; padding-top: 40px; border-top: 1px solid var(--border);">
-                <a href="test05.html" style="color: var(--text-secondary); text-decoration: none;">← 上一测试</a>
-                <span style="color: var(--success); font-weight: 600;">全部6项测试完成 🎉</span>
+                <a href="test07.html" style="color: var(--text-secondary); text-decoration: none;">← 上一测试</a>
+                <span style="color: var(--success); font-weight: 600;">全部8项测试完成 🎉</span>
             </section>
             
         </div>
