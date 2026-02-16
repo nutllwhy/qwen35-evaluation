@@ -6,6 +6,7 @@
     <title>TEST 02: Bug修复能力 | Qwen3.5 评测</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        
         :root {
             --bg: #ffffff;
             --text: #111111;
@@ -13,14 +14,19 @@
             --border: #e5e5e5;
             --accent: #0066cc;
             --code-bg: #f5f5f5;
-            --pending: #999999;
+            --success: #00aa44;
+            --error: #dc3545;
+            --warning: #f5a623;
         }
+        
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background: var(--bg);
             color: var(--text);
             line-height: 1.6;
         }
+        
+        /* Navigation */
         .nav {
             position: fixed;
             top: 0;
@@ -31,6 +37,7 @@
             border-bottom: 1px solid var(--border);
             z-index: 100;
         }
+        
         .nav-container {
             max-width: 1200px;
             margin: 0 auto;
@@ -40,39 +47,228 @@
             justify-content: space-between;
             height: 60px;
         }
+        
         .nav-logo { font-weight: 600; font-size: 18px; }
         .nav-links { display: flex; gap: 32px; list-style: none; }
         .nav-links a { text-decoration: none; color: var(--text-secondary); font-size: 14px; }
         .nav-links a:hover, .nav-links a.active { color: var(--text); }
+        
         .main { margin-top: 60px; }
         .container { max-width: 1000px; margin: 0 auto; padding: 40px 24px; }
+        
         .breadcrumb { font-size: 13px; color: var(--text-secondary); margin-bottom: 24px; }
         .breadcrumb a { color: var(--accent); text-decoration: none; }
-        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
+        
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+        
         .page-title h1 { font-size: 32px; font-weight: 600; margin-bottom: 8px; }
         .page-subtitle { font-size: 16px; color: var(--text-secondary); }
+        
         .status-badge {
             display: inline-flex;
             align-items: center;
             gap: 8px;
             padding: 8px 16px;
-            background: var(--code-bg);
-            color: var(--pending);
+            background: #e6f7ed;
+            color: var(--success);
             border-radius: 20px;
             font-size: 13px;
             font-weight: 600;
         }
+        
         section { margin: 48px 0; }
-        h2 { font-size: 20px; font-weight: 600; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid var(--text); }
-        .pending-box {
+        
+        h2 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--text);
+        }
+        
+        h3 {
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            margin: 28px 0 12px;
+        }
+        
+        /* Metrics */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin: 24px 0;
+        }
+        
+        .metric-item {
+            text-align: center;
+            padding: 20px;
             background: var(--code-bg);
-            border: 2px dashed var(--border);
             border-radius: 8px;
-            padding: 60px;
+        }
+        
+        .metric-value { font-size: 28px; font-weight: 600; color: var(--accent); }
+        .metric-label { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+        
+        /* Bug Table */
+        .bug-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 24px 0;
+            font-size: 14px;
+        }
+        
+        .bug-table th {
+            text-align: left;
+            padding: 12px;
+            background: var(--code-bg);
+            border-bottom: 2px solid var(--border);
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+        }
+        
+        .bug-table td {
+            padding: 16px 12px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .bug-severity {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .severity-high { background: #fee; color: var(--error); }
+        .severity-medium { background: #fff3cd; color: var(--warning); }
+        .severity-low { background: #e6f7ed; color: var(--success); }
+        
+        /* Before/After Comparison */
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin: 32px 0;
+        }
+        
+        .code-panel {
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .code-panel.buggy { border-color: var(--error); }
+        .code-panel.fixed { border-color: var(--success); }
+        
+        .code-header {
+            padding: 12px 16px;
+            font-weight: 600;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .code-panel.buggy .code-header {
+            background: #fee;
+            color: var(--error);
+        }
+        
+        .code-panel.fixed .code-header {
+            background: #e6f7ed;
+            color: var(--success);
+        }
+        
+        .code-content {
+            background: #1a1a1a;
+            color: #e5e5e5;
+            padding: 16px;
+            font-family: "SF Mono", Monaco, monospace;
+            font-size: 12px;
+            line-height: 1.6;
+            overflow-x: auto;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .code-content .bug-line {
+            background: rgba(220, 53, 69, 0.3);
+            display: block;
+            margin: 0 -16px;
+            padding: 0 16px;
+        }
+        
+        .code-content .fix-line {
+            background: rgba(0, 170, 68, 0.3);
+            display: block;
+            margin: 0 -16px;
+            padding: 0 16px;
+        }
+        
+        /* Visual Summary */
+        .visual-summary {
+            display: flex;
+            gap: 16px;
+            margin: 24px 0;
+        }
+        
+        .summary-card {
+            flex: 1;
+            padding: 24px;
+            border-radius: 8px;
             text-align: center;
         }
-        .pending-icon { font-size: 48px; margin-bottom: 16px; }
-        .pending-text { font-size: 18px; color: var(--text-secondary); }
+        
+        .summary-card.buggy {
+            background: #fee;
+            border: 1px solid var(--error);
+        }
+        
+        .summary-card.fixed {
+            background: #e6f7ed;
+            border: 1px solid var(--success);
+        }
+        
+        .summary-number {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        
+        .summary-card.buggy .summary-number { color: var(--error); }
+        .summary-card.fixed .summary-number { color: var(--success); }
+        
+        .summary-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        
+        /* Conclusion Box */
+        .conclusion-box {
+            background: var(--code-bg);
+            border-left: 4px solid var(--success);
+            padding: 24px;
+            margin: 32px 0;
+        }
+        
+        @media (max-width: 768px) {
+            .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+            .comparison { grid-template-columns: 1fr; }
+            .visual-summary { flex-direction: column; }
+        }
     </style>
 </head>
 <body>
@@ -81,7 +277,7 @@
             <div class="nav-logo"><a href="../index.html" style="text-decoration:none;color:inherit;">Qwen3.5 评测</a></div>
             <ul class="nav-links">
                 <li><a href="../index.html">概览</a></li>
-                <li><a href="test01.html">代码生成</a></li>
+                <li><a href="test01.html">美学基准</a></li>
                 <li><a href="test02.html" class="active">Bug修复</a></li>
                 <li><a href="test03.html">项目生成</a></li>
                 <li><a href="test04.html">逻辑推理</a></li>
@@ -91,27 +287,191 @@
 
     <main class="main">
         <div class="container">
+            
             <div class="breadcrumb"><a href="../index.html">概览</a> / TEST 02</div>
 
             <header class="page-header">
                 <div class="page-title">
                     <h1>Bug 修复能力</h1>
-                    <div class="page-subtitle">定位问题并生成修复方案</div>
+                    <div class="page-subtitle">多线程下载器的 Bug 定位与修复</div>
                 </div>
-                <span class="status-badge">待测试</span>
+                <span class="status-badge">测试通过</span>
             </header>
 
+            <!-- Metrics -->
             <section>
-                <div class="pending-box">
-                    <div class="pending-icon">⏳</div>
-                    <div class="pending-text">测试准备中，即将开始...</div>
+                <h2>测试指标</h2>
+                
+                <div class="metrics-grid">
+                    <div class="metric-item">
+                        <div class="metric-value">7</div>
+                        <div class="metric-label">发现 Bug</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value">7</div>
+                        <div class="metric-label">修复方案</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value">4</div>
+                        <div class="metric-label">预期 Bug</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value">3</div>
+                        <div class="metric-label">额外发现</div>
+                    </div>
+                </div>            
+            </section>
+
+            <!-- Visual Summary -->
+            <section>
+                <h2>修复概览</h2>
+                
+                <div class="visual-summary">
+                    <div class="summary-card buggy">
+                        <div class="summary-number">7</div>
+                        <div class="summary-label">原始 Bug 数</div>
+                    </div>
+                    <div class="summary-card fixed">
+                        <div class="summary-number">0</div>
+                        <div class="summary-label">修复后 Bug 数</div>
+                    </div>
                 </div>
             </section>
 
+            <!-- Bug List -->
+            <section>
+                <h2>Bug 清单</h2>
+                
+                <table class="bug-table">
+                    <tr>
+                        <th>编号</th>
+                        <th>问题描述</th>
+                        <th>严重程度</th>
+                        <th>修复方案</th>
+                    </tr>
+                    <tr>
+                        <td>Bug 1</td>
+                        <td>无异常处理</td>
+                        <td><span class="bug-severity severity-high">高</span></td>
+                        <td>try-except 捕获网络异常</td>
+                    </tr>
+                    <tr>
+                        <td>Bug 2</td>
+                        <td>无并发数控制</td>
+                        <td><span class="bug-severity severity-high">高</span></td>
+                        <td>Semaphore 限制并发</td>
+                    </tr>
+                    <tr>
+                        <td>Bug 3</td>
+                        <td>未等待线程完成</td>
+                        <td><span class="bug-severity severity-high">高</span></td>
+                        <td>join() 等待完成</td>
+                    </tr>
+                    <tr>
+                        <td>Bug 4</td>
+                        <td>文件未关闭</td>
+                        <td><span class="bug-severity severity-medium">中</span></td>
+                        <td>with open() 自动管理</td>
+                    </tr>
+                    <tr>
+                        <td>Bug 5</td>
+                        <td>竞态条件（额外发现）</td>
+                        <td><span class="bug-severity severity-high">高</span></td>
+                        <td>Lock 保护共享资源</td>
+                    </tr>
+                    <tr>
+                        <td>Bug 6</td>
+                        <td>无超时设置（额外发现）</td>
+                        <td><span class="bug-severity severity-medium">中</span></td>
+                        <td>添加 timeout 参数</td>
+                    </tr>
+                    <tr>
+                        <td>Bug 7</td>
+                        <td>KeyError 风险（额外发现）</td>
+                        <td><span class="bug-severity severity-low">低</span></td>
+                        <td>添加 key 存在性检查</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- Code Comparison -->
+            <section>
+                <h2>代码对比</h2>
+                
+                <div class="comparison">
+                    <div class="code-panel buggy">
+                        <div class="code-header">
+                            ⚠️ 原始代码（有 Bug）
+                        </div>
+                        <div class="code-content">
+<span class="bug-line">def download(self, url):
+    response = requests.get(url)
+    self.results[url] = response.content</span>
+
+<span class="bug-line">for url in self.urls:
+    t = threading.Thread(target=self.download)
+    t.start()
+return self.results</span>
+
+<span class="bug-line">f = open(filename, 'wb')
+f.write(self.results[url])</span>
+                        </div>
+                    </div>
+                    
+                    <div class="code-panel fixed">
+                        <div class="code-header">
+                            ✓ 修复后代码
+                        </div>
+                        <div class="code-content">
+<span class="fix-line">def download(self, url):
+    self.semaphore.acquire()
+    try:
+        response = requests.get(url, timeout=self.timeout)
+        with self.lock:
+            self.results[url] = {...}
+    except requests.exceptions.RequestException as e:
+        ...
+    finally:
+        self.semaphore.release()</span>
+
+<span class="fix-line">for url in self.urls:
+    t = threading.Thread(...)
+    threads.append(t)
+    t.start()
+
+for t in threads:
+    t.join()
+return self.results</span>
+
+<span class="fix-line">with open(filename, 'wb') as f:
+    f.write(self.results[url])</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Conclusion -->
+            <section>
+                <h2>评测结论</h2>
+                
+                <div class="conclusion-box">
+                    <p style="font-size: 16px; line-height: 1.8;">
+                        Qwen3.5 在 Bug 修复测试中表现出色：<br><br>
+                        1. <strong>全面性</strong>：不仅找到了预期的 4 个 Bug，还额外发现了 3 个潜在问题（竞态条件、超时设置、KeyError）<br>
+                        2. <strong>专业性</strong>：提供了详细的修复方案说明，包含多线程同步、异常处理等高级概念<br>
+                        3. <strong>完整性</strong>：修复后的代码包含完善的注释，解释了每个修复点的原理<br><br>
+                        特别值得注意的是，模型对<strong>多线程编程</strong>有深入理解，
+                        主动识别了竞态条件并提供了 Lock + Semaphore 的组合解决方案。
+                    </p>
+                </div>
+            </section>
+
+            <!-- Navigation -->
             <section style="display: flex; justify-content: space-between; margin-top: 60px; padding-top: 40px; border-top: 1px solid var(--border);">
                 <a href="test01.html" style="color: var(--text-secondary); text-decoration: none;">← 上一测试</a>
-                <a href="test03.html" style="color: var(--accent); text-decoration: none; font-weight: 500;">下一测试 →</a>
+                <a href="test03.html" style="color: var(--accent); text-decoration: none; font-weight: 500;">下一测试：项目生成 →</a>
             </section>
+            
         </div>
     </main>
 </body>
