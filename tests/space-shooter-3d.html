@@ -42,7 +42,7 @@
 
 <script>
 let scene, camera, renderer, player;
-let bullets = [], enemies = [], particles = [];
+let bullets = [], enemies = [], particles = [], enemyBullets = [];
 let score = 0, wave = 1, health = 100;
 let isPlaying = false, keys = {}, lastShot = 0;
 let audioCtx;
@@ -314,6 +314,19 @@ function shoot() {
     bullets.push(bullet);
 }
 
+// 敌机发射子弹
+function enemyShoot(enemy) {
+    const geometry = new THREE.CylinderGeometry(0.06, 0.06, 1.2, 6);
+    geometry.rotateX(Math.PI / 2);
+    const material = new THREE.MeshBasicMaterial({ color: 0xff4400, emissive: 0xff2200 });
+    const bullet = new THREE.Mesh(geometry, material);
+    bullet.position.copy(enemy.mesh.position);
+    bullet.position.y = 0;
+    bullet.position.z += 1;
+    scene.add(bullet);
+    enemyBullets.push(bullet);
+}
+
 // 生成敌机 - 降低频率
 let enemySpawnTimer = 0;
 function spawnEnemy() {
@@ -329,13 +342,18 @@ function spawnEnemy() {
     const healthBar = createHealthBar(enemyData.maxHp, enemyData.color);
     enemy.add(healthBar.sprite);
     
+    // 敌机射击参数
+    const shootInterval = type === 'fast' ? 1500 : type === 'heavy' ? 2500 : 2000;
+    
     enemies.push({ 
         mesh: enemy, 
         type, 
         speed, 
         hp: enemyData.hp, 
         maxHp: enemyData.maxHp,
-        healthBar: healthBar
+        healthBar: healthBar,
+        lastShot: Date.now(),
+        shootInterval: shootInterval
     });
 }
 
@@ -401,9 +419,9 @@ function update() {
         }
     }
     
-    // 生成敌机 - 显著降低频率
+    // 生成敌机
     enemySpawnTimer++;
-    const spawnRate = Math.max(60, 150 - wave * 3); // 原来40-120，现在60-150
+    const spawnRate = Math.max(60, 150 - wave * 3);
     if (enemySpawnTimer > spawnRate) {
         spawnEnemy();
         enemySpawnTimer = 0;
@@ -413,11 +431,21 @@ function update() {
     const playerBox = new THREE.Box3().setFromObject(player);
     const enemiesToRemove = [];
     const bulletsToRemove = [];
+    const now = Date.now();
     
     for (let i = 0; i < enemies.length; i++) {
         const e = enemies[i];
+        
+        // 敌机向玩家飞来（不再旋转）
         e.mesh.position.z += e.speed;
-        e.mesh.rotation.y += 0.02;
+        // 保持正面朝向玩家（机头朝前）
+        e.mesh.rotation.set(0, Math.PI, 0);
+        
+        // 敌机发射子弹
+        if (now - e.lastShot > e.shootInterval) {
+            enemyShoot(e);
+            e.lastShot = now;
+        }
         
         // 更新血条
         if (e.healthBar) {
@@ -479,6 +507,26 @@ function update() {
         }
     }
     
+    // 更新敌机子弹
+    for (let i = enemyBullets.length - 1; i >= 0; i--) {
+        const b = enemyBullets[i];
+        b.position.z += 0.5;
+        
+        // 检测击中玩家
+        const bulletBox = new THREE.Box3().setFromObject(b);
+        if (bulletBox.intersectsBox(playerBox)) {
+            takeDamage(10);
+            scene.remove(b);
+            enemyBullets.splice(i, 1);
+            continue;
+        }
+        
+        if (b.position.z > 15) {
+            scene.remove(b);
+            enemyBullets.splice(i, 1);
+        }
+    }
+    
     // 安全删除
     enemiesToRemove.sort((a, b) => b - a);
     for (const idx of enemiesToRemove) {
@@ -526,6 +574,8 @@ function startGame() {
     enemies = [];
     bullets.forEach(b => scene.remove(b));
     bullets = [];
+    enemyBullets.forEach(b => scene.remove(b));
+    enemyBullets = [];
     particles.forEach(p => scene.remove(p));
     particles = [];
     player.position.set(0, 0, 5);
