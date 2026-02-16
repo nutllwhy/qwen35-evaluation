@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neon Bullet Hell - Canvas Engine</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #050505;
+            color: #fff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            user-select: none;
+        }
+        canvas {
+            display: block;
+        }
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        .hud-element {
+            position: absolute;
+            text-shadow: 0 0 5px rgba(0,0,0,0.8);
+        }
+        #score-display { top: 20px; left: 20px; font-size: 24px; font-weight: bold; color: #0ff; }
+        #fps-display { top: 20px; right: 20px; font-size: 16px; color: #aaa; }
+        #wave-display { top: 60px; left: 20px; font-size: 18px; color: #f0f; }
+        #health-bar-container {
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 10px;
+            background: #333;
+            border: 2px solid #555;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        #health-bar {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, #f00, #ff0);
+            transition: width 0.2s;
+        }
+        #game-over-screen {
+            display: none;
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            pointer-events: auto;
+            z-index: 10;
+        }
+        h1 { font-size: 60px; margin: 0 0 20px 0; color: #f05; text-shadow: 0 0 20px #f05; }
+        button {
+            padding: 15px 40px;
+            font-size: 24px;
+            background: transparent;
+            color: #0ff;
+            border: 2px solid #0ff;
+            cursor: pointer;
+            text-transform: uppercase;
+            box-shadow: 0 0 10px #0ff;
+            transition: all 0.3s;
+        }
+        button:hover { background: #0ff; color: #000; box-shadow: 0 0 30px #0ff; }
+    </style>
+</head>
+<body>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <div id="ui-layer">
+        <div id="score-display" class="hud-element">SCORE: 0</div>
+        <div id="wave-display" class="hud-element">WAVE: 1</div>
+        <div id="fps-display" class="hud-element">FPS: 60</div>
+        <div id="health-bar-container">
+            <div id="health-bar"></div>
+        </div>
+    </div>
+
+    <div id="game-over-screen">
+        <h1>GAME OVER</h1>
+        <p style="font-size: 20px; margin-bottom: 30px; color: #ccc;">FINAL SCORE: <span id="final-score">0</span></p>
+        <button onclick="game.restart()">RESTART</button>
+    </div>
+
+<script>
+/**
+ * 核心配置与工具类
+ */
+const CONFIG = {
+    playerSpeed: 0.15, // 鼠标跟随平滑度
+    playerFireRate: 8, // 帧数间隔
+    maxHealth: 3,
+    bulletSpeed: 12,
+    colors: {
+        player: '#0ff',
+        playerBullet: '#ff0',
+        enemy: '#f05',
+        bulletLinear: '#f80',
+        bulletFan: '#0f8',
+        bulletSpiral: '#f0f'
+    }
+};
+
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+// 自适应全屏
+function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resize);
+resize();
+
+// 基础向量类
+class Vector {
+    constructor(x, y) { this.x = x; this.y = y; }
+    add(v) { this.x += v.x; this.y += v.y; }
+    normalize() {
+        let mag = Math.sqrt(this.x * this.x + this.y * this.y);
+        if (mag > 0) { this.x /= mag; this.y /= mag; }
+    }
+}
+
+/**
+ * 对象池 (性能优化核心)
+ */
+class ObjectPool {
+    constructor(createFn, resetFn, initialSize = 500) {
+        this.pool = [];
+        this.active = [];
+        this.createFn = createFn;
+        this.resetFn = resetFn;
+        for (let i = 0; i < initialSize; i++) this.pool.push(createFn());
+    }
+
+    get() {
+        let obj;
+        if (this.pool.length > 0) {
+            obj = this.pool.pop();
+        } else {
+            obj = this.createFn(); // 动态扩容
+        }
+        this.active.push(obj);
+        return obj;
+    }
+
+    remove(obj) {
+        const idx = this.active.indexOf(obj);
+        if (idx > -1) {
+            this.active.splice(idx, 1);
+            this.pool.push(obj);
+            this.resetFn(obj);
+        }
+    }
+
+    updateAndDraw(updateFn, drawFn, dt) {
+        for (let i = this.active.length - 1; i >= 0; i--) {
+            const obj = this.active[i];
+            if (obj.active) {
+                updateFn(obj, dt);
+                drawFn(obj);
+            } else {
+                this.remove(obj);
+            }
+        }
+    }
+
+    clear() {
+        while(this.active.length > 0) this.remove(this.active[0]);
+    }
+}
+
+/**
+ * 游戏实体
+ */
+
+// 玩家
+class Player {
+    constructor() {
+        this.pos = new Vector(canvas.width / 2, canvas.height - 100);
+        this.radius = 6;
+        this.health = CONFIG.maxHealth;
+        this.invincibleTimer = 0;
+        this.lastFire = 0;
+    }
+    
+    update(inputX, inputY) {
+        // 平滑跟随鼠标
+        this.pos.x += (inputX - this.pos.x) * CONFIG.playerSpeed;
+        this.pos.y += (inputY - this.pos.y) * CONFIG.playerSpeed;
+
+        // 边界限制
+        this.pos.x = Math.max(this.radius, Math.min(canvas.width - this.radius, this.pos.x));
+        this.pos.y = Math.max(this.radius, Math.min(canvas.height - this.radius, this.pos.y));
+
+        if (this.invincibleTimer > 0) this.invincibleTimer--;
+    }
+
+    draw() {
+        if (this.invincibleTimer > 0 && Math.floor(Date.now() / 50) % 2 === 0) return; // 闪烁
+
+        ctx.save();
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = CONFIG.colors.player;
+        ctx.fillStyle = '#fff';
+        ctx.beginPath();
+        ctx.arc(this.pos.x, this.pos.y, this.radius, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // 玩家光环
+        ctx.strokeStyle = CONFIG.colors.player;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(this.pos.x, this.pos.y, this.radius + 4, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+    }
+}
+
+// 敌人基类
+class Enemy {
+    constructor(x, y, type) {
+        this.x = x;
+        this.y = y;
+        this.type = type;
+        this.hp = 20;
+        this.radius = 15;
+        this.active = true;
+        this.timer = 0;
+        this.moveOffset = 0;
+    }
+}
+
+// 子弹基类
+class Bullet {
+    constructor() {
+        this.x = 0; this.y = 0;
+        this.vx = 0; this.vy = 0;
+        this.radius = 5;
+        this.color = '#fff';
+        this.active = false;
+        this.type = 'normal'; // normal, spiral_part
+        this.angle = 0; // 用于螺旋计算
+        this.parentAngle = 0; // 父级旋转角度
+    }
+}
+
+// 粒子
+class Particle {
+    constructor() {
+        this.x = 0; this.y = 0;
+        this.vx = 0; this.vy = 0;
+        this.life = 1.0;
+        this.decay = 0.05;
+        this.color = '#fff';
+        this.active = false;
+    }
+}
+
+/**
+ * 游戏主逻辑
+ */
+class Game {
+    constructor() {
+        this.state = 'MENU'; // MENU, PLAY, GAMEOVER
+        this.score = 0;
+        this.wave = 1;
+        this.frameCount = 0;
+        this.lastTime = 0;
+        
+        // 输入
+        this.input = { x: canvas.width/2, y: canvas.height/2 };
+        this.mouse = { x: 0, y: 0 };
+
+        // 绑定事件
+        window.addEventListener('mousemove', e => {
+            this.input.x = e.clientX;
+            this.input.y = e.clientY;
+            this.mouse.x = e.clientX;
+            this.mouse.y = e.clientY;
+        });
+        window.addEventListener('mousedown', () => this.playerDown = true);
+        window.addEventListener('mouseup', () => this.playerDown = false);
+
+        // 实体初始化
+        this.player = new Player();
+        
+        // 对象池初始化
+        this.bullets = new ObjectPool(
+            () => new Bullet(),
+            (b) => { b.active = false; b.type = 'normal'; }
+        );
+        this.enemies = [];
+        this.particles = new ObjectPool(
+            () => new Particle(),
+            (p) => p.active = false
+        );
+
+        this.loop = this.loop.bind(this);
+        requestAnimationFrame(this.loop);
+    }
+
+    restart() {
+        this.state = 'PLAY';
+        this.score = 0;
+        this.wave = 1;
+        this.player = new Player();
+        this.enemies = [];
+        this.bullets.clear();
+        this.particles.clear();
+        document.getElementById('game-over-screen').style.display = 'none';
+        this.updateUI();
+    }
+
+    spawnEnemy() {
+        // 简单的波次逻辑
+        if (Math.random() < 0.02 + (this.wave * 0.005)) {
+            const x = Math.random() * (canvas.width - 40) + 20;
+            const type = Math.random() > 0.8 ? 'boss' : (Math.random() > 0.5 ? 'shooter' : 'dasher');
+            
+            let hp = 10 * this.wave;
+            if(type === 'boss') hp = 100 + (this.wave * 20);
+            if(type === 'shooter') hp = 30;
+
+            const enemy = new Enemy(x, -30, type);
+            enemy.hp = hp;
+            enemy.radius = type === 'boss' ? 40 : 15;
+            this.enemies.push(enemy);
+        }
+    }
+
+    createBullet(x, y, angle, speed, color, type = 'normal') {
+        const b = this.bullets.get();
+        b.active = true;
+        b.x = x;
+        b.y = y;
+        b.vx = Math.cos(angle) * speed;
+        b.vy = Math.sin(angle) * speed;
+        b.color = color;
+        b.type = type;
+        return b;
+    }
+
+    enemyBehavior(enemy, dt) {
+        enemy.timer++;
+
+        // 移动逻辑
+        if (enemy.type === 'dasher') {
+            enemy.y += 2 + (this.wave * 0.5);
+            enemy.x += Math.sin(enemy.timer * 0.05) * 3;
+            // 偶尔射击
+            if (enemy.timer % 120 === 0) {
+                const angle = Math.atan2(this.player.pos.y - enemy.y, this.player.pos.x - enemy.x);
+                this.createBullet(enemy.x, enemy.y, angle, 6, CONFIG.colors.bulletLinear);
+            }
+        } else if (enemy.type === 'shooter') {
+            enemy.y += 1;
+            // 扇形弹幕
+            if (enemy.timer % 60 === 0) {
+                const baseAngle = Math.PI / 2; // 向下
+                for (let i = -2; i <= 2; i++) {
+                    this.createBullet(enemy.x, enemy.y, baseAngle + (i * 0.2), 5, CONFIG.colors.bulletFan);
+                }
+            }
+        } else if (enemy.type === 'boss') {
+            // Boss 悬停移动
+            const targetX = canvas.width / 2 + Math.sin(enemy.timer * 0.02) * 200;
+            enemy.x += (targetX - enemy.x) * 0.05;
+            enemy.y += (100 - enemy.y) * 0.05;
+
+            // 螺旋弹幕
+            if (enemy.timer % 5 === 0) {
+                const angle = enemy.timer * 0.1;
+                this.createBullet(enemy.x, enemy.y, angle, 4, CONFIG.colors.bulletSpiral, 'spiral');
+                this.createBullet(enemy.x, enemy.y, angle + Math.PI, 4, CONFIG.colors.bulletSpiral, 'spiral');
+            }
+            // 爆炸弹幕
+            if (enemy.timer % 100 === 0) {
+                for(let i=0; i<12; i++) {
+                    this.createBullet(enemy.x, enemy.y, (i/12)*Math.PI*2, 3, CONFIG.colors.bulletLinear);
+                }
+            }
+        }
+
+        // 移除超出屏幕
+        if (enemy.y > canvas.height + 50) enemy.active = false;
+    }
+
+    update(dt) {
+        if (this.state !== 'PLAY') return;
+
+        this.player.update(this.input.x, this.input.y);
+        this.spawnEnemy();
+
+        // 玩家射击
+        if (this.frameCount % CONFIG.playerFireRate === 0) {
+            this.createBullet(this.player.pos.x - 10, this.player.pos.y, -Math.PI/2, 15, CONFIG.colors.playerBullet);
+            this.createBullet(this.player.pos.x + 10, this.player.pos.y, -Math.PI/2, 15, CONFIG.colors.playerBullet);
+        }
+
+        // 更新子弹
+        const bList = this.bullets.active;
+        for (let i = bList.length - 1; i >= 0; i--) {
+            let b = bList[i];
+            b.x += b.vx;
+            b.y += b.vy;
+            // 屏幕外移除
+            if (b.y > canvas.height + 50 || b.y < -50 || b.x < -50 || b.x > canvas.width + 50) {
+                this.bullets.remove(b);
+                continue;
+            }
+
+            // 碰撞检测：子弹打玩家
+            if (this.player.invincibleTimer <= 0) {
+                const dist = Math.hypot(b.x - this.player.pos.x, b.y - this.player.pos.y);
+                if (dist < b.radius + this.player.radius - 2) { // -2 为了稍微宽容的判定
+                    this.playerHit();
+                    this.bullets.remove(b);
+                }
+            }
+        }
+
+        // 更新敌人
+        for (let i = this.enemies.length - 1; i >= 0; i--) {
+            let e = this.enemies[i];
+            this.enemyBehavior(e, dt);
+            
+            // 碰撞检测：玩家子弹打敌人
+            for (let j = bList.length - 1; j >= 0; j--) {
+                let b = bList[j];
+                if (b.type === 'normal' && !b.active) continue; // 忽略非玩家子弹
+                if (b.type !== 'normal') continue; // 简单的颜色/类型检查，实际上玩家子弹是特定颜色
+                
+                const dist = Math.hypot(b.x - e.x, b.y - e.y);
+                if (dist < e.radius + b.radius) {
+                    e.hp--;
+                    this.createExplosion(b.x, b.y, 3, '#ff0');
+                    this.bullets.remove(b);
+                    
+                    if (e.hp <= 0) {
+                        this.createExplosion(e.x, e.y, e.radius, CONFIG.colors.enemy);
+                        this.score += (e.type === 'boss' ? 500 : 100);
+                        this.enemies.splice(i, 1);
+                        this.updateUI();
+                        break; 
+                    }
+                }
+            }
+
+            // 玩家撞敌人
+            const pDist = Math.hypot(this.player.pos.x - e.x, this.player.pos.y - e.y);
+            if (pDist < this.player.radius + e.radius && this.player.invincibleTimer <= 0) {
+                this.playerHit();
+                e.hp = 0; // 同归于尽
+                this.createExplosion(e.x, e.y, e.radius, CONFIG.colors.enemy);
+                this.enemies.splice(i, 1);
+            }
+
+            if (!e.active) this.enemies.splice(i, 1);
+        }
+
+        // 粒子更新
+        this.particles.updateAndDraw(
+            p => {
+                p.x += p.vx; p.y += p.vy;
+                p.life -= p.decay;
+                if(p.life <= 0) p.active = false;
+            },
+            p => {
+                ctx.globalAlpha = p.life;
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 3, 0, Math.PI*2);
+                ctx.fill();
+                ctx.globalAlpha = 1;
+            }
+        );
+
+        // 波次管理
+        if (this.enemies.length === 0 && this.wave * 5 < this.score / 100) {
+            this.wave++;
+            this.updateUI();
+        }
+
+        this.frameCount++;
+    }
+
+    playerHit() {
+        this.player.health--;
+        this.player.invincibleTimer = 120; // 2 秒无敌
+        this.createExplosion(this.player.pos.x, this.player.pos.y, 20, CONFIG.colors.player);
+        this.updateUI();
+        
+        if (this.player.health <= 0) {
+            this.state = 'GAMEOVER';
+            document.getElementById('final-score').innerText = this.score;
+            document.getElementById('game-over-screen').style.display = 'flex';
+        }
+    }
+
+    createExplosion(x, y, size, color) {
+        for (let i = 0; i < size; i++) {
+            const p = this.particles.get();
+            p.active = true;
+            p.x = x; p.y = y;
+            const angle = Math.random() * Math.PI * 2;
+            const speed = Math.random() * 5;
+            p.vx = Math.cos(angle) * speed;
+            p.vy = Math.sin(angle) * speed;
+            p.color = color;
+            p.decay = 0.02 + Math.random() * 0.05;
+        }
+    }
+
+    draw() {
+        // 背景
+        ctx.fillStyle = 'rgba(5, 5, 10, 0.4)'; // 拖影效果
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        if (this.state === 'PLAY') {
+            // 绘制敌人
+            this.enemies.forEach(e => {
+                ctx.save();
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = CONFIG.colors.enemy;
+                ctx.fillStyle = '#300';
+                ctx.strokeStyle = '#f00';
+                ctx.lineWidth = 2;
+                
+                if (e.type === 'boss') {
+                    ctx.beginPath();
+                    ctx.arc(e.x, e.y, e.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.stroke();
+                    // Boss 血条
+                    ctx.fillStyle = 'red';
+                    ctx.fillRect(e.x - 30, e.y - 50, 60 * (e.hp / (100 + this.wave*20)), 5);
+                } else {
+                    // 普通敌人形状
+                    ctx.translate(e.x, e.y);
+                    ctx.rotate(e.timer * 0.05);
+                    ctx.fillRect(-e.radius/2, -e.radius/2, e.radius, e.radius);
+                }
+                ctx.restore();
+            });
+
+            // 绘制子弹
+            this.bullets.active.forEach(b => {
+                ctx.save();
+                ctx.shadowBlur = 5;
+                ctx.shadowColor = b.color;
+                ctx.fillStyle = b.color;
+                ctx.beginPath();
+                // 螺旋弹幕画大一点
+                const r = b.type === 'spiral' ? 8 : 4;
+                ctx.arc(b.x, b.y, r, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            });
+
+            this.player.draw();
+        }
+    }
+
+    updateUI() {
+        document.getElementById('score-display').innerText = `SCORE: ${this.score}`;
+        document.getElementById('wave-display').innerText = `WAVE: ${this.wave}`;
+        const hpPercent = (this.player.health / CONFIG.maxHealth) * 100;
+        document.getElementById('health-bar').style.width = `${hpPercent}%`;
+    }
+
+    loop(timestamp) {
+        const dt = timestamp - this.lastTime;
+        this.lastTime = timestamp;
+
+        // FPS 计算
+        if (this.frameCount % 30 === 0) {
+            document.getElementById('fps-display').innerText = `FPS: ${Math.round(1000/dt)}`;
+        }
+
+        this.update(dt);
+        this.draw();
+        requestAnimationFrame(this.loop);
+    }
+}
+
+// 启动游戏
+const game = new Game();
+
+</script>
+</body>
+</html>
