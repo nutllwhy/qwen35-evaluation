@@ -345,16 +345,25 @@ class Tower {
     
     shoot(target) {
         const stats = TOWER_TYPES[this.type];
+        // 计算初始方向向量（防止目标立即死亡导致子弹卡住）
+        const dx = target.x - this.x;
+        const dy = target.y - this.y;
+        const dist = Math.hypot(dx, dy);
+        const vx = dist > 0 ? (dx / dist) * stats.projectileSpeed : 0;
+        const vy = dist > 0 ? (dy / dist) * stats.projectileSpeed : 0;
+        
         projectiles.push({
             x: this.x, y: this.y,
             target: target,
+            vx: vx, vy: vy,
             damage: this.damage,
             speed: stats.projectileSpeed,
             color: this.color,
             type: this.type,
             splash: stats.splash,
             slow: stats.slow,
-            slowDuration: stats.slowDuration
+            slowDuration: stats.slowDuration,
+            life: 120 // 最大存活2秒（60fps）
         });
     }
     
@@ -576,7 +585,9 @@ class Enemy {
         this.y = path[0].y;
         this.type = type;
         const stats = ENEMY_TYPES[type];
-        this.maxHp = stats.hp * (1 + wave * 0.2);
+        // BOSS血量增长放缓，避免最后一波过于冗长
+        const hpMultiplier = type === 'boss' ? (1 + wave * 0.1) : (1 + wave * 0.15);
+        this.maxHp = stats.hp * hpMultiplier;
         this.hp = this.maxHp;
         this.baseSpeed = stats.speed;
         this.speed = this.baseSpeed;
@@ -743,6 +754,13 @@ function update() {
     for (let i = projectiles.length - 1; i >= 0; i--) {
         const p = projectiles[i];
         
+        // 生命值递减
+        p.life--;
+        if (p.life <= 0) {
+            projectiles.splice(i, 1);
+            continue;
+        }
+        
         // 追踪目标
         if (p.target && enemies.includes(p.target)) {
             const dx = p.target.x - p.x;
@@ -751,6 +769,9 @@ function update() {
             if (dist > 0) {
                 p.x += (dx / dist) * p.speed;
                 p.y += (dy / dist) * p.speed;
+                // 更新方向向量（用于目标死亡后继续飞行）
+                p.vx = (dx / dist) * p.speed;
+                p.vy = (dy / dist) * p.speed;
             }
             
             // 碰撞检测
@@ -776,10 +797,10 @@ function update() {
                 projectiles.splice(i, 1);
             }
         } else {
-            // 目标已死，子弹继续飞
+            // 目标已死或丢失，子弹继续沿原方向飞行
             p.x += p.vx || 0;
             p.y += p.vy || 0;
-            if (p.x < 0 || p.x > 800 || p.y < 0 || p.y > 600) {
+            if (p.x < -20 || p.x > 820 || p.y < -20 || p.y > 620) {
                 projectiles.splice(i, 1);
             }
         }
