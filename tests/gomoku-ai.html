@@ -487,14 +487,23 @@
             font-weight: 600;
         }
         
+        .modal-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
         .modal-blessing {
-            font-size: 16px;
+            font-size: 20px;
             color: #c41e3a;
-            margin-bottom: 25px;
-            padding: 10px 20px;
-            background: rgba(255, 215, 0, 0.2);
-            border-radius: 20px;
-            display: inline-block;
+            margin: 15px 0 30px;
+            padding: 14px 28px;
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.3), rgba(255, 215, 0, 0.15));
+            border-radius: 25px;
+            border: 2px solid #ffd700;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+            text-align: center;
         }
         
         .modal-btn {
@@ -974,15 +983,10 @@ function makeMove(r, c, player) {
     if (checkWin(r, c, player)) {
         gameOver = true;
         const isWin = player === 1;
-        if (isWin) {
-            blackScore++;
-            playWinSound();
-        } else {
-            whiteScore++;
-            playLoseSound();
-        }
+        if (isWin) blackScore++;
+        else whiteScore++;
         updateScore();
-        showModal(isWin ? 'win' : 'lose', isWin ? '黑方胜！' : '白方胜！');
+        showModal(isWin ? 'win' : 'lose', isWin ? '🎉 黑方获胜！' : '🤍 白方获胜！');
         return;
     }
     
@@ -1302,24 +1306,32 @@ function createPetals() {
 }
 
 function showModal(type, message) {
-    document.getElementById('modal').style.display = 'flex';
-    const title = document.getElementById('modalTitle');
-    title.textContent = message;
-    title.className = type;
+    // 确保音频已初始化
+    initAudio();
     
+    const modal = document.getElementById('modal');
+    const title = document.getElementById('modalTitle');
     const desc = document.getElementById('modalDesc');
     const blessing = document.getElementById('modalBlessing');
     
+    title.textContent = message;
+    title.className = type;
+    modal.style.display = 'flex';
+    
     if (type === 'win') {
-        desc.textContent = '五子连珠，妙手天成！';
+        desc.innerHTML = '🎊 五子连珠，妙手天成！🎊';
         blessing.textContent = blessings[Math.floor(Math.random() * blessings.length)];
+        // 播放胜利音效
+        setTimeout(() => playWinSound(), 100);
+        // 放烟花
         createFireworks();
         // 持续放烟花
         const fireworkInterval = setInterval(createFireworks, 1500);
-        document.getElementById('modal').dataset.fireworkInterval = fireworkInterval;
+        modal.dataset.fireworkInterval = fireworkInterval;
     } else if (type === 'lose') {
         desc.textContent = '棋差一着，再接再厉！';
         blessing.textContent = '胜败乃兵家常事，重整旗鼓再出发！';
+        setTimeout(() => playLoseSound(), 100);
     } else {
         desc.textContent = '平分秋色，不分伯仲！';
         blessing.textContent = '和为贵，棋逢对手亦是乐事！';
