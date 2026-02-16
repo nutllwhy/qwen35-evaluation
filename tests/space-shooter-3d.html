@@ -43,7 +43,7 @@
                 <div class="health-fill" id="health-fill"></div>
             </div>
         </div>
-        <div id="version">v1.7.2 - Easy BOSS</div>
+        <div id="version">v1.7.3 - Fix Reset</div>
     </div>
     <div id="menu">
         <h1>STAR FIGHTER</h1>
@@ -959,8 +959,11 @@ function startGame() {
     particles.forEach(p => scene.remove(p));
     particles = [];
     
+    // 移除旧飞机并重新创建1级飞机
+    scene.remove(player);
+    player = createPlayerShip(1);
     player.position.set(0, 0, 5);
-    player.rotation.set(0, 0, 0);
+    scene.add(player);
     
     isPlaying = true;
     update();
