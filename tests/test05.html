@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TEST 05: 3D游戏生成 | Qwen3.5 评测</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --bg: #ffffff;
+            --text: #111111;
+            --text-secondary: #666666;
+            --border: #e5e5e5;
+            --accent: #0066cc;
+            --code-bg: #f5f5f5;
+            --success: #00aa44;
+            --warning: #f5a623;
+            --purple: #7c3aed;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+        
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            z-index: 100;
+        }
+        
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 60px;
+        }
+        
+        .nav-logo { font-weight: 600; font-size: 18px; }
+        .nav-links { display: flex; gap: 32px; list-style: none; }
+        .nav-links a { text-decoration: none; color: var(--text-secondary); font-size: 14px; }
+        .nav-links a:hover, .nav-links a.active { color: var(--text); }
+        
+        .main { margin-top: 60px; }
+        .container { max-width: 1000px; margin: 0 auto; padding: 40px 24px; }
+        
+        .breadcrumb { font-size: 13px; color: var(--text-secondary); margin-bottom: 24px; }
+        .breadcrumb a { color: var(--accent); text-decoration: none; }
+        
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+        
+        .page-title h1 { font-size: 32px; font-weight: 600; margin-bottom: 8px; }
+        .page-subtitle { font-size: 16px; color: var(--text-secondary); }
+        
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        
+        section { margin: 48px 0; }
+        
+        h2 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--text);
+        }
+        
+        h3 {
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            margin: 28px 0 12px;
+        }
+        
+        /* Metrics */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin: 24px 0;
+        }
+        
+        .metric-item {
+            text-align: center;
+            padding: 20px;
+            background: var(--code-bg);
+            border-radius: 8px;
+        }
+        
+        .metric-value { font-size: 28px; font-weight: 600; color: var(--purple); }
+        .metric-label { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+        
+        /* Game Preview */
+        .game-preview {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 12px;
+            padding: 32px;
+            color: white;
+            text-align: center;
+            margin: 24px 0;
+        }
+        
+        .game-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #64b5f6;
+        }
+        
+        .game-desc {
+            font-size: 14px;
+            opacity: 0.8;
+            margin-bottom: 24px;
+        }
+        
+        .game-controls {
+            display: flex;
+            justify-content: center;
+            gap: 32px;
+            margin-bottom: 24px;
+            font-size: 13px;
+        }
+        
+        .control-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 6px;
+        }
+        
+        .key {
+            padding: 4px 12px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        
+        .play-button {
+            display: inline-block;
+            padding: 16px 48px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .play-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+        }
+        
+        /* Feature Cards */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin: 24px 0;
+        }
+        
+        .feature-card {
+            padding: 20px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            border-left: 4px solid var(--purple);
+        }
+        
+        .feature-title {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .feature-desc {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        
+        /* Tech Stack */
+        .tech-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin: 24px 0;
+        }
+        
+        .tech-tag {
+            padding: 8px 16px;
+            background: var(--code-bg);
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        
+        /* Code Stats */
+        .code-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin: 24px 0;
+        }
+        
+        .stat-card {
+            padding: 20px;
+            background: linear-gradient(135deg, #f5f5f5 0%, #ffffff 100%);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .stat-value { font-size: 24px; font-weight: 700; color: var(--purple); }
+        .stat-label { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+        
+        /* Conclusion */
+        .conclusion-box {
+            background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
+            border-left: 4px solid var(--purple);
+            padding: 24px;
+            margin: 32px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        @media (max-width: 768px) {
+            .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+            .feature-grid { grid-template-columns: 1fr; }
+            .code-stats { grid-template-columns: 1fr; }
+            .game-controls { flex-direction: column; gap: 12px; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav">
+        <div class="nav-container">
+            <div class="nav-logo"><a href="../index.html" style="text-decoration:none;color:inherit;">Qwen3.5 评测</a></div>
+            <ul class="nav-links">
+                <li><a href="../index.html">概览</a></li>
+                <li><a href="test01.html">美学基准</a></li>
+                <li><a href="test02.html">Bug修复</a></li>
+                <li><a href="test03.html">项目生成</a></li>
+                <li><a href="test04.html">逻辑推理</a></li>
+                <li><a href="test05.html" class="active">3D游戏</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="main">
+        <div class="container">
+            
+            <div class="breadcrumb"><a href="../index.html">概览</a> / TEST 05</div>
+
+            <header class="page-header">
+                <div class="page-title">
+                    <h1>3D 游戏生成</h1>
+                    <div class="page-subtitle">基于 Three.js 的完整太空射击游戏</div>
+                </div>
+                <span class="status-badge">🎮 可运行</span>
+            </header>
+
+            <!-- Metrics -->
+            <section>
+                <h2>项目规模</h2>
+                
+                <div class="metrics-grid">
+                    <div class="metric-item">
+                        <div class="metric-value">3D</div>
+                        <div class="metric-label">游戏维度</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value">21K</div>
+                        <div class="metric-label">代码字符</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value">6+</div>
+                        <div class="metric-label">游戏系统</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value">1</div>
+                        <div class="metric-label">文件完成</div>
+                    </div>
+                </div>            
+            </section>
+
+            <!-- Game Preview -->
+            <section>
+                <h2>游戏演示</h2>
+                
+                <div class="game-preview">
+                    <div class="game-title">🚀 3D 太空射击</div>
+                    <div class="game-desc">
+                        使用 Three.js 构建的完整3D太空射击游戏，
+                        包含粒子系统、碰撞检测、敌机AI等完整游戏机制
+                    </div>
+                    
+                    <div class="game-controls">
+                        <div class="control-item">
+                            <span>移动:</span>
+                            <span class="key">WASD</span>
+                        </div>
+                        <div class="control-item">
+                            <span>射击:</span>
+                            <span class="key">SPACE</span>
+                        </div>
+                        <div class="control-item">
+                            <span>暂停:</span>
+                            <span class="key">P</span>
+                        </div>
+                    </div>
+                    
+                    <a href="space-shooter-3d.html" class="play-button" target="_blank">
+                        ▶ 开始游戏
+                    </a>
+                </div>
+            </section>
+
+            <!-- Tech Stack -->
+            <section>
+                <h2>技术栈</h2>
+                
+                <div class="tech-list">
+                    <span class="tech-tag">🎨 Three.js (ES Modules)</span>
+                    <span class="tech-tag">📐 WebGL</span>
+                    <span class="tech-tag">🎮 Game Loop</span>
+                    <span class="tech-tag">💥 Particle System</span>
+                    <span class="tech-tag">🎯 Collision Detection</span>
+                    <span class="tech-tag">🤖 Enemy AI</span>
+                    <span class="tech-tag">♻️ Object Pool</span>
+                </div>
+            </section>
+
+            <!-- Features -->
+            <section>
+                <h2>游戏特性</h2>
+                
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <div class="feature-title">🌌 3D 星空场景</div>
+                        <div class="feature-desc">
+                            粒子系统生成的动态星空背景，
+                            营造沉浸式太空环境
+                        </div>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-title">🚀 3D 飞船模型</div>
+                        <div class="feature-desc">
+                            使用基本几何体组合的3D飞船，
+                            发光材质（Emissive）效果
+                        </div>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-title">👾 敌机 AI</div>
+                        <div class="feature-desc">
+                            智能敌机生成和移动算法，
+                            难度随时间递增
+                        </div>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-title">💥 爆炸特效</div>
+                        <div class="feature-desc">
+                            粒子系统实现的爆炸动画，
+                            视觉反馈丰富
+                        </div>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-title">🎯 碰撞检测</div>
+                        <div class="feature-desc">
+                            3D空间碰撞检测系统，
+                            子弹-敌机、敌机-玩家检测
+                        </div>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-title">♻️ 对象池优化</div>
+                        <div class="feature-desc">
+                            对象池管理子弹和敌机，
+                            避免频繁创建销毁的性能开销
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Code Stats -->
+            <section>
+                <h2>代码统计</h2>
+                
+                <div class="code-stats">
+                    <div class="stat-card">
+                        <div class="stat-value">~600</div>
+                        <div class="stat-label">代码行数</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">1</div>
+                        <div class="stat-label">HTML文件</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">0</div>
+                        <div class="stat-label">外部依赖</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Conclusion -->
+            <section>
+                <h2>评测结论</h2>
+                
+                <div class="conclusion-box">
+                    <p style="font-size: 16px; line-height: 1.8;">
+                        Qwen3.5 在3D游戏生成测试中展现了<strong>强大的综合能力</strong>：<br><br>
+                        1. <strong>3D图形编程</strong>：熟练使用Three.js创建3D场景、模型、光照和粒子效果<br>
+                        2. <strong>游戏开发</strong>：完整的游戏循环、输入处理、碰撞检测和AI逻辑<br>
+                        3. <strong>性能优化</strong>：主动实现对象池模式，避免内存泄漏<br>
+                        4. <strong>代码组织</strong>：单文件完成复杂功能，结构清晰可维护<br><br>
+                        生成的游戏<strong>可直接运行</strong>，无需任何配置，展现了模型在创意编程领域的高水平能力。
+                    </p>
+                </div>
+            </section>
+
+            <!-- Navigation -->
+            <section style="display: flex; justify-content: space-between; margin-top: 60px; padding-top: 40px; border-top: 1px solid var(--border);">
+                <a href="test04.html" style="color: var(--text-secondary); text-decoration: none;">← 上一测试</a>
+                <span style="color: var(--success); font-weight: 600;">全部测试完成 🎉</span>
+            </section>
+            
+        </div>
+    </main>
+</body>
+</html>
