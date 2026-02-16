@@ -398,118 +398,158 @@ class Tower {
     }
     
     drawArrowTower() {
-        // 箭塔 - 三角形箭头形状
+        // 箭塔 - 高瘦的弓箭塔形状
         ctx.save();
-        ctx.shadowBlur = 15;
+        ctx.shadowBlur = 20;
         ctx.shadowColor = '#0f0';
         
-        // 主体 - 绿色三角形
+        // 塔身 - 细长矩形
+        ctx.fillStyle = '#3a5a3a';
+        ctx.fillRect(this.x - 8, this.y - 20, 16, 40);
+        
+        // 主体 - 绿色三角形（顶部）
         ctx.fillStyle = '#4a4';
         ctx.beginPath();
-        ctx.moveTo(this.x, this.y - 18);
-        ctx.lineTo(this.x + 15, this.y + 12);
-        ctx.lineTo(this.x - 15, this.y + 12);
+        ctx.moveTo(this.x, this.y - 22);
+        ctx.lineTo(this.x + 12, this.y + 5);
+        ctx.lineTo(this.x - 12, this.y + 5);
         ctx.closePath();
         ctx.fill();
         
-        // 内部装饰 - 小三角形
-        ctx.fillStyle = '#0f0';
-        ctx.beginPath();
-        ctx.moveTo(this.x, this.y - 8);
-        ctx.lineTo(this.x + 6, this.y + 6);
-        ctx.lineTo(this.x - 6, this.y + 6);
-        ctx.closePath();
-        ctx.fill();
-        
-        // 发射口
+        // 屋顶
         ctx.fillStyle = '#2f2';
         ctx.beginPath();
-        ctx.arc(this.x, this.y - 5, 4, 0, Math.PI * 2);
+        ctx.moveTo(this.x, this.y - 28);
+        ctx.lineTo(this.x + 10, this.y - 15);
+        ctx.lineTo(this.x - 10, this.y - 15);
+        ctx.closePath();
         ctx.fill();
+        
+        // 弓箭标识
+        ctx.strokeStyle = '#0f0';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(this.x - 5, this.y + 10);
+        ctx.lineTo(this.x + 5, this.y + 10);
+        ctx.moveTo(this.x, this.y + 5);
+        ctx.lineTo(this.x, this.y + 15);
+        ctx.stroke();
+        
+        // 类型文字标识
+        ctx.fillStyle = '#0f0';
+        ctx.font = 'bold 10px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('A', this.x, this.y - 8);
         
         ctx.restore();
     }
     
     drawCannonTower() {
-        // 炮塔 - 圆形炮台形状
+        // 炮塔 - 矮胖的圆形炮台
         ctx.save();
-        ctx.shadowBlur = 15;
+        ctx.shadowBlur = 20;
         ctx.shadowColor = '#f00';
         
-        // 主体 - 红色圆形
+        // 基座 - 宽大的矩形
+        ctx.fillStyle = '#5a3a3a';
+        ctx.fillRect(this.x - 20, this.y - 15, 40, 30);
+        
+        // 主体 - 红色大圆形
         ctx.fillStyle = '#a44';
         ctx.beginPath();
-        ctx.arc(this.x, this.y, 16, 0, Math.PI * 2);
+        ctx.arc(this.x, this.y - 5, 18, 0, Math.PI * 2);
         ctx.fill();
         
-        // 外圈
+        // 外圈高亮
         ctx.strokeStyle = '#f00';
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, 16, 0, Math.PI * 2);
-        ctx.stroke();
-        
-        // 内部十字
-        ctx.strokeStyle = '#f44';
         ctx.lineWidth = 4;
         ctx.beginPath();
-        ctx.moveTo(this.x - 8, this.y);
-        ctx.lineTo(this.x + 8, this.y);
-        ctx.moveTo(this.x, this.y - 8);
-        ctx.lineTo(this.x, this.y + 8);
+        ctx.arc(this.x, this.y - 5, 18, 0, Math.PI * 2);
         ctx.stroke();
         
-        // 中心点
+        // 粗十字
+        ctx.strokeStyle = '#f44';
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        ctx.moveTo(this.x - 10, this.y - 5);
+        ctx.lineTo(this.x + 10, this.y - 5);
+        ctx.moveTo(this.x, this.y - 15);
+        ctx.lineTo(this.x, this.y + 5);
+        ctx.stroke();
+        
+        // 中心圆
         ctx.fillStyle = '#f88';
         ctx.beginPath();
-        ctx.arc(this.x, this.y, 5, 0, Math.PI * 2);
+        ctx.arc(this.x, this.y - 5, 6, 0, Math.PI * 2);
         ctx.fill();
+        
+        // 类型文字标识
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 10px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('C', this.x, this.y + 12);
         
         ctx.restore();
     }
     
     drawIceTower() {
-        // 冰塔 - 菱形水晶形状
+        // 冰塔 - 六角形水晶柱
         ctx.save();
-        ctx.shadowBlur = 15;
+        ctx.shadowBlur = 20;
         ctx.shadowColor = '#0af';
         
-        // 主体 - 蓝色菱形
+        // 底座
+        ctx.fillStyle = '#2a2a4a';
+        ctx.fillRect(this.x - 12, this.y + 10, 24, 10);
+        
+        // 主体 - 蓝色六角形
         ctx.fillStyle = '#44a';
         ctx.beginPath();
-        ctx.moveTo(this.x, this.y - 18);
-        ctx.lineTo(this.x + 12, this.y);
-        ctx.lineTo(this.x, this.y + 18);
-        ctx.lineTo(this.x - 12, this.y);
+        for (let i = 0; i < 6; i++) {
+            const angle = (i * Math.PI) / 3;
+            const x = this.x + Math.cos(angle) * 14;
+            const y = this.y - 5 + Math.sin(angle) * 14;
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        }
         ctx.closePath();
         ctx.fill();
         
-        // 内部菱形
+        // 内部六角形
         ctx.fillStyle = '#66c';
         ctx.beginPath();
-        ctx.moveTo(this.x, this.y - 10);
-        ctx.lineTo(this.x + 7, this.y);
-        ctx.lineTo(this.x, this.y + 10);
-        ctx.lineTo(this.x - 7, this.y);
+        for (let i = 0; i < 6; i++) {
+            const angle = (i * Math.PI) / 3;
+            const x = this.x + Math.cos(angle) * 9;
+            const y = this.y - 5 + Math.sin(angle) * 9;
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        }
         ctx.closePath();
         ctx.fill();
         
-        // 中心核心
+        // 中心发光核心
         ctx.fillStyle = '#0af';
         ctx.beginPath();
-        ctx.arc(this.x, this.y, 4, 0, Math.PI * 2);
+        ctx.arc(this.x, this.y - 5, 5, 0, Math.PI * 2);
         ctx.fill();
         
-        // 冰晶装饰
+        // 冰晶光芒
         ctx.strokeStyle = '#8af';
         ctx.lineWidth = 2;
-        for (let i = 0; i < 4; i++) {
-            const angle = (i * Math.PI / 2) + Math.PI / 4;
+        for (let i = 0; i < 6; i++) {
+            const angle = (i * Math.PI) / 3;
             ctx.beginPath();
-            ctx.moveTo(this.x + Math.cos(angle) * 10, this.y + Math.sin(angle) * 10);
-            ctx.lineTo(this.x + Math.cos(angle) * 16, this.y + Math.sin(angle) * 16);
+            ctx.moveTo(this.x + Math.cos(angle) * 10, this.y - 5 + Math.sin(angle) * 10);
+            ctx.lineTo(this.x + Math.cos(angle) * 18, this.y - 5 + Math.sin(angle) * 18);
             ctx.stroke();
         }
+        
+        // 类型文字标识
+        ctx.fillStyle = '#aff';
+        ctx.font = 'bold 10px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('I', this.x, this.y + 12);
         
         ctx.restore();
     }
