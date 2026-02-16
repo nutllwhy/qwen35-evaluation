@@ -3,765 +3,414 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D 太空射击 - 终极升级</title>
+    <title>3D 太空射击 - 升级版</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #000; font-family: 'Segoe UI', sans-serif; user-select: none; }
-        #canvas-container { width: 100vw; height: 100vh; display: block; }
-        
-        /* UI 层 */
-        #ui-layer {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none; display: flex; flex-direction: column; justify-content: space-between;
-        }
-        
-        /* HUD 顶部 */
-        .hud-top { display: flex; justify-content: space-between; padding: 20px; color: #fff; text-shadow: 0 0 5px #00f; font-size: 20px; font-weight: bold; }
-        .score-box, .wave-box { background: rgba(0, 20, 40, 0.6); padding: 10px 20px; border: 1px solid #00aaff; border-radius: 8px; }
-        
-        /* 玩家血条 */
-        .health-container { position: absolute; bottom: 20px; left: 20px; width: 300px; height: 20px; background: #333; border: 2px solid #fff; border-radius: 10px; overflow: hidden; }
-        #player-health-bar { width: 100%; height: 100%; background: linear-gradient(90deg, #ff3333, #00ff00); transition: width 0.2s; }
-        #health-text { position: absolute; bottom: 25px; left: 20px; color: white; font-weight: bold; font-size: 14px; }
-        
-        /* 连击提示 */
-        #combo-text {
-            position: absolute; top: 15%; left: 50%; transform: translate(-50%, -50%);
-            color: #ffcc00; font-size: 40px; font-weight: 900; opacity: 0; transition: opacity 0.3s; text-shadow: 0 0 10px #ff6600;
-        }
-        
-        /* BOSS 血条 */
-        #boss-hud {
-            position: absolute; top: 60px; left: 50%; transform: translateX(-50%);
-            width: 600px; height: 30px; display: none; text-align: center;
-        }
-        #boss-health-bar { width: 100%; height: 100%; background: #ff0044; transition: width 0.1s; box-shadow: 0 0 10px #ff0044; }
-        
-        /* 游戏结束 / 开始 菜单 */
-        #menu-overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.85); display: flex; flex-direction: column;
-            align-items: center; justify-content: center; pointer-events: auto; z-index: 100;
-        }
-        h1 { color: #00aaff; font-size: 60px; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 5px; text-shadow: 0 0 20px #00aaff; }
-        p { color: #ccc; font-size: 18px; margin-bottom: 30px; max-width: 600px; text-align: center; line-height: 1.5; }
-        button {
-            padding: 15px 40px; font-size: 24px; background: linear-gradient(45deg, #00aaff, #0066cc);
-            color: white; border: none; border-radius: 50px; cursor: pointer;
-            box-shadow: 0 0 20px rgba(0, 170, 255, 0.5); transition: transform 0.1s;
-        }
-        button:hover { transform: scale(1.05); }
-        
-        /* 警告提示 */
-        #warning-text {
-            position: absolute; top: 30%; width: 100%; text-align: center;
-            font-size: 50px; color: #ff0000; font-weight: bold; display: none;
-            text-shadow: 0 0 20px #ff0000; animation: blink 0.5s infinite;
-        }
-        @keyframes blink { 50% { opacity: 0; } }
+        body { margin: 0; overflow: hidden; background: #000; font-family: Arial, sans-serif; }
+        #game-container { width: 100vw; height: 100vh; }
+        #ui { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+        .hud { position: absolute; padding: 20px; color: #0ff; font-size: 20px; font-weight: bold; text-shadow: 0 0 10px #0ff; }
+        #score { top: 20px; left: 20px; }
+        #health { top: 20px; right: 20px; }
+        #wave { top: 60px; left: 20px; color: #ff0; }
+        #menu { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: auto; }
+        #menu h1 { color: #0ff; font-size: 48px; margin-bottom: 20px; text-shadow: 0 0 20px #0ff; }
+        #menu p { color: #fff; margin-bottom: 30px; text-align: center; }
+        #menu button { padding: 15px 40px; font-size: 24px; background: linear-gradient(45deg, #00aaff, #0066cc); color: white; border: none; border-radius: 30px; cursor: pointer; }
+        #menu button:hover { transform: scale(1.1); }
+        .health-bar { width: 200px; height: 20px; background: #333; border: 2px solid #0ff; border-radius: 10px; overflow: hidden; }
+        .health-fill { height: 100%; background: linear-gradient(90deg, #f00, #0f0); width: 100%; transition: width 0.3s; }
     </style>
-    <!-- 引入 Three.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
-
-    <div id="ui-layer">
-        <div class="hud-top">
-            <div class="score-box">分数：<span id="score">0</span></div>
-            <div class="wave-box">波次：<span id="wave">1</span></div>
-        </div>
-        
-        <div id="warning-text">⚠️ 警告：巨型 BOSS 接近 ⚠️</div>
-
-        <div id="boss-hud">
-            <div style="color:#ffaaaa; margin-bottom:5px; font-weight:bold;">BOSS ENEMY</div>
-            <div id="boss-health-bar"></div>
-        </div>
-
-        <div id="combo-text">COMBO x2</div>
-
-        <div id="health-text">生命值：100%</div>
-        <div class="health-container">
-            <div id="player-health-bar"></div>
+    <div id="game-container"></div>
+    <div id="ui">
+        <div class="hud" id="score">分数: 0</div>
+        <div class="hud" id="wave">波次: 1</div>
+        <div class="hud" id="health">
+            生命值
+            <div class="health-bar">
+                <div class="health-fill" id="health-fill"></div>
+            </div>
         </div>
     </div>
-
-    <div id="menu-overlay">
-        <h1>星际防卫 3D</h1>
-        <p>操作：WASD / 方向键 移动 | 空格键 射击<br>击落敌机躲避子弹，收集道具。每 10 波迎战 BOSS。</p>
-        <button id="start-btn">开始任务</button>
+    <div id="menu">
+        <h1>🚀 3D 太空射击</h1>
+        <p>WASD 移动 | 空格 射击<br>敌机撞击你会扣血！小心躲避！</p>
+        <button onclick="startGame()">开始游戏</button>
     </div>
-
-    <div id="canvas-container"></div>
 
 <script>
-/**
- * 音效管理器 (Web Audio API)
- */
-class SoundManager {
-    constructor() {
-        this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-        this.masterGain = this.ctx.createGain();
-        this.masterGain.gain.value = 0.3; // 总音量
-        this.masterGain.connect(this.ctx.destination);
-        this.bgMusicOscs = [];
-        this.isPlaying = false;
+// 游戏全局变量
+let scene, camera, renderer, player;
+let bullets = [], enemies = [], particles = [];
+let score = 0, wave = 1, health = 100;
+let isPlaying = false;
+let keys = {};
+let lastShot = 0;
+let enemySpawnTimer = 0;
+let difficultyMultiplier = 1;
+
+// Web Audio 上下文
+let audioCtx;
+
+// 初始化音效
+function initAudio() {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+}
+
+// 播放射击音效
+function playShootSound() {
+    if (!audioCtx) return;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.1);
+    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.1);
+}
+
+// 播放爆炸音效
+function playExplosionSound() {
+    if (!audioCtx) return;
+    const bufferSize = audioCtx.sampleRate * 0.3;
+    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+        data[i] = Math.random() * 2 - 1;
     }
+    const noise = audioCtx.createBufferSource();
+    noise.buffer = buffer;
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = 1000;
+    const gain = audioCtx.createGain();
+    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(audioCtx.destination);
+    noise.start();
+}
 
-    resume() { if (this.ctx.state === 'suspended') this.ctx.resume(); }
+// 播放受伤音效
+function playHitSound() {
+    if (!audioCtx) return;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(200, audioCtx.currentTime);
+    osc.frequency.linearRampToValueAtTime(50, audioCtx.currentTime + 0.3);
+    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+    gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.3);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.3);
+}
 
-    // 合成射击音效
-    playShoot() {
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(880, this.ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(110, this.ctx.currentTime + 0.1);
-        gain.gain.setValueAtTime(0.5, this.ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.1);
-        osc.connect(gain);
-        gain.connect(this.masterGain);
-        osc.start();
-        osc.stop(this.ctx.currentTime + 0.1);
+// 初始化场景
+function init() {
+    scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x000000, 0.02);
+    
+    camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(0, 5, 10);
+    camera.lookAt(0, 0, -5);
+    
+    renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.getElementById('game-container').appendChild(renderer.domElement);
+    
+    // 灯光
+    const ambientLight = new THREE.AmbientLight(0x404040);
+    scene.add(ambientLight);
+    const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    dirLight.position.set(5, 10, 5);
+    scene.add(dirLight);
+    
+    // 星空背景
+    const starGeo = new THREE.BufferGeometry();
+    const starCount = 1000;
+    const positions = new Float32Array(starCount * 3);
+    for(let i = 0; i < starCount * 3; i++) {
+        positions[i] = (Math.random() - 0.5) * 100;
     }
+    starGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    const starMat = new THREE.PointsMaterial({color: 0xffffff, size: 0.1});
+    const stars = new THREE.Points(starGeo, starMat);
+    scene.add(stars);
+    
+    // 玩家飞船
+    const geometry = new THREE.ConeGeometry(0.5, 1.5, 8);
+    geometry.rotateX(Math.PI / 2);
+    const material = new THREE.MeshPhongMaterial({ 
+        color: 0x00aaff, 
+        emissive: 0x002244,
+        shininess: 100 
+    });
+    player = new THREE.Mesh(geometry, material);
+    player.position.set(0, 0, 5);
+    scene.add(player);
+    
+    // 事件监听
+    window.addEventListener('keydown', (e) => keys[e.code] = true);
+    window.addEventListener('keyup', (e) => keys[e.code] = false);
+    window.addEventListener('resize', onWindowResize);
+}
 
-    // 合成爆炸音效
-    playExplosion() {
-        const bufferSize = this.ctx.sampleRate * 0.5; // 0.5 秒
-        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-        const data = buffer.getChannelData(0);
-        for (let i = 0; i < bufferSize; i++) {
-            data[i] = Math.random() * 2 - 1;
-        }
-        const noise = this.ctx.createBufferSource();
-        noise.buffer = buffer;
-        const filter = this.ctx.createBiquadFilter();
-        filter.type = 'lowpass';
-        filter.frequency.value = 1000;
-        const gain = this.ctx.createGain();
-        gain.gain.setValueAtTime(1, this.ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.5);
-        noise.connect(filter);
-        filter.connect(gain);
-        gain.connect(this.masterGain);
-        noise.start();
+function onWindowResize() {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+}
+
+// 创建子弹
+function shoot() {
+    const now = Date.now();
+    if (now - lastShot < 200) return;
+    lastShot = now;
+    
+    playShootSound();
+    
+    const geometry = new THREE.SphereGeometry(0.15, 8, 8);
+    const material = new THREE.MeshBasicMaterial({ color: 0x00ffff });
+    const bullet = new THREE.Mesh(geometry, material);
+    bullet.position.copy(player.position);
+    bullet.position.y = 0;
+    scene.add(bullet);
+    bullets.push(bullet);
+}
+
+// 创建敌机
+function spawnEnemy() {
+    const types = ['normal', 'fast', 'heavy'];
+    const type = types[Math.floor(Math.random() * types.length)];
+    
+    let geometry, color, speed, hp;
+    
+    if (type === 'fast') {
+        geometry = new THREE.TetrahedronGeometry(0.4);
+        color = 0xffaa00;
+        speed = 0.25 * difficultyMultiplier;
+        hp = 1;
+    } else if (type === 'heavy') {
+        geometry = new THREE.BoxGeometry(0.8, 0.8, 0.8);
+        color = 0xff00ff;
+        speed = 0.1 * difficultyMultiplier;
+        hp = 3;
+    } else {
+        geometry = new THREE.ConeGeometry(0.4, 0.8, 4);
+        color = 0xff0000;
+        speed = 0.15 * difficultyMultiplier;
+        hp = 1;
     }
+    
+    const material = new THREE.MeshPhongMaterial({ color: color });
+    const enemy = new THREE.Mesh(geometry, material);
+    enemy.position.set(
+        (Math.random() - 0.5) * 16,
+        0,
+        -40 - Math.random() * 10
+    );
+    enemy.rotation.x = Math.PI;
+    scene.add(enemy);
+    
+    enemies.push({
+        mesh: enemy,
+        speed: speed,
+        hp: hp,
+        maxHp: hp,
+        type: type
+    });
+}
 
-    // 合成受伤音效
-    playHit() {
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(150, this.ctx.currentTime);
-        osc.frequency.linearRampToValueAtTime(50, this.ctx.currentTime + 0.3);
-        gain.gain.setValueAtTime(0.5, this.ctx.currentTime);
-        gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.3);
-        osc.connect(gain);
-        gain.connect(this.masterGain);
-        osc.start();
-        osc.stop(this.ctx.currentTime + 0.3);
-    }
-
-    // 合成 BOSS 警报
-    playWarning() {
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = 'square';
-        osc.frequency.setValueAtTime(400, this.ctx.currentTime);
-        osc.frequency.setValueAtTime(400, this.ctx.currentTime + 0.2);
-        osc.frequency.setValueAtTime(800, this.ctx.currentTime + 0.4);
-        gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
-        gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.6);
-        osc.connect(gain);
-        gain.connect(this.masterGain);
-        osc.start();
-        osc.stop(this.ctx.currentTime + 0.6);
-    }
-
-    // 简单的循环背景音乐 (Arpeggiator)
-    startMusic() {
-        if (this.isPlaying) return;
-        this.isPlaying = true;
-        this.playArp();
-    }
-
-    stopMusic() {
-        this.isPlaying = false;
-        this.bgMusicOscs.forEach(o => o.stop());
-    }
-
-    playArp() {
-        if (!this.isPlaying) return;
-        const notes = [110, 146.83, 164.81, 220]; // A, D, E, A
-        let i = 0;
-        
-        const loop = () => {
-            if (!this.isPlaying) return;
-            const osc = this.ctx.createOscillator();
-            const gain = this.ctx.createGain();
-            osc.type = 'sine';
-            osc.frequency.value = notes[i % notes.length];
-            // 随机一点音高变化增加动感
-            osc.frequency.value += (Math.random() - 0.5) * 10; 
-            
-            gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.3);
-            
-            osc.connect(gain);
-            gain.connect(this.masterGain);
-            osc.start();
-            osc.stop(this.ctx.currentTime + 0.3);
-            
-            i++;
-            setTimeout(loop, 200);
-        };
-        loop();
+// 创建爆炸粒子
+function createExplosion(position, color) {
+    for (let i = 0; i < 15; i++) {
+        const geometry = new THREE.SphereGeometry(0.1, 4, 4);
+        const material = new THREE.MeshBasicMaterial({ color: color });
+        const particle = new THREE.Mesh(geometry, material);
+        particle.position.copy(position);
+        particle.velocity = new THREE.Vector3(
+            (Math.random() - 0.5) * 0.5,
+            (Math.random() - 0.5) * 0.5,
+            (Math.random() - 0.5) * 0.5
+        );
+        scene.add(particle);
+        particles.push(particle);
     }
 }
 
-/**
- * 游戏常量与配置
- */
-const CONFIG = {
-    playerSpeed: 0.8,
-    bulletSpeed: 1.5,
-    enemyBulletSpeed: 0.6,
-    colors: {
-        player: 0x00aaff,
-        enemyNormal: 0xff3333,
-        enemyFast: 0xffaa00,
-        enemyHeavy: 0x880088,
-        boss: 0xffffff,
-        bullet: 0x00ffff,
-        enemyBullet: 0xff5500
+// 玩家受伤
+function takeDamage(amount) {
+    health -= amount;
+    if (health < 0) health = 0;
+    document.getElementById('health-fill').style.width = health + '%';
+    playHitSound();
+    
+    // 屏幕闪红
+    document.body.style.background = '#500';
+    setTimeout(() => document.body.style.background = '#000', 100);
+    
+    if (health <= 0) {
+        gameOver();
     }
-};
+}
 
-/**
- * 主游戏类
- */
-class Game {
-    constructor() {
-        this.container = document.getElementById('canvas-container');
-        this.scene = new THREE.Scene();
-        this.scene.fog = new THREE.FogExp2(0x000000, 0.02);
-        
-        this.camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-        this.camera.position.set(0, 3, 10);
-        this.camera.lookAt(0, 0, -5);
+// 游戏结束
+function gameOver() {
+    isPlaying = false;
+    document.getElementById('menu').style.display = 'flex';
+    document.querySelector('#menu h1').textContent = '游戏结束';
+    document.querySelector('#menu p').innerHTML = `最终得分: ${score}<br>波次: ${wave}`;
+    document.querySelector('#menu button').textContent = '重新开始';
+}
 
-        this.renderer = new THREE.WebGLRenderer({ antialias: true });
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.container.appendChild(this.renderer.domElement);
-
-        // 灯光
-        const ambientLight = new THREE.AmbientLight(0x404040);
-        this.scene.add(ambientLight);
-        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-        dirLight.position.set(5, 10, 5);
-        this.scene.add(dirLight);
-
-        this.sound = new SoundManager();
-        this.clock = new THREE.Clock();
-        
-        this.initWorld();
-        this.initPlayer();
-        this.initInputs();
-        
-        // 游戏状态
-        this.state = {
-            isPlaying: false,
-            score: 0,
-            wave: 1,
-            playerHp: 100,
-            isInvulnerable: false,
-            combo: 0,
-            comboTimer: 0,
-            bossActive: false,
-            shakeIntensity: 0
-        };
-
-        // 实体容器
-        this.enemies = [];
-        this.bullets = []; // 玩家子弹
-        this.enemyBullets = [];
-        this.particles = [];
-        this.powerups = [];
-
-        // 波次控制
-        this.waveTimer = 0;
-        this.waveProgress = 0; // 杀敌数
-        this.waveTotal = 10;
-
-        // UI 元素引用
-        this.ui = {
-            score: document.getElementById('score'),
-            wave: document.getElementById('wave'),
-            health: document.getElementById('player-health-bar'),
-            healthText: document.getElementById('health-text'),
-            bossBar: document.getElementById('boss-health-bar'),
-            bossHud: document.getElementById('boss-hud'),
-            warning: document.getElementById('warning-text'),
-            combo: document.getElementById('combo-text')
-        };
-
-        // 碰撞盒调试 (可选)
-        // this.createBoundingBoxDebug();
-
-        window.addEventListener('resize', () => this.onWindowResize(), false);
-        document.getElementById('start-btn').addEventListener('click', () => this.startGame());
-    }
-
-    initWorld() {
-        // 星空背景
-        const starGeo = new THREE.BufferGeometry();
-        const starCount = 2000;
-        const starPos = new Float32Array(starCount * 3);
-        for(let i=0; i<starCount*3; i++) {
-            starPos[i] = (Math.random() - 0.5) * 100;
-        }
-        starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
-        const starMat = new THREE.PointsMaterial({color: 0xffffff, size: 0.1});
-        const stars = new THREE.Points(starGeo, starMat);
-        this.scene.add(stars);
-
-        // 地面网格
-        const gridHelper = new THREE.GridHelper(200, 50, 0x004488, 0x001133);
-        gridHelper.position.y = -5;
-        this.scene.add(gridHelper);
-    }
-
-    initPlayer() {
-        const geometry = new THREE.ConeGeometry(0.5, 1.5, 8);
-        geometry.rotateX(Math.PI / 2);
-        const material = new THREE.MeshPhongMaterial({ 
-            color: CONFIG.colors.player, 
-            emissive: 0x002244,
-            shininess: 100 
-        });
-        this.player = new THREE.Mesh(geometry, material);
-        this.player.position.set(0, 0, 5);
-        
-        // 玩家碰撞盒
-        this.playerBox = new THREE.Box3();
-        this.scene.add(this.player);
-    }
-
-    initInputs() {
-        this.keys = { w: false, a: false, s: false, d: false, space: false };
-        window.addEventListener('keydown', (e) => this.handleKey(e, true));
-        window.addEventListener('keyup', (e) => this.handleKey(e, false));
-    }
-
-    handleKey(e, pressed) {
-        switch(e.code) {
-            case 'KeyW': case 'ArrowUp': this.keys.w = pressed; break;
-            case 'KeyS': case 'ArrowDown': this.keys.s = pressed; break;
-            case 'KeyA': case 'ArrowLeft': this.keys.a = pressed; break;
-            case 'KeyD': case 'ArrowRight': this.keys.d = pressed; break;
-            case 'Space': this.keys.space = pressed; break;
+// 游戏主循环
+function update() {
+    if (!isPlaying) return;
+    
+    // 玩家移动
+    if (keys['KeyW'] || keys['ArrowUp']) player.position.z -= 0.2;
+    if (keys['KeyS'] || keys['ArrowDown']) player.position.z += 0.2;
+    if (keys['KeyA'] || keys['ArrowLeft']) player.position.x -= 0.2;
+    if (keys['KeyD'] || keys['ArrowRight']) player.position.x += 0.2;
+    
+    // 限制玩家移动范围
+    player.position.x = Math.max(-10, Math.min(10, player.position.x));
+    player.position.z = Math.max(-30, Math.min(8, player.position.z));
+    
+    // 倾斜效果
+    player.rotation.z = (keys['KeyA'] ? 0.3 : 0) + (keys['KeyD'] ? -0.3 : 0);
+    
+    // 射击
+    if (keys['Space']) shoot();
+    
+    // 更新子弹
+    for (let i = bullets.length - 1; i >= 0; i--) {
+        bullets[i].position.z -= 0.8;
+        if (bullets[i].position.z < -50) {
+            scene.remove(bullets[i]);
+            bullets.splice(i, 1);
         }
     }
-
-    startGame() {
-        this.sound.resume();
-        this.sound.startMusic();
-        document.getElementById('menu-overlay').style.display = 'none';
-        this.resetGame();
-        this.state.isPlaying = true;
-        this.animate();
+    
+    // 生成敌机
+    enemySpawnTimer++;
+    let spawnRate = Math.max(30, 120 - wave * 10);
+    if (enemySpawnTimer > spawnRate) {
+        spawnEnemy();
+        enemySpawnTimer = 0;
     }
-
-    resetGame() {
-        this.state.score = 0;
-        this.state.wave = 1;
-        this.state.playerHp = 100;
-        this.state.bossActive = false;
-        this.enemies.forEach(e => this.scene.remove(e.mesh));
-        this.enemies = [];
-        this.bullets.forEach(b => this.scene.remove(b.mesh));
-        this.bullets = [];
-        this.enemyBullets.forEach(b => this.scene.remove(b.mesh));
-        this.enemyBullets = [];
-        this.powerups.forEach(p => this.scene.remove(p.mesh));
-        this.powerups = [];
-        this.waveProgress = 0;
-        this.waveTotal = 10;
-        this.updateUI();
-        this.ui.warning.style.display = 'none';
-        this.ui.bossHud.style.display = 'none';
-    }
-
-    // --- 实体生成 ---
-
-    spawnEnemy() {
-        if (this.state.bossActive) return;
-
-        // 动态难度调整
-        const difficultyFactor = 1 + (this.state.wave * 0.1);
-        let type = 'normal';
-        const rand = Math.random();
+    
+    // 更新敌机
+    const playerBox = new THREE.Box3().setFromObject(player);
+    
+    for (let i = enemies.length - 1; i >= 0; i--) {
+        const enemy = enemies[i];
+        enemy.mesh.position.z += enemy.speed;
+        enemy.mesh.rotation.y += 0.05;
         
-        // 随着波次增加，强力敌机概率增加
-        if (this.state.wave >= 3 && rand > 0.7) type = 'fast';
-        if (this.state.wave >= 5 && rand > 0.9) type = 'heavy';
-
-        const geometry = type === 'fast' ? new THREE.TetrahedronGeometry(0.4) : 
-                         type === 'heavy' ? new THREE.BoxGeometry(1, 0.5, 1) : 
-                         new THREE.ConeGeometry(0.3, 0.8, 4);
+        const enemyBox = new THREE.Box3().setFromObject(enemy.mesh);
         
-        let color = CONFIG.colors.enemyNormal;
-        let hp = 1;
-        let speed = 0.2 * difficultyFactor;
-
-        if (type === 'fast') { color = CONFIG.colors.enemyFast; hp = 1; speed = 0.4 * difficultyFactor; }
-        if (type === 'heavy') { color = CONFIG.colors.enemyHeavy; hp = 3; speed = 0.1 * difficultyFactor; }
-
-        const material = new THREE.MeshPhongMaterial({ color: color, flatShading: true });
-        const mesh = new THREE.Mesh(geometry, material);
+        // 敌机撞击玩家检测！
+        if (playerBox.intersectsBox(enemyBox)) {
+            takeDamage(20); // 扣20%血
+            createExplosion(enemy.mesh.position, 0xff0000);
+            scene.remove(enemy.mesh);
+            enemies.splice(i, 1);
+            continue;
+        }
         
-        mesh.position.set(
-            (Math.random() - 0.5) * 20,
-            0,
-            -50 - Math.random() * 20
-        );
-        
-        this.scene.add(mesh);
-        this.enemies.push({ 
-            mesh, type, hp, speed, 
-            box: new THREE.Box3(),
-            flashTimer: 0
-        });
-    }
-
-    spawnBoss() {
-        this.state.bossActive = true;
-        this.ui.warning.style.display = 'block';
-        this.ui.bossHud.style.display = 'block';
-        this.ui.bossBar.style.width = '100%';
-        this.sound.playWarning();
-
-        // 1 秒后出现 BOSS
-        setTimeout(() => {
-            this.ui.warning.style.display = 'none';
-            const geometry = new THREE.TorusKnotGeometry(2, 0.6, 100, 16);
-            const material = new THREE.MeshPhongMaterial({ 
-                color: CONFIG.colors.boss, 
-                emissive: 0x550000,
-                wireframe: false
-            });
-            const mesh = new THREE.Mesh(geometry, material);
-            mesh.position.set(0, 0, -20);
-            this.scene.add(mesh);
-            
-            this.enemies.push({
-                mesh, type: 'boss', hp: 100, maxHp: 100, speed: 0.05,
-                box: new THREE.Box3(),
-                flashTimer: 0,
-                isBoss: true,
-                angle: 0
-            });
-        }, 1000);
-    }
-
-    spawnPowerup(position) {
-        if (Math.random() > 0.15) return; // 15% 概率掉落
-
-        const typeRand = Math.random();
-        let type = 'health'; // 0-0.4
-        let color = 0x00ff00;
-        if (typeRand > 0.4 && typeRand < 0.7) { type = 'shield'; color = 0x00aaff; }
-        if (typeRand > 0.7) { type = 'weapon'; color = 0xff0000; }
-
-        const geometry = new THREE.OctahedronGeometry(0.5);
-        const material = new THREE.MeshBasicMaterial({ color: color, wireframe: true });
-        const mesh = new THREE.Mesh(geometry, material);
-        mesh.position.copy(position);
-        this.scene.add(mesh);
-        this.powerups.push({ mesh, type, speed: 0.1 });
-    }
-
-    // --- 核心逻辑 ---
-
-    update() {
-        const delta = this.clock.getDelta();
-
-        // 1. 玩家移动
-        if (this.keys.w && this.player.position.z > -40) this.player.position.z -= CONFIG.playerSpeed;
-        if (this.keys.s && this.player.position.z < 5) this.player.position.z += CONFIG.playerSpeed;
-        if (this.keys.a && this.player.position.x > -12) this.player.position.x -= CONFIG.playerSpeed;
-        if (this.keys.d && this.player.position.x < 12) this.player.position.x += CONFIG.playerSpeed;
-        
-        // 倾斜效果
-        this.player.rotation.z = (this.keys.a ? 0.5 : 0) + (this.keys.d ? -0.5 : 0);
-        this.player.rotation.y = (this.keys.a ? 0.2 : 0) + (this.keys.d ? -0.2 : 0);
-
-        // 玩家碰撞盒更新
-        this.playerBox.setFromObject(this.player);
-        // 缩小一点碰撞盒，增加宽容度
-        this.playerBox.expandByScalar(-0.1); 
-
-        // 无敌闪烁
-        if (this.state.isInvulnerable) {
-            this.player.visible = Math.floor(Date.now() / 100) % 2 === 0;
-        } else {
-            this.player.visible = true;
-        }
-
-        // 2. 射击
-        if (this.keys.space && this.player.lastShotTime + 0.1 < this.clock.getElapsedTime()) {
-            this.player.lastShotTime = this.clock.getElapsedTime();
-            this.shoot();
-        }
-
-        // 3. 子弹更新
-        this.updateBullets();
-        this.updateEnemyBullets();
-
-        // 4. 敌人生成与波次管理
-        if (!this.state.bossActive) {
-            this.waveTimer -= delta;
-            if (this.waveTimer <= 0) {
-                this.spawnEnemy();
-                // 动态生成频率
-                let freq = 1.0 - (this.state.wave * 0.05); 
-                if (freq < 0.2) freq = 0.2;
-                this.waveTimer = freq + Math.random() * 0.5;
-            }
-            
-            if (this.waveProgress >= this.waveTotal) {
-                this.nextWave();
-            }
-        } else {
-            // BOSS 攻击逻辑
-            this.updateBossBehavior(delta);
-        }
-
-        // 5. 敌人更新与碰撞
-        this.updateEnemies();
-
-        // 6. 道具更新
-        this.updatePowerups();
-
-        // 7. 粒子更新
-        this.updateParticles();
-
-        // 8. 连击衰减
-        if (this.state.combo > 0) {
-            this.state.comboTimer -= delta;
-            if (this.state.comboTimer <= 0) {
-                this.state.combo = 0;
-                this.ui.combo.style.opacity = 0;
-            }
-        }
-
-        // 9. 屏幕震动
-        if (this.state.shakeIntensity > 0) {
-            this.camera.position.x += (Math.random() - 0.5) * this.state.shakeIntensity;
-            this.camera.position.y += (Math.random() - 0.5) * this.state.shakeIntensity;
-            this.state.shakeIntensity -= delta * 2; // 快速恢复
-            if (this.state.shakeIntensity < 0) this.state.shakeIntensity = 0;
-        } else {
-            // 归位
-            this.camera.position.set(0, 3, 10); 
-        }
-    }
-
-    nextWave() {
-        this.state.wave++;
-        this.waveProgress = 0;
-        this.waveTotal = 10 + this.state.wave * 2; // 每波敌人增多
-        this.sound.playExplosion(); // 过渡音效
-        
-        // 每 10 波出 BOSS
-        if (this.state.wave % 10 === 0) {
-            this.spawnBoss();
-        }
-        this.updateUI();
-    }
-
-    shoot() {
-        this.sound.playShoot();
-        const geometry = new THREE.SphereGeometry(0.2, 8, 8);
-        const material = new THREE.MeshBasicMaterial({ color: CONFIG.colors.bullet });
-        const mesh = new THREE.Mesh(geometry, material);
-        mesh.position.copy(this.player.position);
-        this.scene.add(mesh);
-        this.bullets.push({ mesh, box: new THREE.Box3() });
-    }
-
-    enemyShoot(pos) {
-        const geometry = new THREE.SphereGeometry(0.3, 8, 8);
-        const material = new THREE.MeshBasicMaterial({ color: CONFIG.colors.enemyBullet });
-        const mesh = new THREE.Mesh(geometry, material);
-        mesh.position.copy(pos);
-        this.scene.add(mesh);
-        this.enemyBullets.push({ mesh, box: new THREE.Box3() });
-    }
-
-    updateBullets() {
-        for (let i = this.bullets.length - 1; i >= 0; i--) {
-            const b = this.bullets[i];
-            b.mesh.position.z -= CONFIG.bulletSpeed;
-            b.box.setFromObject(b.mesh);
-            
-            if (b.mesh.position.z < -60) {
-                this.scene.remove(b.mesh);
-                this.bullets.splice(i, 1);
-            }
-        }
-    }
-
-    updateEnemyBullets() {
-        for (let i = this.enemyBullets.length - 1; i >= 0; i--) {
-            const b = this.enemyBullets[i];
-            b.mesh.position.z += CONFIG.enemyBulletSpeed;
-            b.box.setFromObject(b.mesh);
-            
-            // 击中玩家检测
-            if (!this.state.isInvulnerable && this.playerBox.intersectsBox(b.box)) {
-                this.takeDamage(10); // -10%
-                this.scene.remove(b.mesh);
-                this.enemyBullets.splice(i, 1);
-                this.createExplosion(b.mesh.position, 0xff0000, 5);
-                continue;
-            }
-
-            if (b.mesh.position.z > 10) {
-                this.scene.remove(b.mesh);
-                this.enemyBullets.splice(i, 1);
-            }
-        }
-    }
-
-    updateEnemies() {
-        for (let i = this.enemies.length - 1; i >= 0; i--) {
-            const enemy = this.enemies[i];
-            
-            // 移动逻辑
-            if (enemy.type === 'boss') {
-                // BOSS 移动
-                enemy.angle += 0.02;
-                enemy.mesh.position.x = Math.sin(enemy.angle) * 8;
-                enemy.mesh.position.y = Math.cos(enemy.angle) * 2;
-                enemy.mesh.rotation.z += 0.05;
-            } else {
-                enemy.mesh.position.z += enemy.speed;
-                enemy.mesh.rotation.z += 0.1;
-            }
-            
-            enemy.box.setFromObject(enemy.mesh);
-            
-            // 击中反馈闪烁
-            if (enemy.flashTimer > 0) {
-                enemy.mesh.material.emissive.setHex(0xff0000);
-                enemy.flashTimer--;
-            } else {
-                enemy.mesh.material.emissive.setHex(0x000000);
-            }
-
-            // 敌机撞击玩家检测
-            if (!this.state.isInvulnerable && this.playerBox.intersectsBox(enemy.box)) {
-                this.takeDamage(20); // -20%
-                this.destroyEnemy(i); // 同归于尽
-                continue;
-            }
-
-            // 子弹击中敌机检测
-            for (let j = this.bullets.length - 1; j >= 0; j--) {
-                const bullet = this.bullets[j];
-                if (enemy.box.intersectsBox(bullet.box)) {
-                    enemy.hp--;
-                    enemy.flashTimer = 5; // 闪烁 5 帧
+        // 子弹击中敌机
+        for (let j = bullets.length - 1; j >= 0; j--) {
+            const bulletBox = new THREE.Box3().setFromObject(bullets[j]);
+            if (bulletBox.intersectsBox(enemyBox)) {
+                enemy.hp--;
+                scene.remove(bullets[j]);
+                bullets.splice(j, 1);
+                
+                if (enemy.hp <= 0) {
+                    createExplosion(enemy.mesh.position, enemy.mesh.material.color);
+                    playExplosionSound();
+                    scene.remove(enemy.mesh);
+                    enemies.splice(i, 1);
                     
-                    // 移除子弹
-                    this.scene.remove(bullet.mesh);
-                    this.bullets.splice(j, 1);
+                    // 计分
+                    let points = enemy.type === 'fast' ? 200 : enemy.type === 'heavy' ? 300 : 100;
+                    score += points;
+                    document.getElementById('score').textContent = '分数: ' + score;
                     
-                    // 击毁逻辑
-                    if (enemy.hp <= 0) {
-                        this.destroyEnemy(i);
-                    } else {
-                        // 未击毁，播放轻微音效
-                        // this.sound.playHit(); 
+                    // 每500分升级波次
+                    if (score > wave * 500) {
+                        wave++;
+                        difficultyMultiplier += 0.2;
+                        document.getElementById('wave').textContent = '波次: ' + wave;
                     }
-                    break; // 一颗子弹只打一个敌人
                 }
-            }
-
-            if (enemy.mesh.position.z > 10) {
-                this.scene.remove(enemy.mesh);
-                this.enemies.splice(i, 1);
+                break;
             }
         }
-    }
-
-    updateBossBehavior(delta) {
-        const boss = this.enemies.find(e => e.isBoss);
-        if (!boss) return;
-
-        // BOSS 攻击模式
-        if (Math.random() < 0.05) {
-            this.enemyShoot(boss.mesh.position); // 单发
-        }
-        if (Math.random() < 0.01) {
-            // 散射
-            for(let k=-1; k<=1; k++) {
-                setTimeout(() => {
-                   // 简单的散射逻辑可以扩展，这里简化为发射多个
-                   this.enemyShoot(boss.mesh.position);
-                }, k*100);
-            }
+        
+        // 敌机飞出屏幕
+        if (enemy.mesh.position.z > 10) {
+            scene.remove(enemy.mesh);
+            enemies.splice(i, 1);
         }
     }
-
-    destroyEnemy(index) {
-        const enemy = this.enemies[index];
-        this.createExplosion(enemy.mesh.position, enemy.mesh.material.color, enemy.type === 'boss' ? 50 : 10);
-        this.sound.playExplosion();
-        this.scene.remove(enemy.mesh);
-        this.enemies.splice(index, 1);
-
-        if (enemy.isBoss) {
-            this.bossDefeated();
-        } else {
-            // 分数与连击
-            this.state.combo++;
-            this.state.comboTimer = 2.0;
-            
-            let points = 100;
-            if (enemy.type === 'fast') points = 200;
-            if (enemy.type === 'heavy') points = 300;
-            points *= this.state.combo; // 倍率
-            
-            this.state.score += points;
-            this.waveProgress++;
-            
-            this.updateUI();
-            this.spawnPowerup(enemy.mesh.position);
+    
+    // 更新粒子
+    for (let i = particles.length - 1; i >= 0; i--) {
+        particles[i].position.add(particles[i].velocity);
+        particles[i].scale.multiplyScalar(0.95);
+        if (particles[i].scale.x < 0.01) {
+            scene.remove(particles[i]);
+            particles.splice(i, 1);
         }
     }
+    
+    renderer.render(scene, camera);
+    requestAnimationFrame(update);
+}
 
-    bossDefeated() {
-        this.state.bossActive = false;
-        this.state.score += 5000;
-        this.ui.bossHud.style.display = 'none';
-        // 下一波
-        this.nextWave(); 
-    }
+// 开始游戏
+function startGame() {
+    initAudio();
+    document.getElementById('menu').style.display = 'none';
+    
+    // 重置游戏状态
+    score = 0;
+    wave = 1;
+    health = 100;
+    difficultyMultiplier = 1;
+    document.getElementById('score').textContent = '分数: 0';
+    document.getElementById('wave').textContent = '波次: 1';
+    document.getElementById('health-fill').style.width = '100%';
+    
+    // 清除旧敌机
+    enemies.forEach(e => scene.remove(e.mesh));
+    enemies = [];
+    bullets.forEach(b => scene.remove(b));
+    bullets = [];
+    particles.forEach(p => scene.remove(p));
+    particles = [];
+    
+    // 重置玩家位置
+    player.position.set(0, 0, 5);
+    
+    isPlaying = true;
+    update();
+}
 
-    updatePowerups() {
-        for (let i = this.powerups.length - 1; i >= 0; i--) {
-            const p = this.powerups[i];
-            p.mesh.position.z += p.speed;
-            p.mesh.rotation.y += 0.1;
-            p.mesh.rotation.x += 0.1;
-            
-            const pBox = new THREE.Box3().setFromObject(p.mesh);
-            
-            if (pBox.intersectsBox(this.playerBox)) {
-                this.activatePowerup(p.type);
-                this.scene.remove(p.mesh);
-                this.powerups.splice(i, 1);
-            } else if (p.mesh.position.z > 10) {
-                this.scene.remove(p.mesh);
-                this.powerups.splic
+// 初始化
+init();
+renderer.render(scene, camera);
+</script>
+</body>
+</html>
