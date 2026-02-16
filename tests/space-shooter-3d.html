@@ -43,7 +43,7 @@
                 <div class="health-fill" id="health-fill"></div>
             </div>
         </div>
-        <div id="version">v1.7.1 - Fixed</div>
+        <div id="version">v1.7.2 - Easy BOSS</div>
     </div>
     <div id="menu">
         <h1>STAR FIGHTER</h1>
@@ -461,8 +461,8 @@ function createBoss() {
         group.add(armor);
     }
     
-    // 返回：适中的难度
-    return { group, hp: 80, maxHp: 80, speed: 0.025, color: '#f00', isBoss: true };
+    // 返回：降低难度
+    return { group, hp: 60, maxHp: 60, speed: 0.03, color: '#f00', isBoss: true };
 }
 
 // 初始化
@@ -577,7 +577,7 @@ function spawnEnemy() {
             healthBar: healthBar,
             isBoss: true,
             lastShot: Date.now(),
-            shootInterval: 1000 // 更频繁的攻击（1秒一次）
+            shootInterval: 1800 // 攻击频率降低（1.8秒一次）
         });
         
         // 显示BOSS警告
@@ -855,7 +855,7 @@ function update() {
         if (bulletBox.intersectsBox(playerBox)) {
             // 根据子弹大小判断是否为BOSS子弹
             const isBossBullet = b.geometry.parameters.radius > 0.25;
-            takeDamage(isBossBullet ? 20 : 15);
+            takeDamage(isBossBullet ? 15 : 15);
             scene.remove(b);
             enemyBullets.splice(i, 1);
             continue;
