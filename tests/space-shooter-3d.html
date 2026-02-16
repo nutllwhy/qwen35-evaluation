@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D 太空射击 - 战斗机版</title>
+    <title>3D 太空射击 - 修复版</title>
     <style>
         body { margin: 0; overflow: hidden; background: #000; font-family: Arial, sans-serif; }
         #game-container { width: 100vw; height: 100vh; }
@@ -36,71 +36,91 @@
     </div>
     <div id="menu">
         <h1>STAR FIGHTER</h1>
-        <p>WASD 移动 | 空格 射击<br>敌机更像真实的战斗机！血条缩短，节奏更舒适</p>
+        <p>WASD 移动 | 空格 射击<br>修复版：更稳定的游戏体验</p>
         <button onclick="startGame()">开始游戏</button>
     </div>
 
 <script>
+// 游戏变量 - 使用更安全的数据结构
 let scene, camera, renderer, player;
-let bullets = [], enemies = [], particles = [], enemyBullets = [];
+let bullets = [];
+let enemies = [];
+let particles = [];
+let enemyBullets = [];
 let score = 0, wave = 1, health = 100;
-let isPlaying = false, keys = {}, lastShot = 0;
+let isPlaying = false;
+let keys = {};
+let lastShot = 0;
 let audioCtx;
+let enemySpawnTimer = 0;
+let frameCount = 0;
 
-function initAudio() { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+// 音效
+function initAudio() { 
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)(); 
+}
+
 function playShootSound() {
     if (!audioCtx) return;
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.type = 'square';
-    osc.frequency.setValueAtTime(800, audioCtx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + 0.1);
-    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    osc.start();
-    osc.stop(audioCtx.currentTime + 0.1);
-}
-function playExplosionSound() {
-    if (!audioCtx) return;
-    const bufferSize = audioCtx.sampleRate * 0.3;
-    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-    const noise = audioCtx.createBufferSource();
-    noise.buffer = buffer;
-    const filter = audioCtx.createBiquadFilter();
-    filter.type = 'lowpass';
-    filter.frequency.value = 1000;
-    const gain = audioCtx.createGain();
-    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
-    noise.connect(filter);
-    filter.connect(gain);
-    gain.connect(audioCtx.destination);
-    noise.start();
-}
-function playHitSound() {
-    if (!audioCtx) return;
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(200, audioCtx.currentTime);
-    osc.frequency.linearRampToValueAtTime(50, audioCtx.currentTime + 0.3);
-    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-    gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.3);
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    osc.start();
-    osc.stop(audioCtx.currentTime + 0.3);
+    try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.1);
+    } catch(e) { console.log('Sound error:', e); }
 }
 
-// 创建短血条 - 缩短长度
+function playExplosionSound() {
+    if (!audioCtx) return;
+    try {
+        const bufferSize = audioCtx.sampleRate * 0.3;
+        const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+        const noise = audioCtx.createBufferSource();
+        noise.buffer = buffer;
+        const filter = audioCtx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.value = 1000;
+        const gain = audioCtx.createGain();
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(audioCtx.destination);
+        noise.start();
+    } catch(e) { console.log('Sound error:', e); }
+}
+
+function playHitSound() {
+    if (!audioCtx) return;
+    try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(200, audioCtx.currentTime);
+        osc.frequency.linearRampToValueAtTime(50, audioCtx.currentTime + 0.3);
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.3);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.3);
+    } catch(e) { console.log('Sound error:', e); }
+}
+
+// 创建短血条
 function createHealthBar(maxHp, color) {
     const canvas = document.createElement('canvas');
-    canvas.width = 40; // 缩短宽度
-    canvas.height = 6; // 缩短高度
+    canvas.width = 40;
+    canvas.height = 6;
     const ctx = canvas.getContext('2d');
     
     function draw(hpPercent) {
@@ -110,7 +130,7 @@ function createHealthBar(maxHp, color) {
         ctx.lineWidth = 1;
         ctx.strokeRect(0, 0, 40, 6);
         
-        const percent = Math.max(0, hpPercent);
+        const percent = Math.max(0, Math.min(1, hpPercent));
         ctx.fillStyle = percent > 0.5 ? color : percent > 0.25 ? '#ff0' : '#f00';
         ctx.fillRect(1, 1, 38 * percent, 4);
     }
@@ -120,7 +140,7 @@ function createHealthBar(maxHp, color) {
     const texture = new THREE.CanvasTexture(canvas);
     const material = new THREE.SpriteMaterial({ map: texture });
     const sprite = new THREE.Sprite(material);
-    sprite.scale.set(1.2, 0.18, 1); // 缩小比例
+    sprite.scale.set(1.2, 0.18, 1);
     sprite.position.y = 1.2;
     
     return { sprite, canvas, ctx, draw };
@@ -162,7 +182,7 @@ function createPlayerShip() {
     return group;
 }
 
-// 创建更像战斗机的敌机
+// 创建敌机
 function createEnemyShip(type) {
     const group = new THREE.Group();
     const bodyMat = new THREE.MeshStandardMaterial({ 
@@ -172,19 +192,15 @@ function createEnemyShip(type) {
     });
     
     if (type === 'fast') {
-        // 快速战斗机 - 流线型
-        // 尖锐机身
         const bodyGeo = new THREE.ConeGeometry(0.5, 2, 8);
         bodyGeo.rotateX(-Math.PI / 2);
         const body = new THREE.Mesh(bodyGeo, bodyMat);
         group.add(body);
-        // 后掠翼
         const wingGeo = new THREE.BoxGeometry(2.5, 0.08, 0.8);
         const wing = new THREE.Mesh(wingGeo, bodyMat);
         wing.position.set(0, 0, 0.3);
-        wing.rotation.x = 0.3; // 后掠
+        wing.rotation.x = 0.3;
         group.add(wing);
-        // 双垂尾
         const tailGeo = new THREE.BoxGeometry(0.08, 0.6, 0.4);
         const tailL = new THREE.Mesh(tailGeo, bodyMat);
         tailL.position.set(-0.4, 0.3, 0.8);
@@ -195,63 +211,34 @@ function createEnemyShip(type) {
         tailR.rotation.z = 0.2;
         group.add(tailR);
         return { group, hp: 4, maxHp: 4, speed: 0.18, color: '#0f0' };
-        
     } else if (type === 'heavy') {
-        // 重型轰炸机 - 宽大机身
-        // 宽机身
         const bodyGeo = new THREE.CylinderGeometry(0.5, 0.6, 2, 8);
         bodyGeo.rotateX(Math.PI / 2);
         const body = new THREE.Mesh(bodyGeo, bodyMat);
         group.add(body);
-        // 大展弦比机翼
         const wingGeo = new THREE.BoxGeometry(3.5, 0.1, 1);
         const wing = new THREE.Mesh(wingGeo, bodyMat);
         wing.position.set(0, -0.1, 0.2);
         group.add(wing);
-        // 四引擎
-        const engineGeo = new THREE.CylinderGeometry(0.15, 0.2, 0.5, 6);
-        engineGeo.rotateX(Math.PI / 2);
-        const engineMat = new THREE.MeshBasicMaterial({ color: 0xff4400 });
-        const positions = [[-1.2, -0.2, 0.8], [1.2, -0.2, 0.8], [-0.6, -0.2, 0.9], [0.6, -0.2, 0.9]];
-        positions.forEach(pos => {
-            const engine = new THREE.Mesh(engineGeo, engineMat);
-            engine.position.set(...pos);
-            group.add(engine);
-        });
         return { group, hp: 10, maxHp: 10, speed: 0.08, color: '#0f0' };
-        
     } else {
-        // 标准战斗机 - 经典布局
-        // 机身
         const bodyGeo = new THREE.CylinderGeometry(0.35, 0.45, 2, 8);
         bodyGeo.rotateX(Math.PI / 2);
         const body = new THREE.Mesh(bodyGeo, bodyMat);
         group.add(body);
-        // 主机翼
         const wingGeo = new THREE.BoxGeometry(2.8, 0.08, 0.9);
         const wing = new THREE.Mesh(wingGeo, bodyMat);
         wing.position.set(0, -0.05, 0.2);
         wing.rotation.x = 0.15;
         group.add(wing);
-        // 水平尾翼
         const hTailGeo = new THREE.BoxGeometry(1.2, 0.06, 0.4);
         const hTail = new THREE.Mesh(hTailGeo, bodyMat);
         hTail.position.set(0, 0.1, 1);
         group.add(hTail);
-        // 垂直尾翼
         const vTailGeo = new THREE.BoxGeometry(0.06, 0.6, 0.4);
         const vTail = new THREE.Mesh(vTailGeo, bodyMat);
         vTail.position.set(0, 0.4, 0.9);
         group.add(vTail);
-        // 进气口
-        const intakeGeo = new THREE.BoxGeometry(0.3, 0.2, 0.5);
-        const intakeMat = new THREE.MeshStandardMaterial({ color: 0x111111 });
-        const intakeL = new THREE.Mesh(intakeGeo, intakeMat);
-        intakeL.position.set(-0.5, -0.1, 0.3);
-        group.add(intakeL);
-        const intakeR = new THREE.Mesh(intakeGeo, intakeMat);
-        intakeR.position.set(0.5, -0.1, 0.3);
-        group.add(intakeR);
         return { group, hp: 6, maxHp: 6, speed: 0.12, color: '#0f0' };
     }
 }
@@ -267,6 +254,7 @@ function init() {
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setClearColor(0x000205);
     document.getElementById('game-container').appendChild(renderer.domElement);
+    
     const ambientLight = new THREE.AmbientLight(0x404060, 0.5);
     scene.add(ambientLight);
     const sunLight = new THREE.DirectionalLight(0xffffff, 0.8);
@@ -275,6 +263,7 @@ function init() {
     const rimLight = new THREE.DirectionalLight(0x0088ff, 0.5);
     rimLight.position.set(-10, 5, -10);
     scene.add(rimLight);
+    
     const starGeo = new THREE.BufferGeometry();
     const starCount = 1500;
     const positions = new Float32Array(starCount * 3);
@@ -285,9 +274,11 @@ function init() {
     const starMat = new THREE.PointsMaterial({color: 0xffffff, size: 0.2});
     const stars = new THREE.Points(starGeo, starMat);
     scene.add(stars);
+    
     player = createPlayerShip();
     player.position.set(0, 0, 5);
     scene.add(player);
+    
     window.addEventListener('keydown', (e) => keys[e.code] = true);
     window.addEventListener('keyup', (e) => keys[e.code] = false);
     window.addEventListener('resize', () => {
@@ -314,21 +305,7 @@ function shoot() {
     bullets.push(bullet);
 }
 
-// 敌机发射子弹
-function enemyShoot(enemy) {
-    const geometry = new THREE.CylinderGeometry(0.06, 0.06, 1.2, 6);
-    geometry.rotateX(Math.PI / 2);
-    const material = new THREE.MeshBasicMaterial({ color: 0xff4400, emissive: 0xff2200 });
-    const bullet = new THREE.Mesh(geometry, material);
-    bullet.position.copy(enemy.mesh.position);
-    bullet.position.y = 0;
-    bullet.position.z += 1;
-    scene.add(bullet);
-    enemyBullets.push(bullet);
-}
-
-// 生成敌机 - 降低频率
-let enemySpawnTimer = 0;
+// 生成敌机
 function spawnEnemy() {
     const types = ['normal', 'fast', 'heavy'];
     const type = types[Math.floor(Math.random() * types.length)];
@@ -338,12 +315,10 @@ function spawnEnemy() {
     let speed = enemyData.speed * (1 + wave * 0.04);
     scene.add(enemy);
     
-    // 创建血条
     const healthBar = createHealthBar(enemyData.maxHp, enemyData.color);
     enemy.add(healthBar.sprite);
     
-    // 敌机射击参数
-    const shootInterval = type === 'fast' ? 1500 : type === 'heavy' ? 2500 : 2000;
+    const shootInterval = type === 'fast' ? 2000 : type === 'heavy' ? 3000 : 2500;
     
     enemies.push({ 
         mesh: enemy, 
@@ -359,15 +334,15 @@ function spawnEnemy() {
 
 // 创建爆炸
 function createExplosion(position, color) {
-    for (let i = 0; i < 10; i++) {
-        const geo = new THREE.SphereGeometry(0.18, 6, 6);
+    for (let i = 0; i < 8; i++) {
+        const geo = new THREE.SphereGeometry(0.15, 6, 6);
         const mat = new THREE.MeshBasicMaterial({ color: color });
         const p = new THREE.Mesh(geo, mat);
         p.position.copy(position);
         p.userData.velocity = new THREE.Vector3(
-            (Math.random() - 0.5) * 0.5,
-            (Math.random() - 0.5) * 0.5,
-            (Math.random() - 0.5) * 0.5
+            (Math.random() - 0.5) * 0.4,
+            (Math.random() - 0.5) * 0.4,
+            (Math.random() - 0.5) * 0.4
         );
         scene.add(p);
         particles.push(p);
@@ -394,9 +369,10 @@ function gameOver() {
     document.querySelector('#menu button').textContent = '重新开始';
 }
 
-// 游戏主循环
+// 游戏主循环 - 完全重写，更安全
 function update() {
     if (!isPlaying) return;
+    frameCount++;
     
     // 玩家移动
     if (keys['KeyW'] || keys['ArrowUp']) player.position.z -= 0.18;
@@ -410,7 +386,7 @@ function update() {
     player.rotation.y = -player.rotation.z * 0.5;
     if (keys['Space']) shoot();
     
-    // 更新子弹
+    // 更新玩家子弹
     for (let i = bullets.length - 1; i >= 0; i--) {
         bullets[i].position.z -= 0.9;
         if (bullets[i].position.z < -50) {
@@ -427,71 +403,68 @@ function update() {
         enemySpawnTimer = 0;
     }
     
-    // 碰撞检测
+    // 获取玩家碰撞盒（只计算一次）
     const playerBox = new THREE.Box3().setFromObject(player);
-    const enemiesToRemove = [];
-    const bulletsToRemove = [];
     const now = Date.now();
     
-    for (let i = 0; i < enemies.length; i++) {
+    // 更新敌机 - 使用反向循环安全删除
+    for (let i = enemies.length - 1; i >= 0; i--) {
         const e = enemies[i];
         
-        // 敌机向玩家飞来（不再旋转）
-        e.mesh.position.z += e.speed;
-        // 保持正面朝向玩家（机头朝前）
-        e.mesh.rotation.set(0, Math.PI, 0);
-        
-        // 敌机发射子弹
-        if (now - e.lastShot > e.shootInterval) {
-            enemyShoot(e);
-            e.lastShot = now;
+        // 安全检查
+        if (!e || !e.mesh) {
+            enemies.splice(i, 1);
+            continue;
         }
         
+        // 移动和旋转
+        e.mesh.position.z += e.speed;
+        e.mesh.rotation.set(0, Math.PI, 0);
+        
         // 更新血条
-        if (e.healthBar) {
-            e.healthBar.draw(e.hp / e.maxHp);
-            e.healthBar.sprite.material.map.needsUpdate = true;
+        if (e.healthBar && e.healthBar.draw) {
+            try {
+                e.healthBar.draw(e.hp / e.maxHp);
+                if (e.healthBar.sprite && e.healthBar.sprite.material) {
+                    e.healthBar.sprite.material.map.needsUpdate = true;
+                }
+            } catch(err) { console.log('Health bar error:', err); }
         }
         
         const enemyBox = new THREE.Box3().setFromObject(e.mesh);
         
-        // 撞击玩家
+        // 撞击检测
         if (playerBox.intersectsBox(enemyBox)) {
             takeDamage(20);
             createExplosion(e.mesh.position, 0xff0000);
-            enemiesToRemove.push(i);
+            scene.remove(e.mesh);
+            enemies.splice(i, 1);
             continue;
         }
         
         // 飞出屏幕
         if (e.mesh.position.z > 10) {
-            enemiesToRemove.push(i);
+            scene.remove(e.mesh);
+            enemies.splice(i, 1);
             continue;
         }
         
-        // 子弹击中
-        for (let j = 0; j < bullets.length; j++) {
-            if (bulletsToRemove.indexOf(j) !== -1) continue;
+        // 子弹击中检测
+        let hit = false;
+        for (let j = bullets.length - 1; j >= 0; j--) {
             const bulletBox = new THREE.Box3().setFromObject(bullets[j]);
             if (bulletBox.intersectsBox(enemyBox)) {
                 e.hp--;
-                bulletsToRemove.push(j);
-                
-                // 命中闪烁
-                e.mesh.traverse(child => {
-                    if (child.isMesh && child.material) {
-                        child.material.emissive = new THREE.Color(0xffffff);
-                        setTimeout(() => {
-                            if (child.material) child.material.emissive = new THREE.Color(0x000000);
-                        }, 60);
-                    }
-                });
+                scene.remove(bullets[j]);
+                bullets.splice(j, 1);
+                hit = true;
                 
                 if (e.hp <= 0) {
                     const color = e.type === 'fast' ? 0xff6600 : e.type === 'heavy' ? 0xff00ff : 0xff0000;
                     createExplosion(e.mesh.position, color);
                     playExplosionSound();
-                    enemiesToRemove.push(i);
+                    scene.remove(e.mesh);
+                    enemies.splice(i, 1);
                     
                     const points = e.type === 'fast' ? 120 : e.type === 'heavy' ? 350 : 220;
                     score += points;
@@ -505,42 +478,7 @@ function update() {
                 break;
             }
         }
-    }
-    
-    // 更新敌机子弹
-    for (let i = enemyBullets.length - 1; i >= 0; i--) {
-        const b = enemyBullets[i];
-        b.position.z += 0.5;
-        
-        // 检测击中玩家
-        const bulletBox = new THREE.Box3().setFromObject(b);
-        if (bulletBox.intersectsBox(playerBox)) {
-            takeDamage(10);
-            scene.remove(b);
-            enemyBullets.splice(i, 1);
-            continue;
-        }
-        
-        if (b.position.z > 15) {
-            scene.remove(b);
-            enemyBullets.splice(i, 1);
-        }
-    }
-    
-    // 安全删除
-    enemiesToRemove.sort((a, b) => b - a);
-    for (const idx of enemiesToRemove) {
-        if (enemies[idx]) {
-            scene.remove(enemies[idx].mesh);
-            enemies.splice(idx, 1);
-        }
-    }
-    bulletsToRemove.sort((a, b) => b - a);
-    for (const idx of bulletsToRemove) {
-        if (bullets[idx]) {
-            scene.remove(bullets[idx]);
-            bullets.splice(idx, 1);
-        }
+        if (hit) continue;
     }
     
     // 更新粒子
@@ -564,22 +502,30 @@ function update() {
 function startGame() {
     initAudio();
     document.getElementById('menu').style.display = 'none';
+    
+    // 重置所有状态
     score = 0;
     wave = 1;
     health = 100;
+    frameCount = 0;
+    enemySpawnTimer = 0;
+    lastShot = 0;
+    
     document.getElementById('score').textContent = 'SCORE: 0';
     document.getElementById('wave').textContent = 'WAVE: 1';
     document.getElementById('health-fill').style.width = '100%';
-    enemies.forEach(e => scene.remove(e.mesh));
+    
+    // 清理所有对象
+    enemies.forEach(e => { if (e.mesh) scene.remove(e.mesh); });
     enemies = [];
     bullets.forEach(b => scene.remove(b));
     bullets = [];
-    enemyBullets.forEach(b => scene.remove(b));
-    enemyBullets = [];
     particles.forEach(p => scene.remove(p));
     particles = [];
+    
     player.position.set(0, 0, 5);
     player.rotation.set(0, 0, 0);
+    
     isPlaying = true;
     update();
 }
