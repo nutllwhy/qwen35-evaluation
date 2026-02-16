@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Qwen3.5 评测报告</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap');
-        
         * {
             margin: 0;
             padding: 0;
@@ -14,266 +12,260 @@
         }
         
         :root {
-            --paper: #faf9f6;
-            --ink: #1a1a1a;
-            --ink-light: #666;
-            --accent: #c41e3a;
-            --border: #e0ddd5;
-            --code-bg: #f5f5f0;
+            --bg: #ffffff;
+            --text: #111111;
+            --text-secondary: #666666;
+            --text-tertiary: #999999;
+            --border: #e5e5e5;
+            --accent: #0066cc;
+            --code-bg: #f5f5f5;
+            --success: #00aa44;
+            --pending: #999999;
         }
         
         body {
-            font-family: 'Inter', -apple-system, sans-serif;
-            background: var(--paper);
-            color: var(--ink);
-            line-height: 1.7;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
             font-size: 16px;
         }
         
         .container {
-            max-width: 800px;
+            max-width: 720px;
             margin: 0 auto;
-            padding: 40px 24px;
+            padding: 60px 24px;
         }
         
-        /* Header - Newspaper Style */
-        .masthead {
-            text-align: center;
-            padding: 40px 0;
-            border-bottom: 3px double var(--ink);
-            margin-bottom: 40px;
+        /* Header */
+        header {
+            margin-bottom: 60px;
         }
         
-        .masthead-date {
-            font-size: 12px;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            color: var(--ink-light);
+        .meta {
+            font-size: 13px;
+            color: var(--text-tertiary);
             margin-bottom: 16px;
         }
         
-        .masthead h1 {
-            font-family: 'Noto Serif SC', serif;
-            font-size: 48px;
-            font-weight: 700;
-            letter-spacing: 4px;
-            margin-bottom: 8px;
-        }
-        
-        .masthead-subtitle {
-            font-size: 14px;
-            color: var(--ink-light);
-            font-style: italic;
-        }
-        
-        .edition-line {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 0;
-            border-top: 1px solid var(--border);
-            border-bottom: 1px solid var(--border);
-            margin-top: 24px;
-            font-size: 11px;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-        }
-        
-        /* Headlines */
-        .headline {
-            font-family: 'Noto Serif SC', serif;
+        h1 {
             font-size: 32px;
             font-weight: 600;
             line-height: 1.3;
-            margin-bottom: 24px;
-            color: var(--ink);
+            margin-bottom: 16px;
+            letter-spacing: -0.5px;
         }
         
-        .subhead {
-            font-size: 18px;
-            color: var(--ink-light);
-            font-weight: 400;
-            margin-bottom: 32px;
-            padding-bottom: 24px;
-            border-bottom: 1px solid var(--border);
-        }
-        
-        /* Article Body */
-        .article-body {
-            font-family: 'Noto Serif SC', serif;
+        .subtitle {
             font-size: 17px;
-            line-height: 1.9;
+            color: var(--text-secondary);
+            line-height: 1.6;
         }
         
-        .article-body p {
-            margin-bottom: 1.5em;
-            text-align: justify;
+        /* Status Bar */
+        .status-bar {
+            display: flex;
+            gap: 24px;
+            padding: 16px 0;
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            margin: 32px 0;
+            font-size: 14px;
         }
         
-        /* Section Headers */
+        .status-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .status-label {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .status-value {
+            font-weight: 500;
+        }
+        
+        .status-value.online {
+            color: var(--success);
+        }
+        
+        /* Section */
+        section {
+            margin: 48px 0;
+        }
+        
         h2 {
-            font-family: 'Noto Serif SC', serif;
-            font-size: 24px;
+            font-size: 20px;
             font-weight: 600;
-            margin: 48px 0 24px;
-            padding-bottom: 12px;
-            border-bottom: 2px solid var(--accent);
+            margin-bottom: 20px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--text);
             display: inline-block;
         }
         
         h3 {
-            font-family: 'Inter', sans-serif;
-            font-size: 14px;
+            font-size: 16px;
             font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin: 32px 0 16px;
-            color: var(--accent);
+            margin: 28px 0 12px;
         }
         
-        /* Info Box */
-        .info-box {
-            background: var(--code-bg);
-            border-left: 4px solid var(--accent);
-            padding: 24px;
-            margin: 32px 0;
+        p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
         }
         
-        .info-box-title {
-            font-family: 'Inter', sans-serif;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 12px;
-            color: var(--accent);
-        }
-        
-        /* Test Case Cards */
+        /* Test Case */
         .test-case {
-            margin: 40px 0;
-            padding: 32px;
             border: 1px solid var(--border);
-            background: white;
+            margin: 24px 0;
         }
         
         .test-header {
             display: flex;
             justify-content: space-between;
-            align-items: baseline;
-            margin-bottom: 20px;
-            padding-bottom: 16px;
+            align-items: center;
+            padding: 16px 20px;
+            background: var(--bg);
             border-bottom: 1px solid var(--border);
         }
         
-        .test-number {
-            font-family: 'Inter', sans-serif;
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            color: var(--ink-light);
+        .test-id {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            font-weight: 500;
         }
         
         .test-title {
-            font-family: 'Noto Serif SC', serif;
-            font-size: 20px;
+            font-size: 15px;
             font-weight: 600;
+            margin-top: 4px;
         }
         
-        .test-status {
+        .badge {
             font-size: 11px;
             font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            padding: 4px 12px;
-            border: 1px solid;
+            letter-spacing: 0.5px;
+            padding: 4px 10px;
         }
         
-        .status-pass {
-            color: #2d5016;
-            border-color: #2d5016;
-            background: #f0f7e6;
+        .badge.pass {
+            background: #e6f7ed;
+            color: var(--success);
         }
         
-        .status-pending {
-            color: var(--ink-light);
-            border-color: var(--border);
-            background: var(--paper);
+        .badge.pending {
+            background: #f5f5f5;
+            color: var(--pending);
+        }
+        
+        .test-body {
+            padding: 20px;
+        }
+        
+        .test-section {
+            margin: 16px 0;
+        }
+        
+        .test-section-label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-tertiary);
+            margin-bottom: 8px;
         }
         
         /* Code Blocks */
         .code-block {
             background: var(--code-bg);
-            padding: 20px;
-            margin: 20px 0;
-            font-family: 'SF Mono', Monaco, monospace;
+            padding: 16px;
+            font-family: "SF Mono", Monaco, monospace;
             font-size: 13px;
             line-height: 1.6;
             overflow-x: auto;
-            border: 1px solid var(--border);
+            white-space: pre-wrap;
+            word-break: break-all;
         }
         
-        .code-label {
-            font-family: 'Inter', sans-serif;
-            font-size: 10px;
+        .code-block.prompt {
+            background: #fff8e6;
+            border-left: 3px solid #f5a623;
+        }
+        
+        /* Summary */
+        .summary {
+            background: var(--code-bg);
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .summary-title {
+            font-size: 12px;
+            font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--ink-light);
-            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+            color: var(--text-tertiary);
+            margin-bottom: 12px;
         }
         
-        /* Quote */
-        blockquote {
-            font-family: 'Noto Serif SC', serif;
-            font-size: 20px;
-            font-style: italic;
-            border-left: 3px solid var(--accent);
-            padding-left: 24px;
-            margin: 32px 0;
-            color: var(--ink-light);
+        .summary-list {
+            list-style: none;
         }
         
-        /* Data Table */
+        .summary-list li {
+            padding: 6px 0;
+            font-size: 14px;
+        }
+        
+        .summary-list li:before {
+            content: "→";
+            margin-right: 10px;
+            color: var(--success);
+        }
+        
+        /* Table */
         table {
             width: 100%;
             border-collapse: collapse;
-            margin: 24px 0;
+            margin: 20px 0;
             font-size: 14px;
         }
         
         th {
             text-align: left;
-            font-family: 'Inter', sans-serif;
-            font-size: 11px;
+            padding: 12px;
+            border-bottom: 2px solid var(--text);
+            font-weight: 600;
+            font-size: 12px;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--ink-light);
-            padding: 12px 8px;
-            border-bottom: 2px solid var(--ink);
+            letter-spacing: 0.5px;
+            color: var(--text-tertiary);
         }
         
         td {
-            padding: 12px 8px;
+            padding: 12px;
             border-bottom: 1px solid var(--border);
         }
         
         /* Footer */
-        .footer {
+        footer {
             margin-top: 80px;
             padding-top: 40px;
             border-top: 1px solid var(--border);
             text-align: center;
-            font-size: 12px;
-            color: var(--ink-light);
+            font-size: 13px;
+            color: var(--text-tertiary);
         }
         
-        .footer-logo {
-            font-family: 'Noto Serif SC', serif;
-            font-size: 18px;
-            font-weight: 600;
-            color: var(--ink);
-            margin-bottom: 8px;
+        footer a {
+            color: var(--accent);
+            text-decoration: none;
         }
         
         /* Highlight */
@@ -281,208 +273,175 @@
             background: #fff3cd;
             padding: 2px 4px;
         }
-        
-        /* Two Column Layout */
-        .two-col {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 40px;
-            margin: 32px 0;
-        }
-        
-        @media (max-width: 600px) {
-            .two-col {
-                grid-template-columns: 1fr;
-            }
-            .masthead h1 {
-                font-size: 32px;
-            }
-        }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Masthead -->
-        <header class="masthead">
-            <div class="masthead-date">2026年2月16日</div>
-            <h1>模型评测</h1>
-            <div class="masthead-subtitle">深度技术评测报告</div>
+        
+        <!-- Header -->
+        <header>
+            <div class="meta">技术评测 · 2026年2月16日</div>
+            <h1>Qwen3.5 深度评测</h1>
+            <p class="subtitle">基于阿里云百炼平台的工程协作能力实测，覆盖代码生成、Bug修复、多文件项目等七大维度</p>
             
-            <div class="edition-line">
-                <span>总第 001 期</span>
-                <span>栗噔噔 AI 实验室</span>
-                <span>GitHub 开源</span>
+            <div class="status-bar">
+                <div class="status-item">
+                    <span class="status-label">状态</span>
+                    <span class="status-value online">在线</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">模型</span>
+                    <span class="status-value">qwen3.5-plus</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">响应时间</span>
+                    <span class="status-value">~3s</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">完成度</span>
+                    <span class="status-value">1/7</span>
+                </div>
             </div>
         </header>
 
-        <!-- Main Headline -->
-        <h1 class="headline">阿里云 Qwen3.5 深度评测：国产大模型的工程协作能力实测</h1>
-        
-        <p class="subhead">
-            基于 Anthropic API 兼容接口的全面测试，覆盖代码生成、Bug修复、多文件项目等七大维度
-        </p>
-
-        <!-- Lead -->
-        <div class="article-body">
+        <!-- Intro -->
+        <section>
             <p>
-                <span class="highlight">Qwen3.5</span> 是阿里云通义千问系列的最新版本，采用混合专家（MoE）架构，
-                原生支持文本、图像、视频多模态理解。本次评测聚焦于其通过 Anthropic API 兼容接口提供的代码生成与工程协作能力，
-                实测其在真实开发场景中的表现。
+                <span class="highlight">Qwen3.5</span> 是阿里云通义千问系列最新版本，采用 MoE 架构，
+                原生支持多模态理解。本评测通过 Anthropic API 兼容接口，实测其在真实开发场景中的表现。
             </p>
-        </div>
-
-        <!-- Key Info Box -->
-        <div class="info-box">
-            <div class="info-box-title">评测摘要</div>
-            <p style="margin: 0; font-family: 'Inter', sans-serif; font-size: 14px;">
-                <strong>测试模型：</strong>qwen3.5-plus<br>
-                <strong>API 端点：</strong>阿里云百炼平台<br>
-                <strong>测试时间：</strong>2026年2月16日<br>
-                <strong>完成进度：</strong>1/7 项测试
-            </p>
-        </div>
+        </section>
 
         <!-- Test Results -->
-        <h2>测试案例</h2>
-
-        <!-- Test 1 -->
-        <div class="test-case">
-            <div class="test-header">
-                <div>
-                    <div class="test-number">Test 01</div>
-                    <div class="test-title">代码生成能力</div>
+        <section>
+            <h2>测试案例</h2>
+            
+            <!-- Test 1 -->
+            <div class="test-case">
+                <div class="test-header">
+                    <div>
+                        <div class="test-id">TEST 01</div>
+                        <div class="test-title">代码生成能力</div>
+                    </div>
+                    <span class="badge pass">通过</span>
                 </div>
-                <span class="test-status status-pass">通过</span>
-            </div>
-            
-            <h3>测试目标</h3>
-            <p style="font-family: 'Noto Serif SC', serif;">
-                验证基础代码生成、注释质量、类型提示规范，以及算法实现的正确性。
-            </p>
-            
-            <h3>Prompt</h3>
-            <div class="code-block" style="background: white;">
-                写一个 Python 快速排序算法，要求：<br>
-                1. 包含详细注释<br>
-                2. 添加类型提示<br>
-                3. 包含测试用例
-            </div>
-            
-            <h3>模型输出摘要</h3>
-            <p style="font-family: 'Noto Serif SC', serif;">
-                Qwen3.5 提供了双版本实现：简洁版（列表推导式，适合教学）和原地版（in-place，O(log n)空间，适合生产）。
-                代码包含完整的类型提示（List[T], TypeVar）、详细中文注释、复杂度分析表格，以及5个覆盖边界情况的测试用例。
-            </p>
-            
-            <h3>代码片段</h3>
-            <div class="code-label">Python</div>
-            <div class="code-block">
-def quick_sort(arr: List[T]) -> List[T]:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;"""快速排序主函数（对外接口）"""<br>
-&nbsp;&nbsp;&nbsp;&nbsp;if len(arr) <= 1:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return arr<br>
-&nbsp;&nbsp;&nbsp;&nbsp;arr_copy = arr.copy()<br>
-&nbsp;&nbsp;&nbsp;&nbsp;quick_sort_recursive(arr_copy, 0, len(arr_copy) - 1)<br>
-&nbsp;&nbsp;&nbsp;&nbsp;return arr_copy
-            </div>
-            
-            <h3>评测结论</h3>
-            <p style="font-family: 'Noto Serif SC', serif;">
-                生成的代码质量达到生产级别，类型提示规范，注释清晰，且主动提供了算法对比和使用建议。
-                体现出对软件工程实践的深入理解。
-            </p>
-        </div>
-
-        <!-- Test 2 -->
-        <div class="test-case">
-            <div class="test-header">
-                <div>
-                    <div class="test-number">Test 02</div>
-                    <div class="test-title">Bug 修复能力</div>
+                <div class="test-body">
+                    <div class="test-section">
+                        <div class="test-section-label">目标</div>
+                        <p style="margin: 0;">验证基础代码生成、注释质量、类型提示规范</p>
+                    </div>
+                    
+                    <div class="test-section">
+                        <div class="test-section-label">Prompt</div>
+                        <div class="code-block prompt">写一个 Python 快速排序算法，要求：
+1. 包含详细注释
+2. 添加类型提示  
+3. 包含测试用例</div>
+                    </div>
+                    
+                    <div class="summary">
+                        <div class="summary-title">输出摘要</div>
+                        <ul class="summary-list">
+                            <li>双版本实现（简洁版 + 原地版）</li>
+                            <li>完整类型提示 List[T], TypeVar</li>
+                            <li>详细中文注释与复杂度分析</li>
+                            <li>5个测试用例覆盖边界情况</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="test-section">
+                        <div class="test-section-label">结论</div>
+                        <p style="margin: 0;">代码质量达生产级别，类型提示规范，体现出对软件工程实践的深入理解。</p>
+                    </div>
                 </div>
-                <span class="test-status status-pending">待测试</span>
             </div>
-            <p style="color: var(--ink-light); font-style: italic;">
-                测试中：给定错误代码片段，验证问题定位与修复方案生成能力...
-            </p>
-        </div>
-
-        <!-- Test 3 -->
-        <div class="test-case">
-            <div class="test-header">
-                <div>
-                    <div class="test-number">Test 03</div>
-                    <div class="test-title">多文件项目生成</div>
+            
+            <!-- Test 2 -->
+            <div class="test-case">
+                <div class="test-header">
+                    <div>
+                        <div class="test-id">TEST 02</div>
+                        <div class="test-title">Bug 修复能力</div>
+                    </div>
+                    <span class="badge pending">待测试</span>
                 </div>
-                <span class="test-status status-pending">待测试</span>
-            </div>
-            <p style="color: var(--ink-light); font-style: italic;">
-                测试中：验证复杂功能的多文件项目结构设计与代码组织能力...
-            </p>
-        </div>
-
-        <!-- Test 4 -->
-        <div class="test-case">
-            <div class="test-header">
-                <div>
-                    <div class="test-number">Test 04</div>
-                    <div class="test-title">逻辑推理</div>
+                <div class="test-body">
+                    <p style="margin: 0; color: var(--text-tertiary);">给定错误代码片段，验证问题定位与修复方案生成能力</p>
                 </div>
-                <span class="test-status status-pending">待测试</span>
             </div>
-            <p style="color: var(--ink-light); font-style: italic;">
-                测试中：数学证明、常识推理、逻辑谜题求解能力...
-            </p>
-        </div>
+            
+            <!-- Test 3 -->
+            <div class="test-case">
+                <div class="test-header">
+                    <div>
+                        <div class="test-id">TEST 03</div>
+                        <div class="test-title">多文件项目生成</div>
+                    </div>
+                    <span class="badge pending">待测试</span>
+                </div>
+                <div class="test-body">
+                    <p style="margin: 0; color: var(--text-tertiary);">验证复杂功能的多文件项目结构设计与代码组织能力</p>
+                </div>
+            </div>
+            
+            <!-- Test 4 -->
+            <div class="test-case">
+                <div class="test-header">
+                    <div>
+                        <div class="test-id">TEST 04</div>
+                        <div class="test-title">逻辑推理</div>
+                    </div>
+                    <span class="badge pending">待测试</span>
+                </div>
+                <div class="test-body">
+                    <p style="margin: 0; color: var(--text-tertiary);">数学证明、常识推理、逻辑谜题求解能力</p>
+                </div>
+            </div>
+        </section>
 
-        <!-- Specs Table -->
-        <h2>技术规格</h2>
-        
-        <table>
-            <tr>
-                <th>项目</th>
-                <th>规格</th>
-            </tr>
-            <tr>
-                <td>模型架构</td>
-                <td>混合专家（MoE）</td>
-            </tr>
-            <tr>
-                <td>多模态支持</td>
-                <td>文本、图像、视频</td>
-            </tr>
-            <tr>
-                <td>API 兼容</td>
-                <td>Anthropic API 格式</td>
-            </tr>
-            <tr>
-                <td>接入平台</td>
-                <td>阿里云百炼</td>
-            </tr>
-            <tr>
-                <td>平均响应时间</td>
-                <td>约 3 秒</td>
-            </tr>
-            <tr>
-                <td>平均输出 Token</td>
-                <td>约 900</td>
-            </tr>
-        </table>
-
-        <!-- Quote -->
-        <blockquote>
-            "Qwen3.5 在代码生成任务中展现出对软件工程实践的深入理解，
-            不仅生成正确的代码，还主动考虑教学与生产两种场景的需求。"
-        </blockquote>
+        <!-- Specs -->
+        <section>
+            <h2>技术规格</h2>
+            <table>
+                <tr>
+                    <th>项目</th>
+                    <th>规格</th>
+                </tr>
+                <tr>
+                    <td>模型架构</td>
+                    <td>混合专家（MoE）</td>
+                </tr>
+                <tr>
+                    <td>多模态支持</td>
+                    <td>文本、图像、视频</td>
+                </tr>
+                <tr>
+                    <td>API 兼容</td>
+                    <td>Anthropic API 格式</td>
+                </tr>
+                <tr>
+                    <td>接入平台</td>
+                    <td>阿里云百炼</td>
+                </tr>
+                <tr>
+                    <td>平均响应</td>
+                    <td>约 3 秒</td>
+                </tr>
+                <tr>
+                    <td>输出 Token</td>
+                    <td>约 900</td>
+                </tr>
+            </table>
+        </section>
 
         <!-- Footer -->
-        <footer class="footer">
-            <div class="footer-logo">栗噔噔 AI 实验室</div>
-            <p>
-                本报告基于公开 API 进行独立测试 | 数据截至 2026年2月16日<br>
-                访问 <a href="https://github.com/nutllwhy/qwen35-evaluation" style="color: var(--accent);">GitHub 仓库</a> 查看完整代码
+        <footer>
+            <p>栗噔噔 AI 实验室 · 数据截至 2026年2月16日</p>
+            <p style="margin-top: 8px;">
+                <a href="https://github.com/nutllwhy/qwen35-evaluation">GitHub 仓库</a>
             </p>
         </footer>
+        
     </div>
 </body>
 </html>
