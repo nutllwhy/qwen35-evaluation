@@ -6,6 +6,7 @@
     <title>TEST 03: 多文件项目生成 | Qwen3.5 评测</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        
         :root {
             --bg: #ffffff;
             --text: #111111;
@@ -13,14 +14,18 @@
             --border: #e5e5e5;
             --accent: #0066cc;
             --code-bg: #f5f5f5;
-            --pending: #999999;
+            --success: #00aa44;
+            --folder: #f5a623;
+            --file: #666666;
         }
+        
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background: var(--bg);
             color: var(--text);
             line-height: 1.6;
         }
+        
         .nav {
             position: fixed;
             top: 0;
@@ -31,6 +36,7 @@
             border-bottom: 1px solid var(--border);
             z-index: 100;
         }
+        
         .nav-container {
             max-width: 1200px;
             margin: 0 auto;
@@ -40,39 +46,205 @@
             justify-content: space-between;
             height: 60px;
         }
+        
         .nav-logo { font-weight: 600; font-size: 18px; }
         .nav-links { display: flex; gap: 32px; list-style: none; }
         .nav-links a { text-decoration: none; color: var(--text-secondary); font-size: 14px; }
         .nav-links a:hover, .nav-links a.active { color: var(--text); }
+        
         .main { margin-top: 60px; }
         .container { max-width: 1000px; margin: 0 auto; padding: 40px 24px; }
+        
         .breadcrumb { font-size: 13px; color: var(--text-secondary); margin-bottom: 24px; }
         .breadcrumb a { color: var(--accent); text-decoration: none; }
-        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
+        
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+        
         .page-title h1 { font-size: 32px; font-weight: 600; margin-bottom: 8px; }
         .page-subtitle { font-size: 16px; color: var(--text-secondary); }
+        
         .status-badge {
             display: inline-flex;
             align-items: center;
             gap: 8px;
             padding: 8px 16px;
-            background: var(--code-bg);
-            color: var(--pending);
+            background: #e6f7ed;
+            color: var(--success);
             border-radius: 20px;
             font-size: 13px;
             font-weight: 600;
         }
+        
         section { margin: 48px 0; }
-        h2 { font-size: 20px; font-weight: 600; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid var(--text); }
-        .pending-box {
+        
+        h2 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--text);
+        }
+        
+        h3 {
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            margin: 28px 0 12px;
+        }
+        
+        /* Metrics */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin: 24px 0;
+        }
+        
+        .metric-item {
+            text-align: center;
+            padding: 20px;
             background: var(--code-bg);
-            border: 2px dashed var(--border);
             border-radius: 8px;
-            padding: 60px;
+        }
+        
+        .metric-value { font-size: 28px; font-weight: 600; color: var(--accent); }
+        .metric-label { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+        
+        /* File Tree */
+        .file-tree {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 24px;
+            font-family: "SF Mono", Monaco, monospace;
+            font-size: 14px;
+            line-height: 2;
+        }
+        
+        .tree-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .tree-folder { color: var(--folder); }
+        .tree-file { color: var(--file); }
+        .tree-indent { margin-left: 24px; }
+        
+        /* File Cards */
+        .file-cards {
+            display: grid;
+            gap: 16px;
+            margin: 24px 0;
+        }
+        
+        .file-card {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .file-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: var(--code-bg);
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .file-icon { font-size: 18px; }
+        .file-name { font-weight: 600; font-size: 14px; }
+        .file-desc { font-size: 12px; color: var(--text-secondary); margin-left: auto; }
+        
+        .file-content {
+            background: #1a1a1a;
+            color: #e5e5e5;
+            padding: 16px;
+            font-family: "SF Mono", Monaco, monospace;
+            font-size: 12px;
+            line-height: 1.6;
+            overflow-x: auto;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        /* Dependency Graph */
+        .dependency-graph {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 24px;
             text-align: center;
         }
-        .pending-icon { font-size: 48px; margin-bottom: 16px; }
-        .pending-text { font-size: 18px; color: var(--text-secondary); }
+        
+        .dep-flow {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+        
+        .dep-node {
+            background: white;
+            border: 2px solid var(--accent);
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 13px;
+        }
+        
+        .dep-arrow { font-size: 20px; color: var(--text-secondary); }
+        
+        /* Checklist */
+        .checklist {
+            list-style: none;
+        }
+        
+        .checklist li {
+            padding: 12px 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .checklist li:before {
+            content: "✓";
+            width: 20px;
+            height: 20px;
+            background: var(--success);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+        
+        /* Conclusion */
+        .conclusion-box {
+            background: var(--code-bg);
+            border-left: 4px solid var(--success);
+            padding: 24px;
+            margin: 32px 0;
+        }
+        
+        @media (max-width: 768px) {
+            .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+            .dep-flow { flex-direction: column; }
+            .dep-arrow { transform: rotate(90deg); }
+        }
     </style>
 </head>
 <body>
@@ -81,7 +253,7 @@
             <div class="nav-logo"><a href="../index.html" style="text-decoration:none;color:inherit;">Qwen3.5 评测</a></div>
             <ul class="nav-links">
                 <li><a href="../index.html">概览</a></li>
-                <li><a href="test01.html">代码生成</a></li>
+                <li><a href="test01.html">美学基准</a></li>
                 <li><a href="test02.html">Bug修复</a></li>
                 <li><a href="test03.html" class="active">项目生成</a></li>
                 <li><a href="test04.html">逻辑推理</a></li>
@@ -91,27 +263,179 @@
 
     <main class="main">
         <div class="container">
+            
             <div class="breadcrumb"><a href="../index.html">概览</a> / TEST 03</div>
 
             <header class="page-header">
                 <div class="page-title">
                     <h1>多文件项目生成</h1>
-                    <div class="page-subtitle">复杂功能的多文件结构设计</div>
+                    <div class="page-subtitle">待办事项管理器 - 完整项目结构设计与代码组织</div>
                 </div>
-                <span class="status-badge">待测试</span>
+                <span class="status-badge">测试通过</span>
             </header>
 
+            <!-- Metrics -->
             <section>
-                <div class="pending-box">
-                    <div class="pending-icon">⏳</div>
-                    <div class="pending-text">测试准备中，即将开始...</div>
+                <h2>项目指标</h2>
+                
+                <div class="metrics-grid">
+                    <div class="metric-item">
+                        <div class="metric-value">4</div>
+                        <div class="metric-label">文件数量</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value">247</div>
+                        <div class="metric-label">代码行数</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value">3</div>
+                        <div class="metric-label">功能模块</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value">0</div>
+                        <div class="metric-label">外部依赖</div>
+                    </div>
+                </div>            
+            </section>
+
+            <!-- File Tree -->
+            <section>
+                <h2>项目结构</h2>
+                
+                <div class="file-tree">
+                    <div class="tree-item">
+                        <span class="tree-folder">📁 todo_manager/</span>
+                    </div>
+                    <div class="tree-item tree-indent">
+                        <span class="tree-file">📄 main.py</span> - 主程序入口（命令行交互）
+                    </div>
+                    <div class="tree-item tree-indent">
+                        <span class="tree-file">📄 utils.py</span> - 工具函数（数据操作）
+                    </div>
+                    <div class="tree-item tree-indent">
+                        <span class="tree-file">📄 config.py</span> - 配置文件（常量定义）
+                    </div>
+                    <div class="tree-item tree-indent">
+                        <span class="tree-file">📄 README.md</span> - 项目说明文档
+                    </div>
                 </div>
             </section>
 
+            <!-- Dependencies -->
+            <section>
+                <h2>文件依赖关系</h2>
+                
+                <div class="dependency-graph">
+                    <div class="dep-flow">
+                        <div class="dep-node">main.py</div>
+                        <span class="dep-arrow">→</span>
+                        <div class="dep-node">utils.py</div>
+                        <span class="dep-arrow">→</span>
+                        <div class="dep-node">config.py</div>
+                    </div>
+                    <p style="color: var(--text-secondary); margin-top: 16px;">
+                        清晰的导入链：主程序 → 工具模块 → 配置
+                    </p>
+                </div>
+            </section>
+
+            <!-- Features -->
+            <section>
+                <h2>功能完整性</h2>
+                
+                <ul class="checklist">
+                    <li>添加任务（带时间戳和ID）</li>
+                    <li>列出所有任务（状态显示）</li>
+                    <li>删除指定任务</li>
+                    <li>标记任务完成</li>
+                    <li>JSON 数据持久化</li>
+                    <li>友好的命令行界面</li>
+                    <li>输入验证和错误处理</li>
+                </ul>
+            </section>
+
+            <!-- Code Preview -->
+            <section>
+                <h2>代码预览</h2>
+                
+                <div class="file-cards">
+                    <div class="file-card">
+                        <div class="file-header">
+                            <span class="file-icon">📄</span>
+                            <span class="file-name">main.py</span>
+                            <span class="file-desc">主程序入口</span>
+                        </div>
+                        <div class="file-content">from utils import add_task, list_tasks, ...
+
+def print_menu():
+    print("=== 待办事项管理器 ===")
+    print("1. 添加任务")
+    print("2. 列出任务")
+    ...
+
+def main():
+    while True:
+        print_menu()
+        choice = input("请选择操作：")
+        ...
+
+if __name__ == "__main__":
+    main()</div>
+                    </div>
+                    
+                    <div class="file-card">
+                        <div class="file-header">
+                            <span class="file-icon">📄</span>
+                            <span class="file-name">utils.py</span>
+                            <span class="file-desc">工具函数模块</span>
+                        </div>
+                        <div class="file-content">from config import DATA_FILE, ...
+import json
+import os
+
+def load_tasks():
+    """从 JSON 文件加载任务列表"""
+    if not os.path.exists(DATA_FILE):
+        return []
+    ...
+
+def add_task(description):
+    """添加新任务"""
+    tasks = load_tasks()
+    task = {
+        "id": len(tasks) + 1,
+        "description": description,
+        "completed": False,
+        ...
+    }
+    ...</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Conclusion -->
+            <section>
+                <h2>评测结论</h2>
+                
+                <div class="conclusion-box">
+                    <p style="font-size: 16px; line-height: 1.8;">
+                        Qwen3.5 在多文件项目生成测试中表现优秀：<br><br>
+                        1. <strong>架构设计</strong>：合理的模块划分（配置/工具/主程序），职责清晰<br>
+                        2. <strong>代码组织</strong>：文件间导入关系正确，遵循 Python 最佳实践<br>
+                        3. <strong>功能完整</strong>：包含增删改查全部功能，以及数据持久化<br>
+                        4. <strong>工程规范</strong>：包含详细的 README 文档和代码注释<br><br>
+                        项目<strong>零外部依赖</strong>，仅使用 Python 标准库即可运行，
+                        适合作为初学者学习项目或快速原型开发。
+                    </p>
+                </div>
+            </section>
+
+            <!-- Navigation -->
             <section style="display: flex; justify-content: space-between; margin-top: 60px; padding-top: 40px; border-top: 1px solid var(--border);">
                 <a href="test02.html" style="color: var(--text-secondary); text-decoration: none;">← 上一测试</a>
-                <a href="test04.html" style="color: var(--accent); text-decoration: none; font-weight: 500;">下一测试 →</a>
+                <a href="test04.html" style="color: var(--accent); text-decoration: none; font-weight: 500;">下一测试：逻辑推理 →</a>
             </section>
+            
         </div>
     </main>
 </body>
