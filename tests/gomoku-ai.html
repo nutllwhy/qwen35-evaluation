@@ -681,6 +681,9 @@ const ctx = canvas.getContext('2d');
 // ==================== 音频系统 ====================
 let audioEnabled = true;
 let audioContext = null;
+let bgmOscillators = [];
+let bgmGainNode = null;
+let isBgmPlaying = false;
 
 // 初始化音频上下文 - 必须在用户交互后调用
 function initAudio() {
@@ -691,6 +694,10 @@ function initAudio() {
     if (audioContext.state === 'suspended') {
         audioContext.resume();
     }
+    // 初始化后开始播放背景音乐
+    if (!isBgmPlaying && audioEnabled) {
+        startBGM();
+    }
 }
 
 function toggleAudio() {
@@ -700,8 +707,122 @@ function toggleAudio() {
     btn.style.opacity = audioEnabled ? '1' : '0.5';
     if (audioEnabled) {
         initAudio();
-        // 播放测试音
+        startBGM();
         playTestSound();
+    } else {
+        stopBGM();
+    }
+}
+
+// 背景音乐系统 - 喜庆的中国风旋律
+const bgmMelody = [
+    // 第一乐句 - 喜庆开场
+    { note: 523.25, duration: 0.25 }, // C5
+    { note: 523.25, duration: 0.25 }, // C5
+    { note: 587.33, duration: 0.25 }, // D5
+    { note: 659.25, duration: 0.5 },  // E5
+    { note: 587.33, duration: 0.25 }, // D5
+    { note: 523.25, duration: 0.25 }, // C5
+    { note: 587.33, duration: 0.5 },  // D5
+    // 第二乐句
+    { note: 659.25, duration: 0.25 }, // E5
+    { note: 659.25, duration: 0.25 }, // E5
+    { note: 698.46, duration: 0.25 }, // F5
+    { note: 783.99, duration: 0.5 },  // G5
+    { note: 698.46, duration: 0.25 }, // F5
+    { note: 659.25, duration: 0.25 }, // E5
+    { note: 587.33, duration: 0.5 },  // D5
+    // 第三乐句 - 高潮
+    { note: 783.99, duration: 0.25 }, // G5
+    { note: 783.99, duration: 0.25 }, // G5
+    { note: 880.00, duration: 0.25 }, // A5
+    { note: 783.99, duration: 0.25 }, // G5
+    { note: 698.46, duration: 0.25 }, // F5
+    { note: 659.25, duration: 0.25 }, // E5
+    { note: 587.33, duration: 0.5 },  // D5
+    // 结尾
+    { note: 659.25, duration: 0.25 }, // E5
+    { note: 587.33, duration: 0.25 }, // D5
+    { note: 523.25, duration: 0.5 },  // C5
+    { note: 0, duration: 0.25 },      // 休止
+    { note: 523.25, duration: 0.75 }, // C5 长音
+];
+
+let bgmIndex = 0;
+let nextNoteTime = 0;
+let bgmTimer = null;
+
+function startBGM() {
+    if (!audioEnabled || !audioContext || isBgmPlaying) return;
+    
+    isBgmPlaying = true;
+    bgmIndex = 0;
+    nextNoteTime = audioContext.currentTime;
+    
+    // 创建背景音乐增益节点
+    bgmGainNode = audioContext.createGain();
+    bgmGainNode.connect(audioContext.destination);
+    bgmGainNode.gain.value = 0.15; // 背景音量较小
+    
+    scheduleNotes();
+}
+
+function scheduleNotes() {
+    if (!isBgmPlaying || !audioEnabled) return;
+    
+    const currentTime = audioContext.currentTime;
+    
+    // 提前调度接下来的音符
+    while (nextNoteTime < currentTime + 0.5) {
+        const noteData = bgmMelody[bgmIndex];
+        
+        if (noteData.note > 0) {
+            // 主音
+            const osc = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            osc.connect(gain);
+            gain.connect(bgmGainNode);
+            
+            osc.frequency.value = noteData.note;
+            osc.type = 'sine';
+            
+            gain.gain.setValueAtTime(0, nextNoteTime);
+            gain.gain.linearRampToValueAtTime(0.3, nextNoteTime + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.01, nextNoteTime + noteData.duration * 0.8);
+            
+            osc.start(nextNoteTime);
+            osc.stop(nextNoteTime + noteData.duration);
+            
+            // 八度音增加丰满度
+            const osc2 = audioContext.createOscillator();
+            const gain2 = audioContext.createGain();
+            osc2.connect(gain2);
+            gain2.connect(bgmGainNode);
+            
+            osc2.frequency.value = noteData.note / 2;
+            osc2.type = 'triangle';
+            gain2.gain.value = 0.1;
+            
+            osc2.start(nextNoteTime);
+            osc2.stop(nextNoteTime + noteData.duration);
+        }
+        
+        nextNoteTime += noteData.duration;
+        bgmIndex = (bgmIndex + 1) % bgmMelody.length;
+    }
+    
+    bgmTimer = setTimeout(scheduleNotes, 100);
+}
+
+function stopBGM() {
+    isBgmPlaying = false;
+    if (bgmTimer) {
+        clearTimeout(bgmTimer);
+        bgmTimer = null;
+    }
+    if (bgmGainNode) {
+        bgmGainNode.disconnect();
+        bgmGainNode = null;
     }
 }
 
@@ -998,6 +1119,10 @@ canvas.addEventListener('click', async (e) => {
     initAudio();
     if (audioContext && audioContext.state === 'suspended') {
         await audioContext.resume();
+    }
+    // 首次点击开始背景音乐
+    if (!isBgmPlaying && audioEnabled) {
+        startBGM();
     }
     
     const rect = canvas.getBoundingClientRect();
