@@ -77,6 +77,33 @@
             font-size: 20px;
         }
         
+        #next-level {
+            top: 65px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 8px 16px;
+            font-size: 14px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        #next-level .progress-bar {
+            width: 150px;
+            height: 8px;
+            background: #333;
+            border: 1px solid #ffd700;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        #next-level .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ffd700, #ff8c00);
+            transition: width 0.3s;
+        }
+        
         #health {
             bottom: 30px;
             left: 50%;
@@ -210,6 +237,12 @@
         <div class="hud" id="score">🧧 _score: 0</div>
         <div class="hud" id="wave">🌊 波次: 1</div>
         <div class="hud" id="level">⭐ 等级: 1</div>
+        <div class="hud" id="next-level">
+            <span>📈 下一级</span>
+            <div class="progress-bar">
+                <div class="progress-fill" id="level-progress"></div>
+            </div>
+        </div>
         <button id="audio-toggle" onclick="toggleAudio()">🔊</button>
         <div class="hud" id="health">
             <span>❤️ 生命值</span>
@@ -472,12 +505,10 @@ function createLanterns() {
     }
 }
 
-// 游戏配置
+// 游戏配置 - 动态难度系统
 const CONFIG = {
     playerSpeed: 0.12,
-    playerFireRate: 6,
     playerHealth: 100,
-    bulletSpeed: 8,
     colors: {
         player: '#ffd700',
         playerBullet: '#ff6b6b',
@@ -485,6 +516,38 @@ const CONFIG = {
         enemyBullet: '#ff3838'
     }
 };
+
+// 动态获取当前等级下的游戏参数
+function getGameParams(level) {
+    // 等级1-20的渐进式难度曲线
+    const progress = Math.min(level, 20) / 20;
+    
+    return {
+        // 射速：从慢(12帧)到快(3帧)
+        fireRate: Math.max(3, Math.floor(12 - progress * 9)),
+        
+        // 子弹数量：从1发到5发散射
+        bulletCount: Math.min(5, 1 + Math.floor(progress * 4)),
+        
+        // 子弹速度：从慢到快
+        bulletSpeed: 8 + progress * 8,
+        
+        // 敌人生成间隔：从稀疏(100帧)到密集(15帧)
+        spawnRate: Math.max(15, Math.floor(100 - progress * 85)),
+        
+        // 敌人速度加成
+        enemySpeedBonus: 1 + progress * 2,
+        
+        // 敌人血量加成
+        enemyHpBonus: 1 + progress * 2,
+        
+        // 敌弹速度
+        enemyBulletSpeed: 4 + progress * 6,
+        
+        // 最大同屏敌人数量
+        maxEnemies: Math.min(30, 3 + Math.floor(progress * 27))
+    };
+}
 
 // 游戏状态
 let game = {
@@ -533,32 +596,74 @@ let game = {
     },
     
     spawnEnemy() {
-        const rate = Math.max(20, 60 - this.wave * 2);
-        if (this.frameCount % rate === 0) {
+        const params = getGameParams(this.playerLevel);
+        
+        // 控制同屏敌人数量
+        if (this.enemies.length >= params.maxEnemies) return;
+        
+        if (this.frameCount % params.spawnRate === 0) {
             const x = Math.random() * (canvas.width - 100) + 50;
             const rand = Math.random();
             let type = 'basic';
-            if (rand > 0.7) type = 'shooter';
-            if (rand > 0.9) type = 'tank';
-            if (this.wave % 5 === 0 && this.frameCount % 300 === 0) type = 'boss';
-            this.enemies.push(new Enemy(x, -50, type));
+            
+            // 随等级增加敌人类型多样性
+            if (this.playerLevel >= 3 && rand > 0.6) type = 'shooter';
+            if (this.playerLevel >= 5 && rand > 0.8) type = 'tank';
+            if (this.playerLevel >= 8 && rand > 0.9) type = 'fast';
+            if (this.playerLevel % 5 === 0 && this.frameCount % 300 === 0) type = 'boss';
+            
+            this.enemies.push(new Enemy(x, -50, type, params));
         }
     },
     
     playerShoot() {
-        if (this.frameCount % CONFIG.playerFireRate === 0) {
-            this.playerBullets.push({
-                x: this.player.x - 15, y: this.player.y - 10,
-                vx: 0, vy: -12,
-                radius: 5,
-                color: CONFIG.colors.playerBullet
-            });
-            this.playerBullets.push({
-                x: this.player.x + 15, y: this.player.y - 10,
-                vx: 0, vy: -12,
-                radius: 5,
-                color: CONFIG.colors.playerBullet
-            });
+        const params = getGameParams(this.playerLevel);
+        
+        if (this.frameCount % params.fireRate === 0) {
+            const bulletCount = params.bulletCount;
+            const speed = params.bulletSpeed;
+            
+            // 根据子弹数量决定发射模式
+            if (bulletCount === 1) {
+                // 单发
+                this.playerBullets.push({
+                    x: this.player.x, y: this.player.y - 10,
+                    vx: 0, vy: -speed,
+                    radius: 5,
+                    color: CONFIG.colors.playerBullet
+                });
+            } else if (bulletCount === 2) {
+                // 双发
+                this.playerBullets.push({
+                    x: this.player.x - 15, y: this.player.y - 10,
+                    vx: 0, vy: -speed,
+                    radius: 5,
+                    color: CONFIG.colors.playerBullet
+                });
+                this.playerBullets.push({
+                    x: this.player.x + 15, y: this.player.y - 10,
+                    vx: 0, vy: -speed,
+                    radius: 5,
+                    color: CONFIG.colors.playerBullet
+                });
+            } else {
+                // 散射模式 (3-5发)
+                const spreadAngle = Math.PI / 8; // 22.5度总散布
+                const startAngle = -spreadAngle / 2;
+                const angleStep = spreadAngle / (bulletCount - 1);
+                
+                for (let i = 0; i < bulletCount; i++) {
+                    const angle = startAngle + angleStep * i - Math.PI / 2;
+                    this.playerBullets.push({
+                        x: this.player.x + Math.cos(angle) * 10,
+                        y: this.player.y + Math.sin(angle) * 10,
+                        vx: Math.cos(angle) * speed,
+                        vy: Math.sin(angle) * speed,
+                        radius: 5,
+                        color: CONFIG.colors.playerBullet
+                    });
+                }
+            }
             playShootSound();
         }
     },
@@ -581,6 +686,8 @@ let game = {
         if (this.state !== 'PLAY') return;
         
         this.frameCount++;
+        const params = getGameParams(this.playerLevel);
+        
         this.player.update(this.input.x, this.input.y);
         this.playerShoot();
         this.spawnEnemy();
@@ -588,7 +695,7 @@ let game = {
         // 更新敌人
         for (let i = this.enemies.length - 1; i >= 0; i--) {
             const e = this.enemies[i];
-            const newBullets = e.update(this.wave);
+            const newBullets = e.update(this.playerLevel);
             this.enemyBullets.push(...newBullets);
             
             if (!e.active) {
@@ -607,14 +714,16 @@ let game = {
                     this.playerBullets.splice(j, 1);
                     
                     if (e.hp <= 0) {
-                        this.score += (e.type === 'boss' ? 500 : 100);
+                        const points = e.type === 'boss' ? 500 : e.type === 'tank' ? 200 : e.type === 'shooter' ? 150 : 100;
+                        this.score += points;
                         this.createExplosion(e.x, e.y, 15, CONFIG.colors.enemy);
                         this.enemies.splice(i, 1);
                         playExplosionSound();
                         
-                        if (this.score > this.wave * 1000) {
-                            this.wave++;
-                            this.playerLevel++;
+                        // 每500分升一级
+                        const newLevel = Math.floor(this.score / 500) + 1;
+                        if (newLevel > this.playerLevel) {
+                            this.playerLevel = newLevel;
                             playLevelUpSound();
                         }
                         this.updateUI();
@@ -729,8 +838,12 @@ let game = {
     
     updateUI() {
         document.getElementById('score').textContent = '🧧 分数: ' + this.score;
-        document.getElementById('wave').textContent = '🌊 波次: ' + this.wave;
         document.getElementById('level').textContent = '⭐ 等级: ' + this.playerLevel;
+        
+        // 更新升级进度条 (每500分一级)
+        const progress = (this.score % 500) / 500 * 100;
+        document.getElementById('level-progress').style.width = progress + '%';
+        
         const hpPercent = Math.max(0, this.player.health / CONFIG.playerHealth * 100);
         document.getElementById('health-fill').style.width = hpPercent + '%';
     },
@@ -794,39 +907,47 @@ class Player {
 
 // 敌人类
 class Enemy {
-    constructor(x, y, type) {
+    constructor(x, y, type, params) {
         this.x = x;
         this.y = y;
         this.type = type;
         this.active = true;
         this.timer = 0;
+        this.params = params;
         
         switch(type) {
             case 'basic':
                 this.radius = 18;
-                this.hp = 3;
-                this.speed = 2;
+                this.hp = Math.floor(3 * params.enemyHpBonus);
+                this.speed = 2 * params.enemySpeedBonus;
                 this.score = 100;
                 this.color = '#ff6b6b';
                 break;
             case 'shooter':
                 this.radius = 16;
-                this.hp = 5;
-                this.speed = 1;
+                this.hp = Math.floor(5 * params.enemyHpBonus);
+                this.speed = 1 * params.enemySpeedBonus;
                 this.score = 200;
                 this.color = '#ff8c00';
                 break;
             case 'tank':
                 this.radius = 25;
-                this.hp = 12;
-                this.speed = 0.6;
+                this.hp = Math.floor(12 * params.enemyHpBonus);
+                this.speed = 0.6 * params.enemySpeedBonus;
                 this.score = 400;
                 this.color = '#e74c3c';
                 break;
+            case 'fast':
+                this.radius = 12;
+                this.hp = Math.floor(2 * params.enemyHpBonus);
+                this.speed = 4 * params.enemySpeedBonus;
+                this.score = 150;
+                this.color = '#ff00ff';
+                break;
             case 'boss':
                 this.radius = 40;
-                this.hp = 50;
-                this.speed = 0.4;
+                this.hp = Math.floor(50 * params.enemyHpBonus);
+                this.speed = 0.4 * params.enemySpeedBonus;
                 this.score = 1000;
                 this.color = '#c0392b';
                 break;
@@ -834,31 +955,38 @@ class Enemy {
         this.maxHp = this.hp;
     }
     
-    update(wave) {
+    update(level) {
         this.timer++;
+        
+        // 根据等级增加弹幕密度
+        const shootInterval = Math.max(20, 80 - level * 3);
         
         switch(this.type) {
             case 'basic':
-                this.y += this.speed + wave * 0.1;
+                this.y += this.speed;
                 this.x += Math.sin(this.timer * 0.03) * 2;
                 break;
+            case 'fast':
+                this.y += this.speed;
+                this.x += Math.cos(this.timer * 0.05) * 3;
+                break;
             case 'shooter':
-                this.y += this.speed + wave * 0.05;
-                if (this.timer % 80 === 0) {
-                    return this.shootFan(wave);
+                this.y += this.speed;
+                if (this.timer % shootInterval === 0) {
+                    return this.shootFan(level);
                 }
                 break;
             case 'tank':
                 this.y += this.speed;
-                if (this.timer % 100 === 0) {
-                    return this.shootAim(wave);
+                if (this.timer % (shootInterval + 20) === 0) {
+                    return this.shootAim(level);
                 }
                 break;
             case 'boss':
                 this.x = canvas.width/2 + Math.sin(this.timer * 0.015) * 150;
                 if (this.y < 120) this.y += this.speed;
-                if (this.timer % 30 === 0) {
-                    return this.shootBoss(wave);
+                if (this.timer % Math.max(10, 30 - level) === 0) {
+                    return this.shootBoss(level);
                 }
                 break;
         }
@@ -867,15 +995,18 @@ class Enemy {
         return [];
     }
     
-    shootFan(wave) {
+    shootFan(level) {
         const bullets = [];
-        const count = 3 + Math.floor(wave / 2);
+        // 等级越高，扇形子弹越多
+        const count = Math.min(8, 3 + Math.floor(level / 2));
+        const speed = this.params.enemyBulletSpeed;
+        
         for (let i = 0; i < count; i++) {
-            const angle = Math.PI / 2 + (i - count/2) * 0.3;
+            const angle = Math.PI / 2 + (i - count/2) * 0.25;
             bullets.push({
                 x: this.x, y: this.y,
-                vx: Math.cos(angle) * 4,
-                vy: Math.sin(angle) * 4,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed,
                 radius: 6,
                 color: CONFIG.colors.enemyBullet
             });
@@ -883,33 +1014,40 @@ class Enemy {
         return bullets;
     }
     
-    shootAim(wave) {
+    shootAim(level) {
+        const speed = this.params.enemyBulletSpeed * 1.2;
         return [{
             x: this.x, y: this.y,
-            vx: 0, vy: 5 + wave * 0.2,
+            vx: 0, vy: speed,
             radius: 8,
             color: CONFIG.colors.enemyBullet
         }];
     }
     
-    shootBoss(wave) {
+    shootBoss(level) {
         const bullets = [];
+        const speed = this.params.enemyBulletSpeed;
+        
+        // 螺旋弹幕
         const angle = this.timer * 0.12;
-        for (let i = 0; i < 4; i++) {
-            const a = angle + i * Math.PI / 2;
+        const spiralCount = Math.min(8, 4 + Math.floor(level / 3));
+        for (let i = 0; i < spiralCount; i++) {
+            const a = angle + i * (Math.PI * 2 / spiralCount);
             bullets.push({
                 x: this.x, y: this.y,
-                vx: Math.cos(a) * 3,
-                vy: Math.sin(a) * 3,
+                vx: Math.cos(a) * speed,
+                vy: Math.sin(a) * speed,
                 radius: 8,
                 color: '#ff3838'
             });
         }
-        if (this.timer % 60 === 0) {
-            for (let i = -2; i <= 2; i++) {
+        
+        // 额外追踪弹
+        if (level >= 5 && this.timer % 40 === 0) {
+            for (let i = -3; i <= 3; i++) {
                 bullets.push({
                     x: this.x, y: this.y,
-                    vx: i * 0.5, vy: 5,
+                    vx: i * 0.8, vy: speed * 1.3,
                     radius: 6,
                     color: CONFIG.colors.enemyBullet
                 });
