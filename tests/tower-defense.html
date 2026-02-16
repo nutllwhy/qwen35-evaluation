@@ -949,34 +949,151 @@ class Enemy {
     draw() {
         const hpPercent = this.hp / this.maxHp;
         ctx.fillStyle = '#300';
-        ctx.fillRect(this.x - 15, this.y - this.radius - 10, 30, 5);
+        ctx.fillRect(this.x - 20, this.y - this.radius - 15, 40, 6);
         ctx.fillStyle = hpPercent > 0.5 ? '#0f0' : '#f00';
-        ctx.fillRect(this.x - 15, this.y - this.radius - 10, 30 * hpPercent, 5);
+        ctx.fillRect(this.x - 20, this.y - this.radius - 15, 40 * hpPercent, 6);
         
-        ctx.fillStyle = this.slowTimer > 0 ? '#88f' : this.color;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.save();
         
-        // 年兽表情
-        ctx.fillStyle = '#fff';
-        ctx.beginPath();
-        ctx.arc(this.x - 5, this.y - 3, 3, 0, Math.PI * 2);
-        ctx.arc(this.x + 5, this.y - 3, 3, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = '#fff';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y + 3, 6, 0, Math.PI);
-        ctx.stroke();
-        
+        // 冰冻效果
         if (this.slowTimer > 0) {
-            ctx.strokeStyle = '#88f';
-            ctx.lineWidth = 2;
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = '#88f';
+        }
+        
+        // 身体颜色 - 年兽红色系
+        const bodyColor = this.slowTimer > 0 ? '#88f' : this.color;
+        const darkColor = this.slowTimer > 0 ? '#447' : '#8b0000';
+        
+        // 年兽身体（椭圆形）
+        ctx.fillStyle = bodyColor;
+        ctx.beginPath();
+        ctx.ellipse(this.x, this.y, this.radius * 1.2, this.radius * 0.9, 0, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // 身体纹理（条纹）
+        ctx.strokeStyle = darkColor;
+        ctx.lineWidth = 2;
+        for (let i = -1; i <= 1; i++) {
             ctx.beginPath();
-            ctx.arc(this.x, this.y, this.radius + 5, 0, Math.PI * 2);
+            ctx.moveTo(this.x + i * 8, this.y - this.radius * 0.6);
+            ctx.lineTo(this.x + i * 8, this.y + this.radius * 0.6);
             ctx.stroke();
         }
+        
+        // 年兽头部（圆形）
+        ctx.fillStyle = bodyColor;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y - this.radius * 0.3, this.radius * 0.7, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // 角 - 年兽特征！
+        ctx.fillStyle = '#ffd700';
+        ctx.beginPath();
+        ctx.moveTo(this.x - 8, this.y - this.radius * 0.8);
+        ctx.lineTo(this.x - 12, this.y - this.radius * 1.4);
+        ctx.lineTo(this.x - 4, this.y - this.radius * 0.9);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = '#8b4513';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        
+        ctx.beginPath();
+        ctx.moveTo(this.x + 8, this.y - this.radius * 0.8);
+        ctx.lineTo(this.x + 12, this.y - this.radius * 1.4);
+        ctx.lineTo(this.x + 4, this.y - this.radius * 0.9);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        
+        // 眼睛 - 凶猛的三角眼
+        ctx.fillStyle = '#ffff00';
+        ctx.beginPath();
+        ctx.moveTo(this.x - 8, this.y - this.radius * 0.5);
+        ctx.lineTo(this.x - 4, this.y - this.radius * 0.3);
+        ctx.lineTo(this.x - 8, this.y - this.radius * 0.3);
+        ctx.closePath();
+        ctx.fill();
+        
+        ctx.beginPath();
+        ctx.moveTo(this.x + 8, this.y - this.radius * 0.5);
+        ctx.lineTo(this.x + 4, this.y - this.radius * 0.3);
+        ctx.lineTo(this.x + 8, this.y - this.radius * 0.3);
+        ctx.closePath();
+        ctx.fill();
+        
+        // 瞳孔
+        ctx.fillStyle = '#000';
+        ctx.beginPath();
+        ctx.arc(this.x - 6, this.y - this.radius * 0.4, 2, 0, Math.PI * 2);
+        ctx.arc(this.x + 6, this.y - this.radius * 0.4, 2, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // 鼻子
+        ctx.fillStyle = '#8b0000';
+        ctx.beginPath();
+        ctx.ellipse(this.x, this.y - this.radius * 0.1, 6, 4, 0, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // 嘴巴 - 锋利的牙齿
+        ctx.fillStyle = '#fff';
+        for (let i = -2; i <= 2; i++) {
+            ctx.beginPath();
+            ctx.moveTo(this.x + i * 5, this.y + this.radius * 0.1);
+            ctx.lineTo(this.x + i * 5 - 2, this.y + this.radius * 0.25);
+            ctx.lineTo(this.x + i * 5 + 2, this.y + this.radius * 0.25);
+            ctx.closePath();
+            ctx.fill();
+        }
+        
+        // 胡须
+        ctx.strokeStyle = '#ffd700';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(this.x - 10, this.y - this.radius * 0.1);
+        ctx.quadraticCurveTo(this.x - 18, this.y, this.x - 15, this.y + 8);
+        ctx.moveTo(this.x + 10, this.y - this.radius * 0.1);
+        ctx.quadraticCurveTo(this.x + 18, this.y, this.x + 15, this.y + 8);
+        ctx.stroke();
+        
+        // 四条腿
+        ctx.fillStyle = darkColor;
+        const legOffset = this.radius * 0.8;
+        const legY = this.y + this.radius * 0.5;
+        // 前左腿
+        ctx.fillRect(this.x - legOffset, legY, 6, 12);
+        // 前右腿
+        ctx.fillRect(this.x + legOffset - 6, legY, 6, 12);
+        // 后左腿
+        ctx.fillRect(this.x - legOffset * 0.5, legY + 2, 5, 10);
+        // 后右腿
+        ctx.fillRect(this.x + legOffset * 0.5 - 5, legY + 2, 5, 10);
+        
+        // 爪子（金色）
+        ctx.fillStyle = '#ffd700';
+        ctx.fillRect(this.x - legOffset - 1, legY + 10, 8, 4);
+        ctx.fillRect(this.x + legOffset - 7, legY + 10, 8, 4);
+        
+        // 尾巴
+        ctx.strokeStyle = bodyColor;
+        ctx.lineWidth = 6;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(this.x + this.radius, this.y);
+        ctx.quadraticCurveTo(this.x + this.radius + 15, this.y + 5, this.x + this.radius + 10, this.y + 15);
+        ctx.stroke();
+        
+        // 尾巴尖（火焰状）
+        ctx.fillStyle = '#ff6600';
+        ctx.beginPath();
+        ctx.moveTo(this.x + this.radius + 10, this.y + 15);
+        ctx.lineTo(this.x + this.radius + 6, this.y + 22);
+        ctx.lineTo(this.x + this.radius + 14, this.y + 22);
+        ctx.closePath();
+        ctx.fill();
+        
+        ctx.restore();
     }
 }
 
