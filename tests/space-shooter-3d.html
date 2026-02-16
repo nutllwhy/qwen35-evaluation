@@ -12,6 +12,15 @@
         #score { top: 20px; left: 20px; }
         #wave { top: 20px; left: 260px; color: #ff0; border-color: #ff0; text-shadow: 0 0 10px #ff0; }
         #health { top: 20px; right: 20px; width: 180px; }
+        #version { 
+            position: absolute; 
+            bottom: 10px; 
+            right: 20px; 
+            color: #0ff; 
+            font-size: 12px; 
+            opacity: 0.7;
+            text-shadow: 0 0 5px #0ff;
+        }
         .health-bar { width: 100%; height: 18px; background: rgba(0,0,0,0.5); border: 2px solid #0ff; border-radius: 9px; overflow: hidden; margin-top: 8px; }
         .health-fill { height: 100%; background: linear-gradient(90deg, #f00, #0f0); width: 100%; transition: width 0.3s; }
         #menu { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(ellipse at center, rgba(0,50,100,0.8) 0%, rgba(0,0,0,0.95) 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: auto; }
@@ -33,6 +42,7 @@
                 <div class="health-fill" id="health-fill"></div>
             </div>
         </div>
+        <div id="version">v1.5.0 - BOSS Update</div>
     </div>
     <div id="menu">
         <h1>STAR FIGHTER</h1>
