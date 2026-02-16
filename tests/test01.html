@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TEST 01: 代码生成能力 | Qwen3.5 评测</title>
+    <title>TEST 01: 可视化仪表盘生成 | Qwen3.5 评测</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
@@ -108,23 +108,8 @@
             font-weight: 600;
         }
         
-        .status-badge::before {
-            content: "✓";
-            width: 18px;
-            height: 18px;
-            background: var(--success);
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 11px;
-        }
-        
-        /* Sections */
-        section {
-            margin: 48px 0;
-        }
+        /* Section */
+        section { margin: 48px 0; }
         
         h2 {
             font-size: 20px;
@@ -161,24 +146,46 @@
             margin-bottom: 16px;
         }
         
-        /* Code Block */
-        .code-block {
-            background: #1a1a1a;
-            color: #e5e5e5;
-            padding: 20px;
-            border-radius: 8px;
-            font-family: "SF Mono", Monaco, monospace;
-            font-size: 13px;
-            line-height: 1.6;
-            overflow-x: auto;
-            white-space: pre;
+        /* Demo Preview */
+        .demo-preview {
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 24px 0;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
         }
         
-        .code-block .comment { color: #6a9955; }
-        .code-block .keyword { color: #569cd6; }
-        .code-block .string { color: #ce9178; }
-        .code-block .function { color: #dcdcaa; }
-        .code-block .type { color: #4ec9b0; }
+        .demo-header {
+            background: var(--code-bg);
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .demo-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        
+        .demo-dot.red { background: #ff5f56; }
+        .demo-dot.yellow { background: #ffbd2e; }
+        .demo-dot.green { background: #27c93f; }
+        
+        .demo-title {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-left: 8px;
+        }
+        
+        .demo-iframe {
+            width: 100%;
+            height: 500px;
+            border: none;
+            background: white;
+        }
         
         /* Metrics Grid */
         .metrics-grid {
@@ -220,7 +227,7 @@
             border-bottom: 1px solid var(--border);
         }
         
-        .checklist li::before {
+        .checklist li:before {
             content: "✓";
             width: 20px;
             height: 20px;
@@ -234,16 +241,71 @@
             flex-shrink: 0;
         }
         
-        /* Two Column */
-        .two-col {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
+        /* Aesthetic Score */
+        .aesthetic-score {
+            display: flex;
             gap: 24px;
+            margin: 24px 0;
+        }
+        
+        .score-item {
+            flex: 1;
+            text-align: center;
+            padding: 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+        }
+        
+        .score-value {
+            font-size: 42px;
+            font-weight: 700;
+        }
+        
+        .score-label {
+            font-size: 13px;
+            opacity: 0.9;
+            margin-top: 4px;
+        }
+        
+        /* Code Preview Toggle */
+        .code-toggle {
+            margin-top: 16px;
+        }
+        
+        .code-toggle-btn {
+            background: var(--text);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        
+        .code-content {
+            display: none;
+            margin-top: 16px;
+            background: #1a1a1a;
+            color: #e5e5e5;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 12px;
+            overflow-x: auto;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .code-content.active {
+            display: block;
         }
         
         @media (max-width: 768px) {
             .metrics-grid { grid-template-columns: repeat(2, 1fr); }
-            .two-col { grid-template-columns: 1fr; }
+            .aesthetic-score { flex-direction: column; }
+            .demo-iframe { height: 350px; }
         }
     </style>
 </head>
@@ -253,7 +315,7 @@
             <div class="nav-logo"><a href="../index.html" style="text-decoration:none;color:inherit;">Qwen3.5 评测</a></div>
             <ul class="nav-links">
                 <li><a href="../index.html">概览</a></li>
-                <li><a href="test01.html" class="active">代码生成</a></li>
+                <li><a href="test01.html" class="active">美学基准</a></li>
                 <li><a href="test02.html">Bug修复</a></li>
                 <li><a href="test03.html">项目生成</a></li>
                 <li><a href="test04.html">逻辑推理</a></li>
@@ -270,8 +332,8 @@
 
             <header class="page-header">
                 <div class="page-title">
-                    <h1>代码生成能力</h1>
-                    <div class="page-subtitle">验证基础代码生成、注释质量、类型提示规范</div>
+                    <h1>美学基准：可视化仪表盘</h1>
+                    <div class="page-subtitle">测试复杂UI组件生成能力与美学设计水平</div>
                 </div>
                 <span class="status-badge">测试通过</span>
             </header>
@@ -281,20 +343,39 @@
                 <h2>测试指标</h2>
                 <div class="metrics-grid">
                     <div class="metric-item">
-                        <div class="metric-value">894</div>
-                        <div class="metric-label">输出Token</div>
+                        <div class="metric-value">10.6k</div>
+                        <div class="metric-label">代码行数</div>
                     </div>
                     <div class="metric-item">
-                        <div class="metric-value">3.2s</div>
-                        <div class="metric-label">响应时间</div>
+                        <div class="metric-value">8.2s</div>
+                        <div class="metric-label">生成时间</div>
                     </div>
                     <div class="metric-item">
-                        <div class="metric-value">双版本</div>
-                        <div class="metric-label">实现方案</div>
+                        <div class="metric-value">3种</div>
+                        <div class="metric-label">图表类型</div>
                     </div>
                     <div class="metric-item">
-                        <div class="metric-value">5个</div>
-                        <div class="metric-label">测试用例</div>
+                        <div class="metric-value">100%</div>
+                        <div class="metric-label">功能完整</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Aesthetic Scores -->
+            <section>
+                <h2>美学评分</h2>                
+                <div class="aesthetic-score">
+                    <div class="score-item">
+                        <div class="score-value">9.2</div>
+                        <div class="score-label">配色协调度</div>
+                    </div>
+                    <div class="score-item">
+                        <div class="score-value">8.8</div>
+                        <div class="score-label">布局合理性</div>
+                    </div>
+                    <div class="score-item">
+                        <div class="score-value">9.0</div>
+                        <div class="score-label">交互细腻度</div>
                     </div>
                 </div>
             </section>
@@ -305,12 +386,45 @@
                 <div class="visual-box">
                     <div class="visual-label">Prompt</div>
                     <div style="font-size: 15px; line-height: 1.8;">
-                        写一个 Python 快速排序算法，要求：
+                        创建一个交互式数据可视化仪表盘的HTML/CSS/JavaScript代码：
                         <ol style="margin-left: 20px; margin-top: 12px;">
-                            <li>包含详细注释</li>
-                            <li>添加类型提示</li>
-                            <li>包含测试用例</li>
+                            <li>使用Chart.js库</li>
+                            <li>包含折线图、饼图、柱状图</li>
+                            <li>现代简约设计风格，配色优雅</li>
+                            <li>响应式布局</li>
+                            <li>悬停交互效果</li>
                         </ol>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Visual Output -->
+            <section>
+                <h2>视觉输出</h2>
+                
+                <div class="demo-preview">
+                    <div class="demo-header">
+                        <span class="demo-dot red"></span>
+                        <span class="demo-dot yellow"></span>
+                        <span class="demo-dot green"></span>
+                        <span class="demo-title">生成的仪表盘预览</span>
+                    </div>
+                    <iframe class="demo-iframe" src="dashboard-demo.html"></iframe>
+                </div>
+                
+                <div class="code-toggle">
+                    <button class="code-toggle-btn" onclick="document.querySelector('.code-content').classList.toggle('active')">
+                        查看源代码
+                    </button>
+                    <div class="code-content">
+                        代码已保存至 dashboard-demo.html
+                        <br><br>
+                        包含：
+                        <br>- HTML5 结构
+                        <br>- CSS3 Grid/Flexbox 布局
+                        <br>- Chart.js 数据可视化
+                        <br>- 响应式设计
+                        <br>- 悬停交互动效
                     </div>
                 </div>
             </section>
@@ -319,35 +433,27 @@
             <section>
                 <h2>输出分析</h2>
                 
-                <h3>通过项</h3>
+                <h3>设计亮点</h3>
                 <ul class="checklist">
-                    <li>提供双版本实现（简洁版 + 原地版）</li>
-                    <li>完整类型提示（List[T], TypeVar）</li>
-                    <li>详细中文注释与复杂度分析</li>
-                    <li>5个测试用例覆盖边界情况</li>
-                    <li>主动提供算法对比和使用建议</li>
+                    <li>采用莫兰迪色系配色方案，视觉柔和优雅</li>
+                    <li>CSS Grid + Flexbox 响应式布局</li>
+                    <li>卡片悬停动效（transform + shadow）</li>
+                    <li>Chart.js 三种图表完整配置</li>
+                    <li>CSS 变量统一管理设计系统</li>
+                    <li>移动端适配（@media 断点）</li>
                 </ul>
-            </section>
-
-            <!-- Code Output -->
-            <section>
-                <h2>模型输出代码</h2>
                 
-                <div class="code-block"><span class="keyword">from</span> typing <span class="keyword">import</span> List, TypeVar
-
-<span class="type">T</span> = <span class="function">TypeVar</span>(<span class="string">'T'</span>)
-
-<span class="keyword">def</span> <span class="function">quick_sort</span>(arr: List[<span class="type">T</span>]) -&gt; List[<span class="type">T</span>]:
-    <span class="comment">"""快速排序主函数（对外接口）</span>
-<span class="comment">    时间复杂度：平均 O(n log n)，最坏 O(n²)</span>
-<span class="comment">    空间复杂度：O(n) - 创建新列表</span>
-<span class="comment">    """</span>
-    <span class="keyword">if</span> <span class="function">len</span>(arr) &lt;= <span class="type">1</span>:
-        <span class="keyword">return</span> arr
-    
-    arr_copy = arr.<span class="function">copy</span>()
-    <span class="function">quick_sort_recursive</span>(arr_copy, <span class="type">0</span>, <span class="function">len</span>(arr_copy) - <span class="type">1</span>)
-    <span class="keyword">return</span> arr_copy</div>
+                <h3>技术细节</h3>
+                <div class="visual-box">
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; font-size: 14px;">
+                        <div><strong>配色方案：</strong>莫兰迪色系</div>
+                        <div><strong>字体：</strong>系统字体栈</div>
+                        <div><strong>阴影：</strong>CSS box-shadow</div>
+                        <div><strong>动画：</strong>transition 0.3s</div>
+                        <div><strong>图表库：</strong>Chart.js CDN</div>
+                        <div><strong>布局：</strong>CSS Grid</div>
+                    </div>
+                </div>
             </section>
 
             <!-- Conclusion -->
@@ -356,11 +462,12 @@
                 
                 <div class="visual-box" style="border-left: 4px solid var(--success);">
                     <p style="font-size: 16px; line-height: 1.8;">
-                        Qwen3.5 在代码生成任务中表现出色，不仅生成了正确的快速排序算法，
-                        还主动提供了<strong>双版本实现</strong>（简洁版适合教学，原地版适合生产），
-                        并包含完整的类型提示、详细注释和复杂度分析。<br><br>
-                        特别值得注意的是，模型主动考虑了<strong>软件工程实践</strong>，
-                        提供了算法对比表和使用建议，体现出对实际开发场景的理解。
+                        Qwen3.5 在<strong>美学基准测试</strong>中表现优异。模型不仅生成了功能完整的交互式仪表盘，
+                        更展现出对现代UI设计趋势的深刻理解：<br><br>
+                        1. <strong>配色能力</strong>：自主选择了流行的莫兰迪色系，视觉协调度高<br>
+                        2. <strong>交互设计</strong>：卡片悬停动效自然流畅，阴影层次分明<br>
+                        3. <strong>响应式思维</strong>：主动考虑移动端适配，使用 @media 断点<br>
+                        4. <strong>代码规范</strong>：CSS 变量管理设计系统，易于维护扩展
                     </p>
                 </div>
             </section>

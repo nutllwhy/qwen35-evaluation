@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>现代交互式数据仪表盘</title>
+    <!-- 引入 Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --text-primary: #2c3e50;
+            --text-secondary: #7f8c8d;
+            --shadow-light: 0 4px 6px rgba(0, 0, 0, 0.05);
+            --shadow-hover: 0 10px 20px rgba(0, 0, 0, 0.1);
+            --accent-color: #3498db;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            padding: 2rem;
+            min-height: 100vh;
+        }
+
+        /* 头部样式 */
+        header {
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        header .date-display {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            background: #eef2f5;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+        }
+
+        /* 网格布局 */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr); /* 默认 3 列 */
+            gap: 20px;
+            grid-auto-rows: minmax(300px, auto);
+        }
+
+        /* 响应式调整 */
+        @media (max-width: 1024px) {
+            .dashboard-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* 卡片容器 */
+        .card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow-light);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 悬停交互效果 */
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .card-icon {
+            width: 32px;
+            height: 32px;
+            background: #f0f4f8;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent-color);
+            font-size: 1.2rem;
+        }
+
+        /* 图表容器 */
+        .chart-container {
+            position: relative;
+            height: 240px;
+            width: 100%;
+        }
+
+        /* 特定卡片大小调整 */
+        .card.large {
+            grid-column: span 2; /* 占据两列 */
+        }
+        
+        @media (max-width: 1024px) {
+            .card.large {
+                grid-column: span 2;
+            }
+        }
+        @media (max-width: 768px) {
+            .card.large {
+                grid-column: span 1;
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Analytics Dashboard</h1>
+        <div class="date-display" id="currentDate">2023.10.27</div>
+    </header>
+
+    <div class="dashboard-grid">
+        <!-- 卡片 1: 柱状图 (占据 2 列宽度) -->
+        <div class="card large">
+            <div class="card-header">
+                <div class="card-title">月度营收趋势</div>
+                <div class="card-icon">📊</div>
+            </div>
+            <div class="chart-container">
+                <canvas id="barChart"></canvas>
+            </div>
+        </div>
+
+        <!-- 卡片 2: 饼图 -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">用户来源分布</div>
+                <div class="card-icon">🍩</div>
+            </div>
+            <div class="chart-container">
+                <canvas id="pieChart"></canvas>
+            </div>
+        </div>
+
+        <!-- 卡片 3: 折线图 (占据 2 列宽度) -->
+        <div class="card large">
+            <div class="card-header">
+                <div class="card-title">网站流量分析</div>
+                <div class="card-icon">📈</div>
+            </div>
+            <div class="chart-container">
+                <canvas id="lineChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 设置当前日期
+        document.getElementById('currentDate').innerText = new Date().toLocaleDateString('zh-CN');
+
+        // 全局字体设置
+        Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto';
+        Chart.defaults.color = '#7f8c8d';
+
+        // 1. 柱状图配置
+        const ctxBar = document.getElementById('barChart').getContext('2d');
+        new Chart(ctxBar, {
+            type: 'bar',
+            data: {
+                labels: ['1 月', '2 月', '3 月', '4 月', '5 月', '6 月'],
+                datasets: [{
+                    label: '销售额 (万元)',
+                    data: [12, 19, 15, 25, 22, 30],
+                    backgroundColor: 'rgba(52, 152, 219, 0.7)',
+                    borderColor: 'rgba(52, 152, 219, 1)',
+                    borderWidth: 1,
+                    borderRadius: 4,
+                    hoverBackgroundColor: 'rgba(52, 152, 219, 0.9)'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(44, 62, 80, 0.9)',
+                        padding: 12,
+                        cornerRadius: 8,
+                        displayColors: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { borderDash: [2, 4], color: '#f0f0f0' },
+                        ticks: { padding: 10 }
+                    },
+                    x: {
+                        grid: { display: false }
+                    }
+                },
+                animation: {
+                    duration: 2000,
+                    easing: 'easeOutQuart'
+                }
+            }
+        });
+
+        // 2. 饼图 (Doughnut) 配置
+        const ctxPie = document.getElementById('pieChart').getContext('2d');
+        new Chart(ctxPie, {
+            type: 'doughnut',
+            data: {
+                labels: ['直接访问', '社交媒体', '搜索引擎', '其他'],
+                datasets: [{
+                    data: [35, 45, 15, 5],
+                    backgroundColor: [
+                        '#3498db', // 蓝
+                        '#9b59b6', // 紫
+                        '#2ecc71', // 绿
+                        '#f1c40f'  // 黄
+                    ],
+                    borderWidth: 0,
+                    hoverOffset: 10
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '75%', // 中间空心大小
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { usePointStyle: true, padding: 20 }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(44, 62, 80, 0.9)',
+                        padding: 12,
+                        cornerRadius: 8
+                    }
+                },
+                animation: {
+                    animateScale: true,
+                    animateRotate: true
+                }
+            }
+        });
+
+        // 3. 折线图配置
+        const ctxLine = document.getElementById('lineChart').getContext('2d');
+        
+        // 创建渐变色
+        const gradient = ctxLine.createLinearGradient(0, 0, 0, 400);
+        gradient.addColorStop(0, 'rgba(46, 204, 113, 0.5)');
+        gradient.addColorStop(1, 'rgba(46, 204, 113, 0.0)');
+
+        new Chart(ctxLine, {
+            type: 'line',
+            data: {
+                labels: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
+                datasets: [{
+                    label: '访问量',
+                    data: [65, 59, 80, 81, 56, 95, 120],
+                    borderColor: '#2ecc71',
+                    backgroundColor: gradient,
+                    tension: 0.4, // 曲线平滑度
+                    fill: true,
+                    pointBackgroundColor: '#fff',
+                    pointBorderColor: '#2ecc71',
+                    pointBorderWidth: 2,
+                    pointRadius: 5,
+                    pointHoverRadius: 7
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        backgroundColor: 'rgba(44, 62, 80, 0.9)',
+                        titleColor: '#fff',
+                        bodyColor: '#fff',
+                        padding: 12,
+                        cornerRadius: 8,
+                        displayColors: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { borderDash: [2, 4], color: '#f0f0f0' },
+                        ticks: { padding: 10 }
+                    },
+                    x: {
+                        grid: { display: false }
+                    }
+                },
+                interaction: {
+                    mode: 'nearest',
+                    axis: 'x',
+                    intersect: false
+                }
+            }
+        });
+    </script>
+</body>
+</html>
