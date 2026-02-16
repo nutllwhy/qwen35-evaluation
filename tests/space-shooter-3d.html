@@ -36,13 +36,14 @@
     <div id="ui">
         <div class="hud" id="score">SCORE: 0</div>
         <div class="hud" id="wave">WAVE: 1</div>
+        <div class="hud" id="level" style="color: #0f0; border-color: #0f0; text-shadow: 0 0 10px #0f0; left: 440px;">LV: 1</div>
         <div class="hud" id="health">
             SHIELD
             <div class="health-bar">
                 <div class="health-fill" id="health-fill"></div>
             </div>
         </div>
-        <div id="version">v1.6.0 - Super BOSS</div>
+        <div id="version">v1.7.0 - Upgrade System</div>
     </div>
     <div id="menu">
         <h1>STAR FIGHTER</h1>
@@ -58,6 +59,7 @@ let enemies = [];
 let particles = [];
 let enemyBullets = [];
 let score = 0, wave = 1, health = 100;
+let playerLevel = 1; // 玩家等级
 let isPlaying = false;
 let keys = {};
 let lastShot = 0;
@@ -156,27 +158,155 @@ function createHealthBar(maxHp, color) {
     return { sprite, canvas, ctx, draw };
 }
 
-// 创建玩家飞船
-function createPlayerShip() {
+// 创建玩家飞船 - 带升级系统
+function createPlayerShip(level = 1) {
     const group = new THREE.Group();
-    const bodyGeo = new THREE.CylinderGeometry(0.3, 0.5, 2.5, 8);
+    
+    // 根据等级设置外观参数
+    const scale = 1 + (level - 1) * 0.3; // 每级增大30%
+    const colors = [
+        { body: 0x4488ff, wing: 0x3366cc, engine: 0x00aaff, cockpit: 0x00ffff }, // Lv1: 蓝色
+        { body: 0x44ff88, wing: 0x33cc66, engine: 0x00ffaa, cockpit: 0x00ffcc }, // Lv2: 绿色
+        { body: 0xff8844, wing: 0xcc6633, engine: 0xffaa00, cockpit: 0xffcc00 }, // Lv3: 橙色
+        { body: 0xff4488, wing: 0xcc3366, engine: 0xff00aa, cockpit: 0xff00cc }, // Lv4: 粉色
+        { body: 0xaa44ff, wing: 0x8833cc, engine: 0xaa00ff, cockpit: 0xcc00ff }, // Lv5: 紫色
+    ];
+    const color = colors[(level - 1) % colors.length];
+    
+    // 机身 - 随等级增大
+    const bodyGeo = new THREE.CylinderGeometry(0.3 * scale, 0.5 * scale, 2.5 * scale, 8);
     bodyGeo.rotateX(Math.PI / 2);
-    const bodyMat = new THREE.MeshStandardMaterial({ color: 0x4488ff, metalness: 0.8, roughness: 0.2 });
+    const bodyMat = new THREE.MeshStandardMaterial({ 
+        color: color.body, 
+        metalness: 0.8 - (level * 0.05), 
+        roughness: 0.2 - (level * 0.03),
+        emissive: color.body,
+        emissiveIntensity: (level - 1) * 0.1
+    });
     const body = new THREE.Mesh(bodyGeo, bodyMat);
     group.add(body);
-    const cockpitGeo = new THREE.SphereGeometry(0.35, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2);
-    const cockpitMat = new THREE.MeshPhysicalMaterial({ color: 0x00ffff, transmission: 0.9, transparent: true, opacity: 0.6 });
+    
+    // 驾驶舱 - 随等级增大并更华丽
+    const cockpitGeo = new THREE.SphereGeometry(0.35 * scale, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2);
+    const cockpitMat = new THREE.MeshPhysicalMaterial({ 
+        color: color.cockpit, 
+        transmission: 0.9, 
+        transparent: true, 
+        opacity: 0.6 + (level * 0.08),
+        emissive: color.cockpit,
+        emissiveIntensity: (level - 1) * 0.2
+    });
     const cockpit = new THREE.Mesh(cockpitGeo, cockpitMat);
-    cockpit.position.set(0, 0.4, 0.3);
+    cockpit.position.set(0, 0.4 * scale, 0.3 * scale);
     group.add(cockpit);
-    const wingGeo = new THREE.BoxGeometry(3, 0.1, 1.2);
-    const wingMat = new THREE.MeshStandardMaterial({ color: 0x3366cc, metalness: 0.8, roughness: 0.2 });
+    
+    // 机翼 - 随等级增大
+    const wingGeo = new THREE.BoxGeometry(3 * scale, 0.1 * scale, 1.2 * scale);
+    const wingMat = new THREE.MeshStandardMaterial({ 
+        color: color.wing, 
+        metalness: 0.8, 
+        roughness: 0.2,
+        emissive: color.wing,
+        emissiveIntensity: (level - 1) * 0.15
+    });
     const wing = new THREE.Mesh(wingGeo, wingMat);
-    wing.position.set(0, -0.1, 0.3);
+    wing.position.set(0, -0.1 * scale, 0.3 * scale);
     wing.rotation.x = 0.2;
     group.add(wing);
-    const tailGeo = new THREE.BoxGeometry(0.1, 0.8, 0.6);
+    
+    // 尾翼
+    const tailGeo = new THREE.BoxGeometry(0.1 * scale, 0.8 * scale, 0.6 * scale);
     const tail = new THREE.Mesh(tailGeo, wingMat);
+    tail.position.set(0, 0.4 * scale, 1 * scale);
+    tail.rotation.x = 0.3;
+    group.add(tail);
+    
+    // 引擎 - 随等级增加数量和大小
+    const engineGeo = new THREE.CylinderGeometry(0.2 * scale, 0.35 * scale, 0.8 * scale, 8);
+    engineGeo.rotateX(Math.PI / 2);
+    const engineMat = new THREE.MeshBasicMaterial({ 
+        color: color.engine, 
+        emissive: color.engine,
+        emissiveIntensity: 1 + (level - 1) * 0.5
+    });
+    
+    // 根据等级增加引擎数量
+    const enginePositions = [
+        [[-0.6 * scale, -0.1 * scale, 1.2 * scale], [0.6 * scale, -0.1 * scale, 1.2 * scale]], // Lv1: 2引擎
+        [[-0.8 * scale, -0.1 * scale, 1.2 * scale], [0.8 * scale, -0.1 * scale, 1.2 * scale], [-0.4 * scale, -0.15 * scale, 1.3 * scale], [0.4 * scale, -0.15 * scale, 1.3 * scale]], // Lv2: 4引擎
+        [[-1 * scale, -0.1 * scale, 1.2 * scale], [1 * scale, -0.1 * scale, 1.2 * scale], [-0.5 * scale, -0.15 * scale, 1.4 * scale], [0.5 * scale, -0.15 * scale, 1.4 * scale], [0, -0.2 * scale, 1.5 * scale]], // Lv3: 5引擎
+        [[-1.2 * scale, -0.1 * scale, 1.2 * scale], [1.2 * scale, -0.1 * scale, 1.2 * scale], [-0.6 * scale, -0.15 * scale, 1.4 * scale], [0.6 * scale, -0.15 * scale, 1.4 * scale], [-0.3 * scale, -0.2 * scale, 1.5 * scale], [0.3 * scale, -0.2 * scale, 1.5 * scale]], // Lv4: 6引擎
+        [[-1.2 * scale, -0.1 * scale, 1.2 * scale], [1.2 * scale, -0.1 * scale, 1.2 * scale], [-0.6 * scale, -0.15 * scale, 1.4 * scale], [0.6 * scale, -0.15 * scale, 1.4 * scale], [-0.3 * scale, -0.2 * scale, 1.5 * scale], [0.3 * scale, -0.2 * scale, 1.5 * scale], [0, -0.25 * scale, 1.6 * scale]], // Lv5: 7引擎
+    ];
+    const positions = enginePositions[Math.min(level - 1, 4)];
+    positions.forEach(pos => {
+        const engine = new THREE.Mesh(engineGeo, engineMat);
+        engine.position.set(...pos);
+        group.add(engine);
+    });
+    
+    // 高等级添加装饰翼
+    if (level >= 2) {
+        const decoWingGeo = new THREE.BoxGeometry(1.5 * scale, 0.05 * scale, 0.6 * scale);
+        const decoWingL = new THREE.Mesh(decoWingGeo, wingMat);
+        decoWingL.position.set(-1.8 * scale, 0.1 * scale, 0.5 * scale);
+        decoWingL.rotation.z = 0.4;
+        group.add(decoWingL);
+        
+        const decoWingR = new THREE.Mesh(decoWingGeo, wingMat);
+        decoWingR.position.set(1.8 * scale, 0.1 * scale, 0.5 * scale);
+        decoWingR.rotation.z = -0.4;
+        group.add(decoWingR);
+    }
+    
+    // Lv3+ 添加顶部天线/雷达
+    if (level >= 3) {
+        const antennaGeo = new THREE.CylinderGeometry(0.05 * scale, 0.05 * scale, 0.8 * scale, 6);
+        const antennaMat = new THREE.MeshStandardMaterial({ 
+            color: 0xffffff, 
+            emissive: 0xffffff,
+            emissiveIntensity: 0.5
+        });
+        const antenna = new THREE.Mesh(antennaGeo, antennaMat);
+        antenna.position.set(0, 0.8 * scale, 0);
+        group.add(antenna);
+        
+        const radarGeo = new THREE.SphereGeometry(0.15 * scale, 8, 8);
+        const radar = new THREE.Mesh(radarGeo, antennaMat);
+        radar.position.set(0, 1.2 * scale, 0);
+        group.add(radar);
+    }
+    
+    // Lv4+ 添加侧翼武器挂架
+    if (level >= 4) {
+        const weaponGeo = new THREE.CylinderGeometry(0.08 * scale, 0.1 * scale, 1.2 * scale, 6);
+        const weaponMat = new THREE.MeshStandardMaterial({ color: 0x444444 });
+        const weaponL = new THREE.Mesh(weaponGeo, weaponMat);
+        weaponL.position.set(-2.2 * scale, -0.2 * scale, 0.3 * scale);
+        weaponL.rotation.x = Math.PI / 2;
+        group.add(weaponL);
+        
+        const weaponR = new THREE.Mesh(weaponGeo, weaponMat);
+        weaponR.position.set(2.2 * scale, -0.2 * scale, 0.3 * scale);
+        weaponR.rotation.x = Math.PI / 2;
+        group.add(weaponR);
+    }
+    
+    // Lv5 添加光环装饰
+    if (level >= 5) {
+        const ringGeo = new THREE.TorusGeometry(1.5 * scale, 0.05 * scale, 8, 32);
+        const ringMat = new THREE.MeshBasicMaterial({ 
+            color: color.engine,
+            emissive: color.engine,
+            emissiveIntensity: 2
+        });
+        const ring = new THREE.Mesh(ringGeo, ringMat);
+        ring.position.set(0, 0.3 * scale, -0.5 * scale);
+        ring.rotation.x = Math.PI / 2;
+        group.add(ring);
+    }
+    
+    return group;
     tail.position.set(0, 0.4, 1);
     tail.rotation.x = 0.3;
     group.add(tail);
@@ -344,8 +474,8 @@ function createBoss() {
         group.add(armor);
     }
     
-    // 返回：HP从50增加到120，速度更慢（0.015）
-    return { group, hp: 120, maxHp: 120, speed: 0.015, color: '#f00', isBoss: true };
+    // 返回：适中的难度
+    return { group, hp: 80, maxHp: 80, speed: 0.025, color: '#f00', isBoss: true };
 }
 
 // 初始化
@@ -380,7 +510,7 @@ function init() {
     const stars = new THREE.Points(starGeo, starMat);
     scene.add(stars);
     
-    player = createPlayerShip();
+    player = createPlayerShip(playerLevel);
     player.position.set(0, 0, 5);
     scene.add(player);
     
@@ -710,6 +840,12 @@ function update() {
                     if (score > wave * 1000) {
                         wave++;
                         document.getElementById('wave').textContent = 'WAVE: ' + wave;
+                        
+                        // 每5波玩家升级
+                        if (wave % 5 === 1 && wave > 1) {
+                            playerLevel++;
+                            upgradePlayer();
+                        }
                     }
                 }
                 break;
@@ -762,6 +898,51 @@ function update() {
     requestAnimationFrame(update);
 }
 
+// 玩家升级
+function upgradePlayer() {
+    // 保存当前位置
+    const currentPos = player.position.clone();
+    
+    // 移除旧飞船
+    scene.remove(player);
+    
+    // 创建新等级飞船
+    player = createPlayerShip(playerLevel);
+    player.position.copy(currentPos);
+    scene.add(player);
+    
+    // 更新UI
+    document.getElementById('level').textContent = 'LV: ' + playerLevel;
+    
+    // 显示升级提示
+    showUpgradeMessage();
+    
+    // 升级奖励：恢复血量
+    health = Math.min(100, health + 30);
+    document.getElementById('health-fill').style.width = health + '%';
+}
+
+// 显示升级提示
+function showUpgradeMessage() {
+    const msg = document.createElement('div');
+    msg.style.cssText = `
+        position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);
+        color: #00ff00; font-size: 48px; font-weight: bold;
+        text-shadow: 0 0 20px #00ff00, 0 0 40px #00ff00;
+        animation: pulse 0.5s infinite; pointer-events: none; z-index: 100;
+    `;
+    const colors = ['蓝色', '绿色', '橙色', '粉色', '紫色'];
+    const colorName = colors[(playerLevel - 1) % colors.length];
+    msg.textContent = `⭐ LEVEL UP! ⭐\nLv.${playerLevel} ${colorName}战机`;
+    msg.style.whiteSpace = 'pre-line';
+    msg.style.textAlign = 'center';
+    document.body.appendChild(msg);
+    
+    setTimeout(() => {
+        msg.remove();
+    }, 3000);
+}
+
 // 开始游戏
 function startGame() {
     initAudio();
@@ -771,12 +952,14 @@ function startGame() {
     score = 0;
     wave = 1;
     health = 100;
+    playerLevel = 1;
     frameCount = 0;
     enemySpawnTimer = 0;
     lastShot = 0;
     
     document.getElementById('score').textContent = 'SCORE: 0';
     document.getElementById('wave').textContent = 'WAVE: 1';
+    document.getElementById('level').textContent = 'LV: 1';
     document.getElementById('health-fill').style.width = '100%';
     
     // 清理所有对象
