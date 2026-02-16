@@ -267,23 +267,23 @@ let bgmOscillators = [];
 let isBgmPlaying = false;
 
 // 初始化音频
-function initAudio() {
+async function initAudio() {
     if (!audioContext) {
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
     }
     if (audioContext.state === 'suspended') {
-        audioContext.resume();
+        await audioContext.resume();
     }
     if (!isBgmPlaying && audioEnabled) {
         startBGM();
     }
 }
 
-function toggleAudio() {
+async function toggleAudio() {
     audioEnabled = !audioEnabled;
     document.getElementById('audio-toggle').textContent = audioEnabled ? '🔊' : '🔇';
     if (audioEnabled) {
-        initAudio();
+        await initAudio();
     } else {
         stopBGM();
     }
@@ -563,14 +563,17 @@ let game = {
     enemyBullets: [],
     particles: [],
     
-    init() {
+    async init() {
         this.player = new Player();
         window.addEventListener('mousemove', e => {
             this.input.x = e.clientX;
             this.input.y = e.clientY;
         });
-        window.addEventListener('click', () => {
+        window.addEventListener('click', async () => {
             initAudio();
+            if (audioContext && audioContext.state === 'suspended') {
+                await audioContext.resume();
+            }
         });
         
         createLanterns();
